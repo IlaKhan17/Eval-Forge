@@ -36,8 +36,11 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"**/tests/**" = ["S", "ARG", "PLR"]
-"tests/**" = ["S", "ARG", "PLR"]
+# Tests legitimately do things production code should not: local imports to keep a
+# fixture self-contained, multi-statement `pytest.raises` blocks that assert on
+# setup *and* the raise, nested `with` where the nesting is the thing under test.
+"**/tests/**" = ["S", "ARG", "PLR", "PLC0415", "PT012", "SIM117", "N818", "E402"]
+"tests/**" = ["S", "ARG", "PLR", "PLC0415", "PT012", "SIM117", "N818", "E402"]
 
 [lint.isort]
 known-first-party = [
