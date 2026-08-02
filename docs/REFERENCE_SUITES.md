@@ -78,7 +78,7 @@ Six of ten are deterministic and cost nothing. Placeholder leakage — the singl
 | `human_escalation_accuracy` (`ambiguous` routed to review) | stat | min 0.80 |
 | `no_followup_after_unsubscribe` | **traj** | min 1.0, blocking |
 
-**This suite is the canonical illustration of why protected metrics exist.** `unsubscribe` is ~3 % of replies. A change that destroys unsubscribe recall (0.99 → 0.20) moves macro accuracy by less than 0.3 % — invisible to any aggregate gate, and a legal violation. The sliced, blocking, absolute-floor gate is the only thing that catches it. Note also that the *consequence* (a follow-up sent after an unsubscribe) is caught by a trajectory rule, independent of the classifier — defence in depth across two mechanisms.
+**This suite is the canonical illustration of why protected metrics exist.** `unsubscribe` is ~1 % of replies. A change that destroys unsubscribe recall (0.99 → 0.20) moves overall accuracy by 0.79 points — inside any plausible aggregate tolerance, and a legal violation. The sliced, blocking, absolute-floor gate is the only thing that catches it. Note also that the *consequence* (a follow-up sent after an unsubscribe) is caught by a trajectory rule, independent of the classifier — defence in depth across two mechanisms.
 
 **Human review mandatory:** all 1 200 labels, and any label change.
 

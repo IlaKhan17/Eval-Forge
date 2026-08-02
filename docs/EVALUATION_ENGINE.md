@@ -264,7 +264,9 @@ class GateRule:
 
 Evaluation order per rule: metric missing → `error` (a typo'd metric key must never silently pass — this is a real trap in comparable tools); evaluator error rate > threshold → `error`; then absolute thresholds; then, if a baseline exists, regression thresholds. Verdict = worst across rules; `fail` on any blocking failure, else `warn`, else `pass`. Exit code: 0 pass/warn, 1 blocking fail, 2 execution error, 3 configuration error.
 
-**Why aggregate averages hide critical failures.** Concrete: a reply-intent classifier over 1 000 examples where `unsubscribe` is 3 % of traffic. A change breaks unsubscribe detection completely — recall 0.99 → 0.20. Macro accuracy moves from 0.94 to 0.9163: less than a 0.3 % drop, comfortably inside any `max_regression: 0.02` gate. The system now ignores unsubscribe requests, which is a CAN-SPAM/GDPR violation and an actual legal liability, and every gate is green.
+**Why aggregate averages hide critical failures.** Concrete: a reply-intent classifier over 1 200 examples where `unsubscribe` is 1 % of traffic. A change breaks unsubscribe detection completely — recall 0.99 → 0.20. Overall accuracy falls by `prevalence × recall_drop` = 0.01 × 0.79 = **0.79 percentage points**, from 0.941 to 0.933 — comfortably inside any `max_regression: 0.02` gate. The system now ignores unsubscribe requests, which is a CAN-SPAM/GDPR violation and an actual legal liability, and every gate is green.
+
+Be precise about the arithmetic, because it determines the mitigation. The aggregate is not *uniformly* blind: at 3 % prevalence the same collapse costs 2.4 points and a 2-point gate would catch it. The aggregate is blind **below a prevalence threshold set by the gate tolerance** — and that threshold is invisible to whoever writes the gate. You cannot pick a tolerance that protects every rare class without blocking on ordinary noise in the common ones. That is why the answer is a separate absolute floor on the rare class, not a tighter aggregate tolerance.
 
 The mitigations are structural, not advisory:
 1. **Sliced gates** — `applies_to_slice: {class: unsubscribe}` gates the rare class directly.
