@@ -89,6 +89,12 @@ disallow_untyped_defs = false
 # Each package has its own tests/conftest.py, so the module name collides and mypy
 # cannot hold both. Fixtures are test scaffolding, not shipped code; the tests that
 # import from them are still fully checked.
+# boto3 ships no type information. Only the thin S3ObjectStore adapter touches it,
+# and that adapter is behind the ObjectStore protocol, which *is* typed.
+[[tool.mypy.overrides]]
+module = ["boto3.*", "botocore.*"]
+ignore_missing_imports = true
+
 [[tool.mypy.overrides]]
 module = "conftest"
 ignore_missing_imports = true

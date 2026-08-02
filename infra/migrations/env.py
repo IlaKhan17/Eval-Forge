@@ -13,6 +13,7 @@ from logging.config import fileConfig
 from alembic import context
 from evalforge_api.db import models  # noqa: F401 — registers every table
 from evalforge_api.db.base import Base
+from evalforge_api.db.partitions import is_partition_child
 from evalforge_api.settings import get_settings
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -26,12 +27,20 @@ config.set_main_option("sqlalchemy.url", get_settings().sqlalchemy_url)
 target_metadata = Base.metadata
 
 
+def include_object(_object, name, type_, _reflected, _compare_to) -> bool:  # type: ignore[no-untyped-def]
+    """Hide partition children from autogenerate."""
+    if type_ == "table" and name is not None and is_partition_child(name):
+        return False
+    return not (type_ == "index" and name is not None and is_partition_child(name))
+
+
 def run_migrations_offline() -> None:
     context.configure(
         url=config.get_main_option("sqlalchemy.url"),
         target_metadata=target_metadata,
         literal_binds=True,
         compare_type=True,
+        include_object=include_object,
         dialect_opts={"paramstyle": "named"},
     )
     with context.begin_transaction():
@@ -44,6 +53,7 @@ def do_run_migrations(connection: Connection) -> None:
         target_metadata=target_metadata,
         compare_type=True,
         compare_server_default=True,
+        include_object=include_object,
     )
     with context.begin_transaction():
         context.run_migrations()

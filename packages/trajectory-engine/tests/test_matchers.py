@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from conftest import TraceBuilder, policy_yaml
+from builders import TraceBuilder, policy_yaml
 
 from evalforge_trajectory import evaluate_policy, load_policy
 from evalforge_types import Status

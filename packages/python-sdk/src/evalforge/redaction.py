@@ -208,9 +208,11 @@ class RedactionPipeline:
             else (redactors if redactors is not None else default())
         )
         self.count = 0
+        self.truncated = 0
 
     def apply(self, value: Any, *, path: str = "") -> Any:
         self.count = 0
+        self.truncated = 0
         if not self.capture_mode.stores_payloads:
             return None
         return self._walk(value, path, 0)
@@ -250,6 +252,7 @@ class RedactionPipeline:
                 return value
 
         if isinstance(value, str) and len(value.encode("utf-8", "ignore")) > self.max_field_bytes:
+            self.truncated += 1
             # Record the loss rather than silently shortening: a truncated payload
             # that looks complete is how people debug the wrong thing for an hour.
             return {

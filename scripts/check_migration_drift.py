@@ -14,12 +14,20 @@ from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
 from evalforge_api.db import models  # noqa: F401 — registers every table
 from evalforge_api.db.base import Base
+from evalforge_api.db.partitions import is_partition_child
 from evalforge_api.settings import get_settings
 from sqlalchemy.ext.asyncio import create_async_engine
 
 
+def _include(_object, name, type_, _reflected, _compare_to) -> bool:  # type: ignore[no-untyped-def]
+    """Partition children are created by maintenance, not by migrations."""
+    return not (name is not None and type_ in ("table", "index") and is_partition_child(name))
+
+
 def _diff(connection) -> list:  # type: ignore[no-untyped-def]
-    context = MigrationContext.configure(connection)
+    context = MigrationContext.configure(
+        connection, opts={"include_object": _include, "compare_type": True}
+    )
     return compare_metadata(context, Base.metadata)
 
 

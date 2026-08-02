@@ -36,6 +36,8 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
+# Alembic writes these; reflowing generated SQL literals only creates diff noise.
+"infra/migrations/versions/*.py" = ["E501"]
 # Tests legitimately do things production code should not: local imports to keep a
 # fixture self-contained, multi-statement `pytest.raises` blocks that assert on
 # setup *and* the raise, nested `with` where the nesting is the thing under test.

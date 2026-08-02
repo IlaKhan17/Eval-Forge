@@ -14,7 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from evalforge_api.api.routes import health
+from evalforge_api.api.routes import health, ingest, traces
+from evalforge_api.db.partitions import ensure_partitions
 from evalforge_api.db.session import dispose_engine, get_sessionmaker, init_engine
 from evalforge_api.errors import (
     ApiError,
@@ -55,7 +56,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-        init_engine(config)
+        engine = init_engine(config)
+        # Partitions must exist before the first insert of a new month, so this runs
+        # at every startup rather than only at migration time.
+        async with engine.begin() as connection:
+            await ensure_partitions(connection)
         try:
             yield
         finally:
@@ -73,6 +78,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     _install_middleware(app, config)
     _install_error_handlers(app)
     app.include_router(health.router)
+    app.include_router(ingest.router)
+    app.include_router(traces.router)
     return app
 
 

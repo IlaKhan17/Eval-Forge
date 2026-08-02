@@ -14,6 +14,7 @@ from evalforge_api.db.models.identity import (
     RefreshToken,
     User,
 )
+from evalforge_api.db.models.traces import PayloadObject, Span, SpanEvent, Trace
 
 __all__ = [
     "ApiKey",
@@ -21,7 +22,11 @@ __all__ = [
     "Environment",
     "Membership",
     "Organization",
+    "PayloadObject",
     "Project",
     "RefreshToken",
+    "Span",
+    "SpanEvent",
+    "Trace",
     "User",
 ]

@@ -10,43 +10,16 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
-from typing import Any
 
 import pytest
 
 os.environ.setdefault("EVALFORGE_STRICT", "1")
 
+from doubles import RecordingTransport  # noqa: F401 — re-exported for fixtures
+
 import evalforge
 from evalforge import safety
 from evalforge.config import Config
-
-
-class RecordingTransport:
-    """Captures exported bodies instead of sending them."""
-
-    def __init__(self, *, fail_times: int = 0, always_fail: bool = False) -> None:
-        self.bodies: list[bytes] = []
-        self.fail_times = fail_times
-        self.always_fail = always_fail
-        self.attempts = 0
-
-    def __call__(self, body: bytes) -> None:
-        self.attempts += 1
-        if self.always_fail or self.attempts <= self.fail_times:
-            msg = "simulated transport failure"
-            raise ConnectionError(msg)
-        self.bodies.append(body)
-
-    def payloads(self) -> list[dict[str, Any]]:
-        import gzip
-        import json
-
-        return [json.loads(gzip.decompress(b)) for b in self.bodies]
-
-    def decoded(self) -> str:
-        import gzip
-
-        return "".join(gzip.decompress(b).decode("utf-8") for b in self.bodies)
 
 
 @pytest.fixture(autouse=True)

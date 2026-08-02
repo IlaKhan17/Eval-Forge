@@ -35,6 +35,13 @@ class Settings(BaseSettings):
 
     redis_url: str = "redis://127.0.0.1:6379/0"
 
+    # Object storage. Absent endpoint means payload offload stays in-process, which
+    # keeps a bare `uvicorn` run working with nothing but Postgres.
+    s3_endpoint: str | None = None
+    s3_bucket: str = "evalforge-payloads"
+    s3_access_key: str = ""
+    s3_secret_key: str = ""
+
     # --------------------------------------------------------------------- auth
     jwt_secret: str = ""
     jwt_algorithm: str = "HS256"

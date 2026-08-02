@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from conftest import BASE, TraceBuilder
+from builders import BASE, TraceBuilder
 
 from evalforge_trajectory import load_policy, normalize
 from evalforge_trajectory.normalize import args_hash

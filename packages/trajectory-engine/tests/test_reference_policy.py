@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from conftest import TraceBuilder
+from builders import TraceBuilder
 
 from evalforge_trajectory import evaluate_policy, load_policy_file
 from evalforge_trajectory.evaluator import TrajectoryEvaluator

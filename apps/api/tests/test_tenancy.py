@@ -11,10 +11,10 @@ from __future__ import annotations
 import uuid
 
 import pytest
-from conftest import Tenant, make_tenant
 from evalforge_api.db.models.identity import ApiKey, Environment, Project
 from evalforge_api.repositories.base import TenantContext, TenantRepository
 from evalforge_api.security import keys as key_utils
+from factories import Tenant, make_tenant
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession

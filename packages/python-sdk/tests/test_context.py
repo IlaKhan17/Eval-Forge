@@ -11,7 +11,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
-from conftest import RecordingTransport
+from doubles import RecordingTransport
 
 import evalforge
 from evalforge import safety

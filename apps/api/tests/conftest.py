@@ -8,22 +8,14 @@ database than the one we ship.
 from __future__ import annotations
 
 import os
-import uuid
 from collections.abc import AsyncIterator
 
 import pytest
 import pytest_asyncio
 from evalforge_api.db.base import Base
-from evalforge_api.db.models.identity import (
-    ApiKey,
-    Environment,
-    Membership,
-    Organization,
-    Project,
-    User,
-)
-from evalforge_api.security import keys as key_utils
+from evalforge_api.db.partitions import ensure_partitions
 from evalforge_api.settings import Settings
+from factories import Tenant, make_tenant
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 TEST_DB = "evalforge_test"
@@ -67,6 +59,11 @@ async def engine():  # type: ignore[no-untyped-def]
     test_engine = create_async_engine(settings.sqlalchemy_url)
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # `create_all` builds the partitioned parents but not their partitions —
+        # those are created by the migration and by the startup hook. Without this
+        # every insert fails with "no partition of relation found for row", which is
+        # precisely why the DEFAULT partition exists as a safety net in production.
+        await ensure_partitions(conn)
     yield test_engine
     await test_engine.dispose()
 
@@ -78,59 +75,6 @@ async def session(engine) -> AsyncIterator[AsyncSession]:  # type: ignore[no-unt
     async with maker() as db:
         yield db
         await db.rollback()
-
-
-class Tenant:
-    """A complete, isolated tenant: org, user, membership, project, key."""
-
-    def __init__(
-        self,
-        org: Organization,
-        user: User,
-        project: Project,
-        environment: Environment,
-        api_key: ApiKey,
-        token: str,
-    ) -> None:
-        self.org = org
-        self.user = user
-        self.project = project
-        self.environment = environment
-        self.api_key = api_key
-        self.token = token
-
-
-async def make_tenant(
-    session: AsyncSession, *, slug: str, role: str = "owner", scopes: list[str] | None = None
-) -> Tenant:
-    org = Organization(name=f"Org {slug}", slug=slug)
-    user = User(email=f"{slug}-{uuid.uuid4().hex[:6]}@example.com", name=f"User {slug}")
-    session.add_all([org, user])
-    await session.flush()
-
-    membership = Membership(org_id=org.id, user_id=user.id, role=role)
-    project = Project(org_id=org.id, name=f"Project {slug}", slug=slug)
-    session.add_all([membership, project])
-    await session.flush()
-
-    environment = Environment(project_id=project.id, name="production")
-    session.add(environment)
-    await session.flush()
-
-    generated = key_utils.generate("test")
-    api_key = ApiKey(
-        project_id=project.id,
-        environment_id=environment.id,
-        name="default",
-        prefix=generated.prefix,
-        key_hash=generated.key_hash,
-        scopes=scopes if scopes is not None else ["ingest", "read", "write"],
-        created_by=user.id,
-    )
-    session.add(api_key)
-    await session.flush()
-
-    return Tenant(org, user, project, environment, api_key, generated.token)
 
 
 @pytest_asyncio.fixture
