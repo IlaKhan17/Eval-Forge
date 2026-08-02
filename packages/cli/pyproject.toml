@@ -1,0 +1,33 @@
+[project]
+name = "evalforge-cli"
+version = "0.1.0.dev0"
+description = "EvalForge command-line interface — run suites, gate CI, compare experiments"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+dependencies = [
+    "evalforge",
+    "evalforge-core",
+    "evalforge-trajectory",
+    "evalforge-types",
+    "typer>=0.15",
+    "rich>=13.9",
+    "pyyaml>=6.0",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+evalforge = "evalforge_cli.main:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/evalforge_cli"]
+
+[tool.uv.sources]
+evalforge = { workspace = true }
+evalforge-core = { workspace = true }
+evalforge-trajectory = { workspace = true }
+evalforge-types = { workspace = true }

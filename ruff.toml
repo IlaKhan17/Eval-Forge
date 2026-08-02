@@ -1,0 +1,57 @@
+line-length = 100
+target-version = "py312"
+src = [
+    "packages/shared-types/src",
+    "packages/evaluation-core/src",
+    "packages/trajectory-engine/src",
+    "packages/python-sdk/src",
+    "packages/cli/src",
+]
+
+[lint]
+select = [
+    "E", "W",      # pycodestyle
+    "F",           # pyflakes
+    "I",           # isort
+    "N",           # pep8-naming
+    "UP",          # pyupgrade
+    "B",           # bugbear
+    "C4",          # comprehensions
+    "SIM",         # simplify
+    "RUF",         # ruff
+    "ASYNC",       # async correctness
+    "S",           # bandit
+    "DTZ",         # naive datetimes
+    "PT",          # pytest style
+    "RET",         # returns
+    "PTH",         # pathlib
+    "TID",         # tidy imports
+    "ARG",         # unused arguments
+    "PL",          # pylint subset
+]
+ignore = [
+    "PLR0913",  # too many arguments — evaluator configs legitimately have many
+    "PLR2004",  # magic values in comparisons
+    "S101",     # assert — used deliberately in tests and invariants
+]
+
+[lint.per-file-ignores]
+"**/tests/**" = ["S", "ARG", "PLR"]
+"tests/**" = ["S", "ARG", "PLR"]
+
+[lint.isort]
+known-first-party = [
+    "evalforge",
+    "evalforge_types",
+    "evalforge_core",
+    "evalforge_trajectory",
+    "evalforge_cli",
+]
+
+[lint.flake8-tidy-imports]
+ban-relative-imports = "parents"
+
+[format]
+# Never touch the docs: ruff reformats fenced Python inside markdown, which
+# churns the planning documents for no benefit.
+exclude = ["docs/**"]

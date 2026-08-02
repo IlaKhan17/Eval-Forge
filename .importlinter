@@ -1,0 +1,67 @@
+; Architectural contracts (docs/ARCHITECTURE.md §3, ADR-001).
+; These are the load-bearing boundary of the whole system: if evaluation-core or
+; trajectory-engine ever learn about HTTP or the database, local mode dies and the
+; "same verdict everywhere" guarantee goes with it. Enforced in CI, not by discipline.
+
+[importlinter]
+root_packages =
+    evalforge_types
+    evalforge_core
+    evalforge_trajectory
+    evalforge
+    evalforge_cli
+include_external_packages = True
+
+[importlinter:contract:pure-core]
+name = evaluation-core is a pure library (no I/O, no framework)
+type = forbidden
+source_modules =
+    evalforge_core
+forbidden_modules =
+    httpx
+    requests
+    sqlalchemy
+    psycopg
+    redis
+    boto3
+    fastapi
+    starlette
+    arq
+    evalforge_api
+
+[importlinter:contract:pure-trajectory]
+name = trajectory-engine is a pure library (no I/O, no framework)
+type = forbidden
+source_modules =
+    evalforge_trajectory
+forbidden_modules =
+    httpx
+    requests
+    sqlalchemy
+    psycopg
+    redis
+    boto3
+    fastapi
+    starlette
+    arq
+    evalforge_api
+
+[importlinter:contract:layers]
+name = Dependency direction is one-way
+type = layers
+layers =
+    evalforge_cli
+    evalforge
+    evalforge_core : evalforge_trajectory
+    evalforge_types
+
+[importlinter:contract:types-are-leaf]
+name = shared-types depends on nothing of ours
+type = forbidden
+source_modules =
+    evalforge_types
+forbidden_modules =
+    evalforge_core
+    evalforge_trajectory
+    evalforge
+    evalforge_cli

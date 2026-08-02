@@ -1,0 +1,62 @@
+# Local development / self-hosting reference deployment (ADR-016).
+#
+# Every port binds to 127.0.0.1 only: this file must never accidentally expose a
+# database to a network. Credentials come from .env, which `make setup` generates
+# with random values — there are deliberately no default passwords here.
+
+name: evalforge
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?run scripts/gen-dev-env.sh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run scripts/gen-dev-env.sh}
+      POSTGRES_DB: ${POSTGRES_DB:-evalforge}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", ""]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?run scripts/gen-dev-env.sh}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?run scripts/gen-dev-env.sh}
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:

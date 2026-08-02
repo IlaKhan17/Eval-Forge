@@ -1,0 +1,82 @@
+[project]
+name = "evalforge-workspace"
+version = "0.0.0"
+description = "EvalForge monorepo root (not published)"
+requires-python = ">=3.12,<3.14"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+# apps/api carries both the API and the worker: same package, same image, two
+# entrypoints (ADR-001). apps/worker holds only deployment config, not code.
+members = ["packages/*", "apps/api"]
+
+[tool.uv.sources]
+evalforge-types = { workspace = true }
+evalforge-core = { workspace = true }
+evalforge-trajectory = { workspace = true }
+evalforge = { workspace = true }
+evalforge-cli = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "evalforge-types",
+    "evalforge-core",
+    "evalforge-trajectory",
+    "evalforge",
+    "evalforge-cli",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "hypothesis>=6.112",
+    "syrupy>=4.8",
+    "freezegun>=1.5",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "import-linter>=2.1",
+]
+
+# ---------------------------------------------------------------- pytest
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["packages", "apps", "tests"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+]
+asyncio_mode = "auto"
+markers = [
+    "integration: requires docker services (postgres/redis/minio)",
+    "e2e: full-stack end-to-end test",
+    "load: performance test, not run in PR CI",
+    "live: calls a real model provider; never run in PR CI",
+]
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+branch = true
+source = ["packages"]
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@overload",
+]
+
+# ---------------------------------------------------------------- mypy
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+enable_error_code = ["redundant-expr", "possibly-undefined", "truthy-bool"]
+files = ["packages", "apps"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false

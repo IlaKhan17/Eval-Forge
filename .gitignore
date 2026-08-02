@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+dist/
+build/
+
+# Node
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# Secrets and local config — never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+
+# EvalForge local state
+.evalforge/
+~/.evalforge/
+evalforge-report.json
+*.evalforge.local.yaml
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Docker volumes
+.docker-data/

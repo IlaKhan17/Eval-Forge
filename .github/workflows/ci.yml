@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_FROZEN: "0"
+
+jobs:
+  # Stage 1 — fast static checks. Ordered first so a lint failure never waits on
+  # containers (docs/TESTING_STRATEGY.md §9).
+  static:
+    name: lint · types · architecture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages
+      - name: ruff check
+        run: uv run ruff check --output-format=github .
+      - name: ruff format
+        run: uv run ruff format --check .
+      - name: mypy (strict)
+        run: uv run mypy
+      - name: architectural import contracts
+        run: uv run lint-imports --config .importlinter
+      - name: application-neutrality check
+        run: ./scripts/check-domain-leak.sh
+
+  # Stage 2 — unit tests.
+  unit:
+    name: unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages
+      - name: pytest
+        run: >
+          uv run pytest
+          -m "not integration and not e2e and not load and not live"
+          --cov --cov-report=term-missing --cov-report=xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage.xml
