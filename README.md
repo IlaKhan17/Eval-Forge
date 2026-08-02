@@ -64,13 +64,13 @@ uv add evalforge
 ```python
 import evalforge
 
+
 @evalforge.trace("generate_outreach")
-async def generate_outreach(prospect_id: str) -> Email:
-    ...
+async def generate_outreach(prospect_id: str) -> Email: ...
+
 
 @evalforge.tool("gmail.send")
-async def send_email(to: str, subject: str, body: str) -> str:
-    ...
+async def send_email(to: str, subject: str, body: str) -> str: ...
 ```
 
 ```bash

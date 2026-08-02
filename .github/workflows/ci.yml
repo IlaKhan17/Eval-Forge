@@ -57,3 +57,50 @@ jobs:
         with:
           name: coverage
           path: coverage.xml
+
+  # Stage 3 — integration against real Postgres. Not SQLite: the schema uses
+  # JSONB, ARRAY, INET and partial indexes, so a SQLite run would be testing a
+  # different database than the one we ship.
+  integration:
+    name: integration tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: evalforge
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: evalforge
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U evalforge"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      POSTGRES_USER: evalforge
+      POSTGRES_PASSWORD: ci-only-password
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: evalforge
+      JWT_SECRET: ci-secret-value-that-is-long-enough-32
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages
+
+      - name: migrations apply, reverse, and reapply
+        run: |
+          uv run alembic upgrade head
+          uv run alembic downgrade base
+          uv run alembic upgrade head
+
+      - name: models and migrations agree
+        # Compares live schema against the ORM metadata. A non-empty diff means
+        # someone changed a model without writing the migration for it.
+        run: uv run python scripts/check_migration_drift.py
+
+      - run: uv run pytest -m integration

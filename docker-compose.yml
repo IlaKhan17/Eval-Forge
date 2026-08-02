@@ -3,6 +3,10 @@
 # Every port binds to 127.0.0.1 only: this file must never accidentally expose a
 # database to a network. Credentials come from .env, which `make setup` generates
 # with random values — there are deliberately no default passwords here.
+#
+# Host ports are overridable. Developers commonly already have a Postgres on 5432
+# from another project, and a compose file that cannot coexist with one is a
+# compose file people stop using.
 
 name: evalforge
 
@@ -15,7 +19,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run scripts/gen-dev-env.sh}
       POSTGRES_DB: ${POSTGRES_DB:-evalforge}
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -29,7 +33,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--save", ""]
     ports:
-      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
       - redisdata:/data
     healthcheck:
@@ -46,8 +50,8 @@ services:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:?run scripts/gen-dev-env.sh}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?run scripts/gen-dev-env.sh}
     ports:
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
+      - "127.0.0.1:${S3_PORT:-9000}:9000"
+      - "127.0.0.1:${S3_CONSOLE_PORT:-9001}:9001"
     volumes:
       - miniodata:/data
     healthcheck:

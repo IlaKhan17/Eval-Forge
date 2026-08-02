@@ -85,3 +85,11 @@ exclude = "(^|/)conftest\\.py$"
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
+
+# Each package has its own tests/conftest.py, so the module name collides and mypy
+# cannot hold both. Fixtures are test scaffolding, not shipped code; the tests that
+# import from them are still fully checked.
+[[tool.mypy.overrides]]
+module = "conftest"
+ignore_missing_imports = true
+follow_imports = "skip"

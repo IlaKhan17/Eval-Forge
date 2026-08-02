@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from conftest import RecordingTransport  # type: ignore[attr-defined]
+from conftest import RecordingTransport
 
 from evalforge import redaction
 from evalforge.client import Client

@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 import pytest
-from conftest import RecordingTransport  # type: ignore[attr-defined]
+from conftest import RecordingTransport
 
 import evalforge
 from evalforge.client import Client, sampled

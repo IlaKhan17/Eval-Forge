@@ -1,0 +1,43 @@
+"""Fail when the ORM models and the migration history disagree.
+
+The most common Alembic mistake is editing a model and forgetting the migration.
+It stays invisible until a deploy hits a column that does not exist, so the check
+belongs in CI rather than in a reviewer's head.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import sys
+
+from alembic.autogenerate import compare_metadata
+from alembic.migration import MigrationContext
+from evalforge_api.db import models  # noqa: F401 — registers every table
+from evalforge_api.db.base import Base
+from evalforge_api.settings import get_settings
+from sqlalchemy.ext.asyncio import create_async_engine
+
+
+def _diff(connection) -> list:  # type: ignore[no-untyped-def]
+    context = MigrationContext.configure(connection)
+    return compare_metadata(context, Base.metadata)
+
+
+async def main() -> int:
+    engine = create_async_engine(get_settings().sqlalchemy_url)
+    async with engine.connect() as connection:
+        differences = await connection.run_sync(_diff)
+    await engine.dispose()
+
+    if differences:
+        print("✗ models and migrations disagree:")
+        for entry in differences:
+            print(f"    {entry}")
+        print("\n  Run: uv run alembic revision --autogenerate -m '<what changed>'")
+        return 1
+    print("✓ models and migrations agree")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(asyncio.run(main()))
