@@ -7,18 +7,31 @@ database than the one we ship.
 
 from __future__ import annotations
 
+import asyncio
 import os
 from collections.abc import AsyncIterator
+from pathlib import Path
 
 import pytest
 import pytest_asyncio
-from evalforge_api.db.base import Base
 from evalforge_api.db.partitions import ensure_partitions
 from evalforge_api.settings import Settings
 from factories import Tenant, make_tenant
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 TEST_DB = "evalforge_test"
+ROOT = Path(__file__).resolve().parents[3]
+
+
+def _migrate(url: str) -> None:
+    """Run alembic in a worker thread; env.py opens its own event loop."""
+    from alembic import command
+    from alembic.config import Config
+
+    config = Config(str(ROOT / "alembic.ini"))
+    config.set_main_option("script_location", str(ROOT / "infra" / "migrations"))
+    config.set_main_option("sqlalchemy.url", url)
+    command.upgrade(config, "head")
 
 
 def _settings() -> Settings:
@@ -56,13 +69,16 @@ async def engine():  # type: ignore[no-untyped-def]
     finally:
         await admin.dispose()
 
+    # Migrations, not `create_all`. They are not equivalent: the migrations also
+    # create partitions and the dataset-immutability triggers, so a suite built with
+    # `create_all` would be testing a schema we never ship — and would have silently
+    # skipped every trigger assertion.
+    await asyncio.to_thread(_migrate, settings.sqlalchemy_url)
+
     test_engine = create_async_engine(settings.sqlalchemy_url)
     async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        # `create_all` builds the partitioned parents but not their partitions —
-        # those are created by the migration and by the startup hook. Without this
-        # every insert fails with "no partition of relation found for row", which is
-        # precisely why the DEFAULT partition exists as a safety net in production.
+        # Mirrors the production startup hook, which adds the current month's
+        # partitions on top of the DEFAULT one the migration creates.
         await ensure_partitions(conn)
     yield test_engine
     await test_engine.dispose()
