@@ -16,6 +16,7 @@ ignore the exit code.
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import platform
 import sys
@@ -25,6 +26,7 @@ from typing import Annotated, Any
 import typer
 
 from evalforge_cli import runner
+from evalforge_cli.render import markdown as markdown_module
 from evalforge_cli.render import report as report_module
 from evalforge_cli.render import terminal
 from evalforge_cli.suite.loader import SuiteError, load_suite
@@ -171,6 +173,60 @@ def validate(
     typer.echo(f"  {len(loaded.suite.evaluators)} evaluator(s), {len(loaded.suite.gates)} gate(s)")
     for hint in loaded.hints:
         typer.echo(style.paint(f"  {style.warn} {hint}", terminal.YELLOW))
+
+
+@app.command()
+def comment(
+    report_path: Annotated[Path, typer.Argument(help="A report JSON produced by `eval`")],
+    run_url: Annotated[
+        str | None, typer.Option("--run-url", help="Link back to the CI run")
+    ] = None,
+    output: Annotated[
+        Path | None, typer.Option("--output", "-o", help="Write markdown here instead of stdout")
+    ] = None,
+) -> None:
+    """Render a report as pull-request markdown.
+
+    Deliberately knows nothing about GitHub: it reads a file and writes markdown, so
+    it is a pure function that can be snapshot-tested, and any CI system can post
+    the result however it likes.
+    """
+    if not report_path.exists():
+        _fail(f"report not found: {report_path}", runner.exit_code_for_setup_error())
+        return
+
+    try:
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        _fail(f"{report_path}: not valid JSON: {exc}", runner.exit_code_for_setup_error())
+        return
+
+    body = markdown_module.render(payload, run_url=run_url)
+    if output:
+        output.write_text(body, encoding="utf-8")
+        typer.echo(f"wrote {output}")
+    else:
+        typer.echo(body)
+
+
+@app.command(name="comment-error")
+def comment_error(
+    message: Annotated[str, typer.Argument(help="What went wrong")],
+    suite: Annotated[str | None, typer.Option("--suite")] = None,
+    run_url: Annotated[str | None, typer.Option("--run-url")] = None,
+    output: Annotated[Path | None, typer.Option("--output", "-o")] = None,
+) -> None:
+    """Render a comment for a run that never produced a report.
+
+    Posting something matters: an absent comment reads as "no problems found",
+    which is the opposite of what happened.
+    """
+    body = markdown_module.render_error(message, suite=suite, run_url=run_url)
+    if output:
+        output.write_text(body, encoding="utf-8")
+        typer.echo(f"wrote {output}")
+    else:
+        typer.echo(body)
 
 
 @app.command()

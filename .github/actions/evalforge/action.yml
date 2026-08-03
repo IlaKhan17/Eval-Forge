@@ -1,0 +1,192 @@
+name: EvalForge
+description: Run an EvalForge suite, gate the pull request, and post the report as a comment.
+author: EvalForge
+
+# A composite action rather than a Docker or JavaScript one: it is a handful of
+# steps around a Python CLI, and a container image would add a pull on every run
+# plus a release pipeline, for nothing.
+
+inputs:
+  suite:
+    description: Path to the suite YAML.
+    required: true
+  output:
+    description: Where to write the JSON report.
+    required: false
+    default: evalforge-report.json
+  comment:
+    description: Post or update a pull-request comment.
+    required: false
+    default: "true"
+  upload-artifact:
+    description: Upload the JSON report as a workflow artifact.
+    required: false
+    default: "true"
+  fail-on-gate:
+    description: >
+      Fail the job when a blocking gate fails. Setting this to "false" makes the
+      evaluation advisory, which is a reasonable way to introduce EvalForge to an
+      existing repository before anyone depends on it.
+    required: false
+    default: "true"
+  python-version:
+    description: Python version for the run.
+    required: false
+    default: "3.12"
+  working-directory:
+    description: Directory to run in.
+    required: false
+    default: "."
+  github-token:
+    description: >
+      Token used to post the comment. The default GITHUB_TOKEN is enough, but the
+      job needs `pull-requests: write` for it to work.
+    required: false
+    default: ${{ github.token }}
+  extra-args:
+    description: Additional arguments passed through to `evalforge eval`.
+    required: false
+    default: ""
+
+outputs:
+  verdict:
+    description: pass, warn, fail, or error.
+    value: ${{ steps.run.outputs.verdict }}
+  exit-code:
+    description: The CLI's exit code.
+    value: ${{ steps.run.outputs.exit-code }}
+  report:
+    description: Path to the JSON report.
+    value: ${{ steps.run.outputs.report }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        enable-cache: true
+
+    - name: Sync dependencies
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: uv sync --all-packages
+
+    - name: Run evaluation
+      id: run
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      # `continue-on-error` is deliberately not used. The exit code is captured here
+      # and re-applied in the final step, so the comment is always posted first — a
+      # failing job with no explanation is the worst possible outcome.
+      run: |
+        set +e
+        uv run evalforge eval "${{ inputs.suite }}" \
+          --output "${{ inputs.output }}" \
+          ${{ inputs.extra-args }} 2>&1 | tee /tmp/evalforge-stdout.txt
+        code=${PIPESTATUS[0]}
+        set -e
+
+        echo "exit-code=${code}" >> "$GITHUB_OUTPUT"
+        echo "report=${{ inputs.output }}" >> "$GITHUB_OUTPUT"
+
+        if [ -f "${{ inputs.output }}" ]; then
+          verdict=$(uv run python -c "import json,sys; print(json.load(open(sys.argv[1]))['verdict'])" "${{ inputs.output }}")
+        else
+          verdict=error
+        fi
+        echo "verdict=${verdict}" >> "$GITHUB_OUTPUT"
+        echo "EvalForge verdict: ${verdict} (exit ${code})"
+
+    - name: Job summary
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      if: always()
+      run: |
+        if [ -f "${{ inputs.output }}" ]; then
+          uv run evalforge comment "${{ inputs.output }}" \
+            --run-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            >> "$GITHUB_STEP_SUMMARY"
+        else
+          uv run evalforge comment-error "$(tail -c 2000 /tmp/evalforge-stdout.txt)" \
+            --suite "${{ inputs.suite }}" \
+            --run-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+    - name: Upload report
+      if: always() && inputs.upload-artifact == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: evalforge-report
+        path: ${{ inputs.working-directory }}/${{ inputs.output }}
+        if-no-files-found: ignore
+
+    - name: Post or update the pull-request comment
+      # `always()` so a failed evaluation still explains itself. An absent comment
+      # reads as "no problems found", which is the opposite of what happened.
+      if: always() && inputs.comment == 'true' && github.event.pull_request.number
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        set -euo pipefail
+
+        if [ -f "${{ inputs.output }}" ]; then
+          uv run evalforge comment "${{ inputs.output }}" --run-url "$RUN_URL" -o /tmp/body.md
+        else
+          uv run evalforge comment-error "$(tail -c 2000 /tmp/evalforge-stdout.txt)" \
+            --suite "${{ inputs.suite }}" --run-url "$RUN_URL" -o /tmp/body.md
+        fi
+
+        # Find our own previous comment by its HTML marker, not by author or
+        # position: a bot may post several kinds of comment, and editing the wrong
+        # one is worse than adding a new one.
+        existing=$(gh api \
+          "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+          --paginate --jq \
+          'map(select(.body | contains("<!-- evalforge-report -->"))) | first | .id // empty')
+
+        if [ -n "$existing" ]; then
+          gh api --method PATCH \
+            "repos/${GITHUB_REPOSITORY}/issues/comments/${existing}" \
+            -F body=@/tmp/body.md >/dev/null
+          echo "updated comment ${existing}"
+        else
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+            -F body=@/tmp/body.md >/dev/null
+          echo "posted a new comment"
+        fi
+
+    - name: Apply the verdict
+      # The last step, so everything above has already run. Re-applying the captured
+      # exit code here is what makes the check red without hiding the report.
+      if: always()
+      shell: bash
+      run: |
+        code="${{ steps.run.outputs.exit-code }}"
+        verdict="${{ steps.run.outputs.verdict }}"
+
+        if [ "$code" = "0" ]; then
+          echo "::notice title=EvalForge::quality gates passed (${verdict})"
+          exit 0
+        fi
+
+        if [ "${{ inputs.fail-on-gate }}" != "true" ] && [ "$code" = "1" ]; then
+          # Advisory mode: surface it loudly, but do not block.
+          echo "::warning title=EvalForge::blocking gate failed, but fail-on-gate is false"
+          exit 0
+        fi
+
+        case "$code" in
+          1) echo "::error title=EvalForge::a protected quality gate regressed" ;;
+          2) echo "::error title=EvalForge::the evaluation could not be completed" ;;
+          3) echo "::error title=EvalForge::the suite configuration is invalid" ;;
+          *) echo "::error title=EvalForge::evaluation exited with ${code}" ;;
+        esac
+        exit "$code"

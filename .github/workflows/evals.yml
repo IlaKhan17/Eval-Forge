@@ -1,0 +1,45 @@
+# Runs EvalForge's own reference suite on every pull request.
+#
+# This doubles as the worked example: it is the workflow the documentation points
+# at, and because it runs on this repository's own PRs, it cannot silently rot.
+
+name: Evals
+
+on:
+  pull_request:
+    paths:
+      - "packages/**"
+      - "apps/**"
+      - "evals/**"
+      - "examples/**"
+      - ".github/workflows/evals.yml"
+      - ".github/actions/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # Required for the comment. Without it the run succeeds and the comment silently
+  # does not appear, which is a confusing way to fail.
+  pull-requests: write
+
+concurrency:
+  group: evals-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reply-intent:
+    name: reply-intent suite
+    runs-on: ubuntu-latest
+    # A fork PR gets no secrets, so anything needing a provider key or a server
+    # token cannot run here. This suite is deliberately offline and deterministic,
+    # so it runs everywhere — see docs/SECURITY.md §12 for why running fork code
+    # with real secrets is a supply-chain compromise rather than a convenience.
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # baseline resolution needs history
+
+      - uses: ./.github/actions/evalforge
+        with:
+          suite: evals/suites/reply-intent.yaml
+          output: evalforge-report.json
