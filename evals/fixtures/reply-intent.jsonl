@@ -1,0 +1,6 @@
+{"id": "r-001", "input": {"body": "Sounds great, can we meet Tuesday?"}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-002", "input": {"body": "Please remove me from your list."}, "expected": {"intent": "unsubscribe"}, "metadata": {"intent": "unsubscribe"}}
+{"id": "r-003", "input": {"body": "Not interested, thanks."}, "expected": {"intent": "not_interested"}, "metadata": {"intent": "not_interested"}}
+{"id": "r-004", "input": {"body": "Tell me more about pricing."}, "expected": {"intent": "needs_information"}, "metadata": {"intent": "needs_information"}}
+{"id": "r-005", "input": {"body": "I am out of office until Monday."}, "expected": {"intent": "out_of_office"}, "metadata": {"intent": "out_of_office"}}
+{"id": "r-006", "input": {"body": "Stop emailing me."}, "expected": {"intent": "unsubscribe"}, "metadata": {"intent": "unsubscribe"}}

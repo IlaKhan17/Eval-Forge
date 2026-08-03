@@ -14,7 +14,7 @@ import unicodedata
 from collections.abc import Sequence
 from typing import Any, Literal
 
-from evalforge_core.paths import PathError, resolve_in_context
+from evalforge_core.paths import PathError, resolve, resolve_in_context
 from evalforge_core.types import EvalContext, EvaluatorBase
 from evalforge_types import Score
 
@@ -44,6 +44,19 @@ class _FieldEvaluator(EvaluatorBase):
             # score would hide a broken suite behind a plausible-looking metric.
             return None, Score.failure(self.name, str(exc))
         return value, None
+
+
+def _resolve_expected(path: str, expected: dict[str, Any]) -> Any:
+    """Resolve a path that names a field of `expected`.
+
+    A bare name like `intent` means `expected.intent`, not `output.intent`. Routing
+    it through the generic resolver treated it as output-relative and errored on
+    every example — a broken evaluator reported as a metric of zero measurements
+    rather than as a mistake.
+    """
+    if path.startswith("expected."):
+        return resolve(expected, path.removeprefix("expected."))
+    return resolve(expected, path)
 
 
 def _normalize(text: str, mode: Normalization) -> str:
@@ -88,7 +101,7 @@ class ExactMatch(_FieldEvaluator):
         assert ctx.expected is not None
         if self.expected_field:
             try:
-                wanted = resolve_in_context(self.expected_field, output=None, expected=ctx.expected)
+                wanted = _resolve_expected(self.expected_field, ctx.expected)
             except PathError as exc:
                 return Score.failure(self.name, str(exc))
         else:

@@ -104,3 +104,46 @@ jobs:
         run: uv run python scripts/check_migration_drift.py
 
       - run: uv run pytest -m integration
+
+  # Stage 4 — the CLI as a user invokes it, including the exit-code contract.
+  # A unit test can assert a verdict; only this asserts that CI would act on it.
+  cli:
+    name: cli contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages
+
+      - name: suite validates
+        run: uv run evalforge validate evals/suites/reply-intent.yaml
+
+      - name: dry run makes no model calls
+        run: uv run evalforge eval evals/suites/reply-intent.yaml --dry-run
+
+      - name: a healthy run exits 0
+        run: uv run evalforge eval evals/suites/reply-intent.yaml -o /tmp/pass.json
+
+      - name: a protected-metric regression exits 1
+        env:
+          EXAMPLE_BREAK_UNSUBSCRIBE: "1"
+        run: |
+          # The gate must block. `!` inverts, so the step fails if the CLI wrongly
+          # succeeds — which is the failure mode that matters here.
+          ! uv run evalforge eval evals/suites/reply-intent.yaml -o /tmp/fail.json
+
+      - name: the failing report names the blocking gate
+        run: |
+          uv run python - <<'PY'
+          import json, sys
+          report = json.load(open("/tmp/fail.json"))
+          assert report["verdict"] == "fail", report["verdict"]
+          assert report["exit_code"] == 1, report["exit_code"]
+          blocking = [g["metric_key"] for g in report["gates"]
+                      if g["verdict"] == "fail" and g["blocking"]]
+          assert "classes_recall" in blocking, blocking
+          print("report contract holds:", blocking)
+          PY
