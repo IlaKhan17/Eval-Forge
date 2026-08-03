@@ -16,7 +16,12 @@ from evalforge_types.common import (
     Verdict,
 )
 from evalforge_types.dataset import Example, content_hash
-from evalforge_types.gates import GateRule, GateSet
+from evalforge_types.gates import (
+    CalibrationRequirementSpec,
+    CalibrationStatus,
+    GateRule,
+    GateSet,
+)
 from evalforge_types.results import ExampleResult, TaskError
 from evalforge_types.score import GateResult, Metric, MetricDelta, Score
 from evalforge_types.trace import Span, SpanEvent, TokenUsage, Trace
@@ -24,6 +29,8 @@ from evalforge_types.trace import Span, SpanEvent, TokenUsage, Trace
 __version__ = "0.1.0.dev0"
 
 __all__ = [
+    "CalibrationRequirementSpec",
+    "CalibrationStatus",
     "CaptureMode",
     "Example",
     "ExampleResult",

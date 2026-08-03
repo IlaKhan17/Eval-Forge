@@ -148,6 +148,97 @@ jobs:
           print("report contract holds:", blocking)
           PY
 
+  # Stage 4b — calibration. Runs offline from recorded judge verdicts, so it needs no
+  # provider credential and works on a fork pull request. That is the point: if this
+  # could not run without a secret, `require_calibration` would be untestable in exactly
+  # the situation it matters most.
+  calibration:
+    name: judge calibration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages
+
+      - name: the calibration suite validates
+        run: uv run evalforge validate evals/suites/reply-tone.yaml
+
+      - name: recomputing the committed record reproduces it
+        run: |
+          uv run evalforge calibrate evals/suites/reply-tone.yaml \
+            -e acceptable_to_followup \
+            --verdicts evals/calibration/reply-tone.verdicts.jsonl \
+            --no-write -o /tmp/calibration.json
+
+          # The numbers are hand-checkable from the fixture, so pinning them here catches
+          # a change in the maths rather than merely a change in the output format.
+          uv run python - <<'PY'
+          import json
+          report = json.load(open("/tmp/calibration.json"))
+          assert report["n_examples"] == 120, report["n_examples"]
+          assert abs(report["agreement"] - 112 / 120) < 1e-9, report["agreement"]
+          assert abs(report["kappa"] - 0.8666666666666667) < 1e-9, report["kappa"]
+          assert abs(report["false_pass_rate"] - 2 / 60) < 1e-9, report["false_pass_rate"]
+          assert abs(report["false_fail_rate"] - 6 / 60) < 1e-9, report["false_fail_rate"]
+          assert report["n_ceiling_examples"] == 24, report["n_ceiling_examples"]
+          print("calibration maths holds")
+          PY
+
+      - name: a judge that wanders outside its requirement exits 1
+        run: |
+          # Rewrite the verdicts so the judge waves through a fifth of the opt-out
+          # requests, then assert the command fails. `!` inverts, so the step fails if the
+          # CLI wrongly succeeds — which is the failure mode that matters here.
+          uv run python - <<'PY'
+          import json
+          rows = [json.loads(line) for line in open("evals/calibration/reply-tone.verdicts.jsonl")]
+          waved = 0
+          for row in rows:
+              if row["id"].startswith("tone-u") and waved < 12:
+                  row["label"] = "acceptable"
+                  waved += 1
+          with open("/tmp/bad-verdicts.jsonl", "w") as fh:
+              for row in rows:
+                  fh.write(json.dumps(row) + "\n")
+          PY
+
+          ! uv run evalforge calibrate evals/suites/reply-tone.yaml \
+              -e acceptable_to_followup --verdicts /tmp/bad-verdicts.jsonl --no-write
+
+      - name: an uncalibrated gated judge is never silent
+        run: |
+          uv run python - <<'PY'
+          import shutil, tempfile
+          from pathlib import Path
+          from evalforge_cli.runner import build_gate_set, judge_metric_keys, resolve_calibrations
+          from evalforge_cli.suite.loader import load_suite
+          from evalforge_core.gates import evaluate_gates
+          from evalforge_types import Metric, Verdict
+
+          # Hide the committed record, leaving the judge uncalibrated.
+          record = next(Path("evals/calibration").glob("*.calibration.json"))
+          moved = Path(tempfile.mkdtemp()) / record.name
+          shutil.move(record, moved)
+          try:
+              loaded = load_suite("evals/suites/reply-tone.yaml")
+              report = evaluate_gates(
+                  build_gate_set(loaded),
+                  [Metric(key="acceptable_to_followup", value=0.99, count=120)],
+                  judge_metrics=judge_metric_keys(loaded),
+                  calibrations=resolve_calibrations(loaded),
+              )
+              # The metric passes its threshold with room to spare, and the run still
+              # fails: `require: true` means an unvalidated judge cannot gate a merge.
+              assert report.verdict is Verdict.ERROR, report.verdict
+              assert report.blocking_failures[0].rule == "uncalibrated_judge"
+              print("uncalibrated judge blocks:", report.blocking_failures[0].message[:70])
+          finally:
+              shutil.move(moved, record)
+          PY
+
   # Stage 5 — the dashboard. Its own job rather than steps appended to `static`:
   # nothing here needs Python, and a Node failure should be readable without
   # scrolling past a uv sync.

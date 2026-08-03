@@ -11,7 +11,15 @@ from typing import Any
 import pytest
 
 from evalforge_core.gates import evaluate_gates
-from evalforge_types import GateRule, GateSet, Metric, Severity, Verdict
+from evalforge_types import (
+    CalibrationStatus,
+    ExitCode,
+    GateRule,
+    GateSet,
+    Metric,
+    Severity,
+    Verdict,
+)
 
 
 def metric(
@@ -195,3 +203,147 @@ class TestSlicedGates:
         report = evaluate_gates(rules, metrics)
         assert report.verdict is Verdict.FAIL
         assert report.results[0].slice == {"class": "unsubscribe"}
+
+
+class TestCalibrationGating:
+    """The judge-trust half of the gate engine.
+
+    Four states with four different fixes, and a fifth property that matters more than
+    any of them: an uncalibrated judge is never *silent*. Gating a merge on a number
+    nobody has checked is exactly the failure this subsystem exists to surface, so it
+    warns even when nobody asked for enforcement.
+    """
+
+    def gate_set(self, **kwargs: object) -> GateSet:
+        return GateSet(
+            rules=[GateRule(metric_key="groundedness", minimum=0.8)],
+            **kwargs,  # type: ignore[arg-type]
+        )
+
+    def metrics(self) -> list[Metric]:
+        return [Metric(key="groundedness", value=0.9, count=100)]
+
+    def test_an_uncalibrated_judge_warns_by_default(self) -> None:
+        report = evaluate_gates(self.gate_set(), self.metrics(), judge_metrics=["groundedness"])
+        # The threshold passed, so the run is not blocked...
+        assert report.exit_code == ExitCode.PASS
+        assert report.verdict is Verdict.WARN
+        # ...but the fact that nobody has checked the judge is stated.
+        assert any(r.rule == "uncalibrated_judge" for r in report.warnings)
+
+    def test_require_calibration_turns_that_warning_into_an_error(self) -> None:
+        report = evaluate_gates(
+            self.gate_set(require_calibration=True),
+            self.metrics(),
+            judge_metrics=["groundedness"],
+        )
+        assert report.verdict is Verdict.ERROR
+        assert report.exit_code == ExitCode.EXECUTION_ERROR
+        assert any(r.rule == "uncalibrated_judge" for r in report.blocking_failures)
+
+    def test_a_deterministic_metric_is_never_asked_for_calibration(self) -> None:
+        # Only judges need it. A `json_schema` check does not have an opinion to
+        # validate, and demanding calibration for one would be noise that trains people
+        # to ignore the warning.
+        report = evaluate_gates(
+            self.gate_set(require_calibration=True), self.metrics(), judge_metrics=[]
+        )
+        assert report.verdict is Verdict.PASS
+        assert not any("calibrat" in (r.rule or "") for r in report.results)
+
+    def test_an_ungated_judge_metric_is_not_required_to_be_calibrated(self) -> None:
+        # A judge whose number is merely reported, not gated on, blocks nothing. Holding
+        # it to the same bar would mean paying for calibration to look at a chart.
+        gate_set = GateSet(
+            rules=[GateRule(metric_key="exact_match", minimum=0.9)], require_calibration=True
+        )
+        report = evaluate_gates(
+            gate_set,
+            [Metric(key="exact_match", value=1.0, count=10)],
+            judge_metrics=["groundedness"],
+        )
+        assert report.verdict is Verdict.PASS
+
+    def test_a_satisfied_calibration_passes_and_reports_its_numbers(self) -> None:
+        status = CalibrationStatus(
+            metric_key="groundedness",
+            calibrated=True,
+            satisfied=True,
+            n_examples=120,
+            agreement=0.91,
+            kappa=0.82,
+        )
+        report = evaluate_gates(
+            self.gate_set(require_calibration=True),
+            self.metrics(),
+            judge_metrics=["groundedness"],
+            calibrations={"groundedness": status},
+        )
+        assert report.verdict is Verdict.PASS
+        calibrated = next(r for r in report.results if r.rule == "calibrated")
+        # The evidence appears in the report, so a reader can see what "trusted" rests
+        # on rather than taking a green check on faith.
+        assert "120 examples" in calibrated.message
+        assert "0.820" in calibrated.message
+
+    def test_a_failing_calibration_blocks_and_names_the_reasons(self) -> None:
+        status = CalibrationStatus(
+            metric_key="groundedness",
+            calibrated=True,
+            satisfied=False,
+            failures=["false-pass rate 0.180 exceeds 0.050"],
+            n_examples=120,
+            kappa=0.55,
+        )
+        report = evaluate_gates(
+            self.gate_set(require_calibration=True),
+            self.metrics(),
+            judge_metrics=["groundedness"],
+            calibrations={"groundedness": status},
+        )
+        assert report.verdict is Verdict.ERROR
+        failure = report.blocking_failures[0]
+        assert failure.rule == "calibration_requirement"
+        assert "false-pass rate" in failure.message
+
+    def test_a_calibration_for_a_different_evaluator_version_is_stale(self) -> None:
+        # The subtle one. Editing a rubric silently redefines the metric, so evidence
+        # about the old judge says nothing about the new one. Accepting it would let a
+        # rubric change launder itself through an old certificate.
+        status = CalibrationStatus(
+            metric_key="groundedness",
+            calibrated=True,
+            satisfied=True,
+            evaluator_version_hash="abc123",
+            stale_for_version="def456",
+            n_examples=120,
+            kappa=0.9,
+        )
+        report = evaluate_gates(
+            self.gate_set(require_calibration=True),
+            self.metrics(),
+            judge_metrics=["groundedness"],
+            calibrations={"groundedness": status},
+        )
+        assert report.verdict is Verdict.ERROR
+        assert report.blocking_failures[0].rule == "stale_calibration"
+
+    def test_a_failing_threshold_still_dominates_a_calibration_warning(self) -> None:
+        # Calibration state must not mask a real regression, and a warning must not be
+        # promoted into a block by accident.
+        report = evaluate_gates(
+            self.gate_set(),
+            [Metric(key="groundedness", value=0.5, count=100)],
+            judge_metrics=["groundedness"],
+        )
+        assert report.verdict is Verdict.FAIL
+        assert report.exit_code == ExitCode.BLOCKING_FAILURE
+
+    def test_thresholds_can_be_tightened_per_gate_set(self) -> None:
+        gate_set = self.gate_set(require_calibration={"min_kappa": 0.9, "required": False})
+        requirement = gate_set.calibration_requirement
+        assert requirement is not None
+        assert requirement.min_kappa == 0.9
+        # `required: false` keeps it advisory even with custom thresholds.
+        report = evaluate_gates(gate_set, self.metrics(), judge_metrics=["groundedness"])
+        assert report.verdict is Verdict.WARN

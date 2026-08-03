@@ -30,7 +30,16 @@ from evalforge_api.errors import ConflictError, NotFoundError
 from evalforge_core.aggregate import aggregate_scores
 from evalforge_core.compare import Comparison, compare_metrics
 from evalforge_core.gates import GateReport, evaluate_gates
-from evalforge_types import ExampleResult, GateRule, GateSet, Metric, ResultStatus, Score, Severity
+from evalforge_types import (
+    CalibrationRequirementSpec,
+    ExampleResult,
+    GateRule,
+    GateSet,
+    Metric,
+    ResultStatus,
+    Score,
+    Severity,
+)
 
 
 def slice_key(slice_: dict[str, Any] | None) -> str:
@@ -419,7 +428,15 @@ class ExperimentService:
         return GateSet(
             name=gate_set.name,
             require_dataset_match=gate_set.require_dataset_match,
-            require_calibration=gate_set.require_calibration,
+            # Two columns, one field: the boolean says whether calibration is enforced
+            # and the JSONB says with which thresholds. Rebuilding the spec when the
+            # JSONB is present keeps a tightened threshold visible on the server side
+            # rather than collapsing back to the defaults.
+            require_calibration=(
+                CalibrationRequirementSpec(**gate_set.calibration_requirement)
+                if gate_set.calibration_requirement
+                else gate_set.require_calibration
+            ),
             rules=[
                 GateRule(
                     metric_key=rule.metric_key,

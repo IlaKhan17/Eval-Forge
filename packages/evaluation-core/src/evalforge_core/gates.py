@@ -15,9 +15,19 @@ Two properties matter more than anything else here:
 
 from __future__ import annotations
 
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass, field
 
-from evalforge_types import ExitCode, GateResult, GateRule, GateSet, Metric, Severity, Verdict
+from evalforge_types import (
+    CalibrationStatus,
+    ExitCode,
+    GateResult,
+    GateRule,
+    GateSet,
+    Metric,
+    Severity,
+    Verdict,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,12 +64,22 @@ def evaluate_gates(
     baseline: list[Metric] | None = None,
     *,
     dataset_match: bool = True,
+    judge_metrics: Collection[str] = (),
+    calibrations: Mapping[str, CalibrationStatus] | None = None,
 ) -> GateReport:
-    """Apply every rule in the set and combine the verdicts."""
+    """Apply every rule in the set and combine the verdicts.
+
+    `judge_metrics` names the metrics produced by LLM judges. The gate engine cannot
+    infer it — a `Metric` is just a key and a number — and it is needed because gating on
+    a judge nobody has checked is the specific thing calibration exists to catch.
+    """
     index = {(m.key, _key(m.slice)): m for m in candidate}
     base_index = {(m.key, _key(m.slice)): m for m in (baseline or [])}
 
     results = [_apply(rule, index, base_index) for rule in gate_set.rules]
+    results.extend(
+        _calibration_results(gate_set, judge_metrics=judge_metrics, calibrations=calibrations or {})
+    )
 
     if gate_set.require_dataset_match and not dataset_match:
         results.append(
@@ -77,6 +97,117 @@ def evaluate_gates(
         )
 
     return GateReport(results=results, verdict=_combine(results))
+
+
+def _calibration_results(
+    gate_set: GateSet,
+    *,
+    judge_metrics: Collection[str],
+    calibrations: Mapping[str, CalibrationStatus],
+) -> list[GateResult]:
+    """One result per gated judge metric, describing the state of its calibration.
+
+    Four distinct states, because they have four different fixes:
+
+    - **no calibration** — go and calibrate it
+    - **calibration for a different evaluator version** — the rubric or model changed, so
+      the old evidence does not apply; re-calibrate
+    - **calibrated and failing the requirement** — fix the judge or the rubric
+    - **calibrated and satisfying it** — nothing to do, but the numbers still appear in
+      the report so the reader can see what "trusted" rests on
+
+    Whether these block depends on `require_calibration`. When it is off they are
+    warnings, never silence: a merge gated on an unvalidated number is worth saying out
+    loud even when nobody has asked for it to be enforced.
+    """
+    requirement = gate_set.calibration_requirement
+    gated_judges = sorted(
+        {rule.metric_key for rule in gate_set.rules if rule.metric_key in set(judge_metrics)}
+    )
+    if not gated_judges:
+        return []
+
+    blocking = requirement is not None and requirement.required
+    severity = Severity.BLOCK if blocking else Severity.WARN
+    results: list[GateResult] = []
+
+    for metric_key in gated_judges:
+        status = calibrations.get(metric_key)
+
+        if status is None or not status.calibrated:
+            results.append(
+                GateResult(
+                    metric_key=metric_key,
+                    verdict=(Verdict.ERROR if blocking else Verdict.FAIL).value,
+                    severity=severity,
+                    rule="uncalibrated_judge",
+                    message=(
+                        f"{metric_key} is gated on an LLM judge with no calibration. "
+                        "The number has never been checked against a human, so the "
+                        "gate is blocking merges on an unvalidated measurement. Run "
+                        "`evalforge calibrate` against a labelled set."
+                    ),
+                )
+            )
+            continue
+
+        if status.is_stale:
+            results.append(
+                GateResult(
+                    metric_key=metric_key,
+                    verdict=(Verdict.ERROR if blocking else Verdict.FAIL).value,
+                    severity=severity,
+                    rule="stale_calibration",
+                    message=(
+                        f"{metric_key} has a calibration for evaluator version "
+                        f"{status.evaluator_version_hash} but the run used "
+                        f"{status.stale_for_version}. The rubric, model, or judge "
+                        "parameters changed, which means the ruler changed; the old "
+                        "calibration says nothing about the new judge."
+                    ),
+                )
+            )
+            continue
+
+        if status.satisfied is False:
+            results.append(
+                GateResult(
+                    metric_key=metric_key,
+                    verdict=(Verdict.ERROR if blocking else Verdict.FAIL).value,
+                    severity=severity,
+                    rule="calibration_requirement",
+                    actual=status.kappa,
+                    message=(
+                        f"{metric_key} judge calibration does not meet the requirement: "
+                        + "; ".join(status.failures)
+                    ),
+                )
+            )
+            continue
+
+        results.append(
+            GateResult(
+                metric_key=metric_key,
+                verdict=Verdict.PASS.value,
+                severity=Severity.WARN,
+                rule="calibrated",
+                actual=status.kappa,
+                message=_calibrated_message(status),
+            )
+        )
+
+    return results
+
+
+def _calibrated_message(status: CalibrationStatus) -> str:
+    kappa = "undefined" if status.kappa is None else f"{status.kappa:.3f}"
+    agreement = "?" if status.agreement is None else f"{status.agreement:.3f}"
+    ceiling = " (at the human ceiling)" if status.at_human_ceiling else ""
+    suffix = f" — {'; '.join(status.warnings)}" if status.warnings else ""
+    return (
+        f"{status.metric_key} judge calibrated on {status.n_examples} examples: "
+        f"agreement {agreement}, κ {kappa}{ceiling}{suffix}"
+    )
 
 
 def _apply(  # noqa: PLR0911 — one early return per gate clause reads better than nesting

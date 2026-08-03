@@ -1,0 +1,120 @@
+{"id": "tone-a000", "input": {"body": "Thanks for reaching out — could you send over pricing for 10 seats?"}, "output": "Thanks for reaching out — could you send over pricing for 10 seats?", "human_label": "acceptable", "second_human_label": "unacceptable"}
+{"id": "tone-a001", "input": {"body": "Appreciate the note. We're evaluating vendors this quarter; happy to talk next week."}, "output": "Appreciate the note. We're evaluating vendors this quarter; happy to talk next week.", "human_label": "acceptable", "second_human_label": "unacceptable"}
+{"id": "tone-a002", "input": {"body": "This looks interesting. Can you share a case study from logistics?"}, "output": "This looks interesting. Can you share a case study from logistics?", "human_label": "acceptable", "second_human_label": "unacceptable"}
+{"id": "tone-a003", "input": {"body": "Thank you, but we've just signed with another provider. Best of luck."}, "output": "Thank you, but we've just signed with another provider. Best of luck.", "human_label": "acceptable", "second_human_label": "acceptable"}
+{"id": "tone-a004", "input": {"body": "Not a fit right now, though I'd welcome a check-in next half."}, "output": "Not a fit right now, though I'd welcome a check-in next half.", "human_label": "acceptable", "second_human_label": "acceptable"}
+{"id": "tone-a005", "input": {"body": "Could you clarify whether SSO is included in the base plan?"}, "output": "Could you clarify whether SSO is included in the base plan?", "human_label": "acceptable", "second_human_label": "acceptable"}
+{"id": "tone-a006", "input": {"body": "Thanks for reaching out — could you send over pricing for 5 seats?"}, "output": "Thanks for reaching out — could you send over pricing for 5 seats?", "human_label": "acceptable", "second_human_label": "acceptable"}
+{"id": "tone-a007", "input": {"body": "Appreciate the note. We're evaluating vendors this quarter; happy to talk Tuesday."}, "output": "Appreciate the note. We're evaluating vendors this quarter; happy to talk Tuesday.", "human_label": "acceptable", "second_human_label": "acceptable"}
+{"id": "tone-a008", "input": {"body": "This looks interesting. Can you share a case study from logistics?"}, "output": "This looks interesting. Can you share a case study from logistics?", "human_label": "acceptable", "second_human_label": "acceptable"}
+{"id": "tone-a009", "input": {"body": "Thank you, but we've just signed with another provider. Best of luck."}, "output": "Thank you, but we've just signed with another provider. Best of luck.", "human_label": "acceptable", "second_human_label": "acceptable"}
+{"id": "tone-a010", "input": {"body": "Not a fit right now, though I'd welcome a check-in next half."}, "output": "Not a fit right now, though I'd welcome a check-in next half.", "human_label": "acceptable", "second_human_label": "acceptable"}
+{"id": "tone-a011", "input": {"body": "Could you clarify whether SOC 2 reporting is included in the base plan?"}, "output": "Could you clarify whether SOC 2 reporting is included in the base plan?", "human_label": "acceptable", "second_human_label": "acceptable"}
+{"id": "tone-a012", "input": {"body": "Thanks for reaching out — could you send over pricing for 10 seats?"}, "output": "Thanks for reaching out — could you send over pricing for 10 seats?", "human_label": "acceptable", "second_human_label": "acceptable"}
+{"id": "tone-a013", "input": {"body": "Appreciate the note. We're evaluating vendors this quarter; happy to talk next week."}, "output": "Appreciate the note. We're evaluating vendors this quarter; happy to talk next week.", "human_label": "acceptable", "second_human_label": "acceptable"}
+{"id": "tone-a014", "input": {"body": "This looks interesting. Can you share a case study from logistics?"}, "output": "This looks interesting. Can you share a case study from logistics?", "human_label": "acceptable"}
+{"id": "tone-a015", "input": {"body": "Thank you, but we've just signed with another provider. Best of luck."}, "output": "Thank you, but we've just signed with another provider. Best of luck.", "human_label": "acceptable"}
+{"id": "tone-a016", "input": {"body": "Not a fit right now, though I'd welcome a check-in next year."}, "output": "Not a fit right now, though I'd welcome a check-in next year.", "human_label": "acceptable"}
+{"id": "tone-a017", "input": {"body": "Could you clarify whether the sandbox is included in the base plan?"}, "output": "Could you clarify whether the sandbox is included in the base plan?", "human_label": "acceptable"}
+{"id": "tone-a018", "input": {"body": "Thanks for reaching out — could you send over pricing for 120 seats?"}, "output": "Thanks for reaching out — could you send over pricing for 120 seats?", "human_label": "acceptable"}
+{"id": "tone-a019", "input": {"body": "Appreciate the note. We're evaluating vendors this quarter; happy to talk Thursday."}, "output": "Appreciate the note. We're evaluating vendors this quarter; happy to talk Thursday.", "human_label": "acceptable"}
+{"id": "tone-a020", "input": {"body": "This looks interesting. Can you share a case study from education?"}, "output": "This looks interesting. Can you share a case study from education?", "human_label": "acceptable"}
+{"id": "tone-a021", "input": {"body": "Thank you, but we've just signed with another provider. Best of luck."}, "output": "Thank you, but we've just signed with another provider. Best of luck.", "human_label": "acceptable"}
+{"id": "tone-a022", "input": {"body": "Not a fit right now, though I'd welcome a check-in next year."}, "output": "Not a fit right now, though I'd welcome a check-in next year.", "human_label": "acceptable"}
+{"id": "tone-a023", "input": {"body": "Could you clarify whether SOC 2 reporting is included in the base plan?"}, "output": "Could you clarify whether SOC 2 reporting is included in the base plan?", "human_label": "acceptable"}
+{"id": "tone-a024", "input": {"body": "Thanks for reaching out — could you send over pricing for 50 seats?"}, "output": "Thanks for reaching out — could you send over pricing for 50 seats?", "human_label": "acceptable"}
+{"id": "tone-a025", "input": {"body": "Appreciate the note. We're evaluating vendors this quarter; happy to talk Tuesday."}, "output": "Appreciate the note. We're evaluating vendors this quarter; happy to talk Tuesday.", "human_label": "acceptable"}
+{"id": "tone-a026", "input": {"body": "This looks interesting. Can you share a case study from healthcare?"}, "output": "This looks interesting. Can you share a case study from healthcare?", "human_label": "acceptable"}
+{"id": "tone-a027", "input": {"body": "Thank you, but we've just signed with another provider. Best of luck."}, "output": "Thank you, but we've just signed with another provider. Best of luck.", "human_label": "acceptable"}
+{"id": "tone-a028", "input": {"body": "Not a fit right now, though I'd welcome a check-in next year."}, "output": "Not a fit right now, though I'd welcome a check-in next year.", "human_label": "acceptable"}
+{"id": "tone-a029", "input": {"body": "Could you clarify whether audit logs is included in the base plan?"}, "output": "Could you clarify whether audit logs is included in the base plan?", "human_label": "acceptable"}
+{"id": "tone-a030", "input": {"body": "Thanks for reaching out — could you send over pricing for 10 seats?"}, "output": "Thanks for reaching out — could you send over pricing for 10 seats?", "human_label": "acceptable"}
+{"id": "tone-a031", "input": {"body": "Appreciate the note. We're evaluating vendors this quarter; happy to talk the 14th."}, "output": "Appreciate the note. We're evaluating vendors this quarter; happy to talk the 14th.", "human_label": "acceptable"}
+{"id": "tone-a032", "input": {"body": "This looks interesting. Can you share a case study from gaming?"}, "output": "This looks interesting. Can you share a case study from gaming?", "human_label": "acceptable"}
+{"id": "tone-a033", "input": {"body": "Thank you, but we've just signed with another provider. Best of luck."}, "output": "Thank you, but we've just signed with another provider. Best of luck.", "human_label": "acceptable"}
+{"id": "tone-a034", "input": {"body": "Not a fit right now, though I'd welcome a check-in next year."}, "output": "Not a fit right now, though I'd welcome a check-in next year.", "human_label": "acceptable"}
+{"id": "tone-a035", "input": {"body": "Could you clarify whether SOC 2 reporting is included in the base plan?"}, "output": "Could you clarify whether SOC 2 reporting is included in the base plan?", "human_label": "acceptable"}
+{"id": "tone-a036", "input": {"body": "Thanks for reaching out — could you send over pricing for 10 seats?"}, "output": "Thanks for reaching out — could you send over pricing for 10 seats?", "human_label": "acceptable"}
+{"id": "tone-a037", "input": {"body": "Appreciate the note. We're evaluating vendors this quarter; happy to talk next week."}, "output": "Appreciate the note. We're evaluating vendors this quarter; happy to talk next week.", "human_label": "acceptable"}
+{"id": "tone-a038", "input": {"body": "This looks interesting. Can you share a case study from gaming?"}, "output": "This looks interesting. Can you share a case study from gaming?", "human_label": "acceptable"}
+{"id": "tone-a039", "input": {"body": "Thank you, but we've just signed with another provider. Best of luck."}, "output": "Thank you, but we've just signed with another provider. Best of luck.", "human_label": "acceptable"}
+{"id": "tone-a040", "input": {"body": "Not a fit right now, though I'd welcome a check-in next half."}, "output": "Not a fit right now, though I'd welcome a check-in next half.", "human_label": "acceptable"}
+{"id": "tone-a041", "input": {"body": "Could you clarify whether SOC 2 reporting is included in the base plan?"}, "output": "Could you clarify whether SOC 2 reporting is included in the base plan?", "human_label": "acceptable"}
+{"id": "tone-a042", "input": {"body": "Thanks for reaching out — could you send over pricing for 25 seats?"}, "output": "Thanks for reaching out — could you send over pricing for 25 seats?", "human_label": "acceptable"}
+{"id": "tone-a043", "input": {"body": "Appreciate the note. We're evaluating vendors this quarter; happy to talk the 14th."}, "output": "Appreciate the note. We're evaluating vendors this quarter; happy to talk the 14th.", "human_label": "acceptable"}
+{"id": "tone-a044", "input": {"body": "This looks interesting. Can you share a case study from logistics?"}, "output": "This looks interesting. Can you share a case study from logistics?", "human_label": "acceptable"}
+{"id": "tone-a045", "input": {"body": "Thank you, but we've just signed with another provider. Best of luck."}, "output": "Thank you, but we've just signed with another provider. Best of luck.", "human_label": "acceptable"}
+{"id": "tone-a046", "input": {"body": "Not a fit right now, though I'd welcome a check-in next quarter."}, "output": "Not a fit right now, though I'd welcome a check-in next quarter.", "human_label": "acceptable"}
+{"id": "tone-a047", "input": {"body": "Could you clarify whether the sandbox is included in the base plan?"}, "output": "Could you clarify whether the sandbox is included in the base plan?", "human_label": "acceptable"}
+{"id": "tone-a048", "input": {"body": "Thanks for reaching out — could you send over pricing for 5 seats?"}, "output": "Thanks for reaching out — could you send over pricing for 5 seats?", "human_label": "acceptable"}
+{"id": "tone-a049", "input": {"body": "Appreciate the note. We're evaluating vendors this quarter; happy to talk the 14th."}, "output": "Appreciate the note. We're evaluating vendors this quarter; happy to talk the 14th.", "human_label": "acceptable"}
+{"id": "tone-a050", "input": {"body": "This looks interesting. Can you share a case study from logistics?"}, "output": "This looks interesting. Can you share a case study from logistics?", "human_label": "acceptable"}
+{"id": "tone-a051", "input": {"body": "Thank you, but we've just signed with another provider. Best of luck."}, "output": "Thank you, but we've just signed with another provider. Best of luck.", "human_label": "acceptable"}
+{"id": "tone-a052", "input": {"body": "Not a fit right now, though I'd welcome a check-in next half."}, "output": "Not a fit right now, though I'd welcome a check-in next half.", "human_label": "acceptable"}
+{"id": "tone-a053", "input": {"body": "Could you clarify whether the API is included in the base plan?"}, "output": "Could you clarify whether the API is included in the base plan?", "human_label": "acceptable"}
+{"id": "tone-a054", "input": {"body": "Thanks for reaching out — could you send over pricing for 50 seats?"}, "output": "Thanks for reaching out — could you send over pricing for 50 seats?", "human_label": "acceptable"}
+{"id": "tone-a055", "input": {"body": "Appreciate the note. We're evaluating vendors this quarter; happy to talk the 14th."}, "output": "Appreciate the note. We're evaluating vendors this quarter; happy to talk the 14th.", "human_label": "acceptable"}
+{"id": "tone-a056", "input": {"body": "This looks interesting. Can you share a case study from logistics?"}, "output": "This looks interesting. Can you share a case study from logistics?", "human_label": "acceptable"}
+{"id": "tone-a057", "input": {"body": "Thank you, but we've just signed with another provider. Best of luck."}, "output": "Thank you, but we've just signed with another provider. Best of luck.", "human_label": "acceptable"}
+{"id": "tone-a058", "input": {"body": "Not a fit right now, though I'd welcome a check-in next quarter."}, "output": "Not a fit right now, though I'd welcome a check-in next quarter.", "human_label": "acceptable"}
+{"id": "tone-a059", "input": {"body": "Could you clarify whether the API is included in the base plan?"}, "output": "Could you clarify whether the API is included in the base plan?", "human_label": "acceptable"}
+{"id": "tone-u000", "input": {"body": "stop emailing me"}, "output": "stop emailing me", "human_label": "unacceptable", "second_human_label": "unacceptable"}
+{"id": "tone-u001", "input": {"body": "Who gave you my address? Remove it."}, "output": "Who gave you my address? Remove it.", "human_label": "unacceptable", "second_human_label": "unacceptable"}
+{"id": "tone-u002", "input": {"body": "Not interested. Do not follow up."}, "output": "Not interested. Do not follow up.", "human_label": "unacceptable", "second_human_label": "unacceptable"}
+{"id": "tone-u003", "input": {"body": "This is the third email. Take me off the list."}, "output": "This is the third email. Take me off the list.", "human_label": "unacceptable", "second_human_label": "unacceptable"}
+{"id": "tone-u004", "input": {"body": "no"}, "output": "no", "human_label": "unacceptable", "second_human_label": "unacceptable"}
+{"id": "tone-u005", "input": {"body": "Why do you keep contacting me about SSO?"}, "output": "Why do you keep contacting me about SSO?", "human_label": "unacceptable", "second_human_label": "unacceptable"}
+{"id": "tone-u006", "input": {"body": "stop emailing me"}, "output": "stop emailing me", "human_label": "unacceptable", "second_human_label": "unacceptable"}
+{"id": "tone-u007", "input": {"body": "Who gave you my address? Remove it."}, "output": "Who gave you my address? Remove it.", "human_label": "unacceptable", "second_human_label": "unacceptable"}
+{"id": "tone-u008", "input": {"body": "Not interested. Do not follow up."}, "output": "Not interested. Do not follow up.", "human_label": "unacceptable", "second_human_label": "unacceptable"}
+{"id": "tone-u009", "input": {"body": "This is the third email. Take me off the list."}, "output": "This is the third email. Take me off the list.", "human_label": "unacceptable", "second_human_label": "unacceptable"}
+{"id": "tone-u010", "input": {"body": "no"}, "output": "no", "human_label": "unacceptable"}
+{"id": "tone-u011", "input": {"body": "Why do you keep contacting me about audit logs?"}, "output": "Why do you keep contacting me about audit logs?", "human_label": "unacceptable"}
+{"id": "tone-u012", "input": {"body": "stop emailing me"}, "output": "stop emailing me", "human_label": "unacceptable"}
+{"id": "tone-u013", "input": {"body": "Who gave you my address? Remove it."}, "output": "Who gave you my address? Remove it.", "human_label": "unacceptable"}
+{"id": "tone-u014", "input": {"body": "Not interested. Do not follow up."}, "output": "Not interested. Do not follow up.", "human_label": "unacceptable"}
+{"id": "tone-u015", "input": {"body": "This is the third email. Take me off the list."}, "output": "This is the third email. Take me off the list.", "human_label": "unacceptable"}
+{"id": "tone-u016", "input": {"body": "no"}, "output": "no", "human_label": "unacceptable"}
+{"id": "tone-u017", "input": {"body": "Why do you keep contacting me about SSO?"}, "output": "Why do you keep contacting me about SSO?", "human_label": "unacceptable"}
+{"id": "tone-u018", "input": {"body": "stop emailing me"}, "output": "stop emailing me", "human_label": "unacceptable"}
+{"id": "tone-u019", "input": {"body": "Who gave you my address? Remove it."}, "output": "Who gave you my address? Remove it.", "human_label": "unacceptable"}
+{"id": "tone-u020", "input": {"body": "Not interested. Do not follow up."}, "output": "Not interested. Do not follow up.", "human_label": "unacceptable"}
+{"id": "tone-u021", "input": {"body": "This is the third email. Take me off the list."}, "output": "This is the third email. Take me off the list.", "human_label": "unacceptable"}
+{"id": "tone-u022", "input": {"body": "no"}, "output": "no", "human_label": "unacceptable"}
+{"id": "tone-u023", "input": {"body": "Why do you keep contacting me about the sandbox?"}, "output": "Why do you keep contacting me about the sandbox?", "human_label": "unacceptable"}
+{"id": "tone-u024", "input": {"body": "stop emailing me"}, "output": "stop emailing me", "human_label": "unacceptable"}
+{"id": "tone-u025", "input": {"body": "Who gave you my address? Remove it."}, "output": "Who gave you my address? Remove it.", "human_label": "unacceptable"}
+{"id": "tone-u026", "input": {"body": "Not interested. Do not follow up."}, "output": "Not interested. Do not follow up.", "human_label": "unacceptable"}
+{"id": "tone-u027", "input": {"body": "This is the third email. Take me off the list."}, "output": "This is the third email. Take me off the list.", "human_label": "unacceptable"}
+{"id": "tone-u028", "input": {"body": "no"}, "output": "no", "human_label": "unacceptable"}
+{"id": "tone-u029", "input": {"body": "Why do you keep contacting me about audit logs?"}, "output": "Why do you keep contacting me about audit logs?", "human_label": "unacceptable"}
+{"id": "tone-u030", "input": {"body": "stop emailing me"}, "output": "stop emailing me", "human_label": "unacceptable"}
+{"id": "tone-u031", "input": {"body": "Who gave you my address? Remove it."}, "output": "Who gave you my address? Remove it.", "human_label": "unacceptable"}
+{"id": "tone-u032", "input": {"body": "Not interested. Do not follow up."}, "output": "Not interested. Do not follow up.", "human_label": "unacceptable"}
+{"id": "tone-u033", "input": {"body": "This is the third email. Take me off the list."}, "output": "This is the third email. Take me off the list.", "human_label": "unacceptable"}
+{"id": "tone-u034", "input": {"body": "no"}, "output": "no", "human_label": "unacceptable"}
+{"id": "tone-u035", "input": {"body": "Why do you keep contacting me about the sandbox?"}, "output": "Why do you keep contacting me about the sandbox?", "human_label": "unacceptable"}
+{"id": "tone-u036", "input": {"body": "stop emailing me"}, "output": "stop emailing me", "human_label": "unacceptable"}
+{"id": "tone-u037", "input": {"body": "Who gave you my address? Remove it."}, "output": "Who gave you my address? Remove it.", "human_label": "unacceptable"}
+{"id": "tone-u038", "input": {"body": "Not interested. Do not follow up."}, "output": "Not interested. Do not follow up.", "human_label": "unacceptable"}
+{"id": "tone-u039", "input": {"body": "This is the third email. Take me off the list."}, "output": "This is the third email. Take me off the list.", "human_label": "unacceptable"}
+{"id": "tone-u040", "input": {"body": "no"}, "output": "no", "human_label": "unacceptable"}
+{"id": "tone-u041", "input": {"body": "Why do you keep contacting me about SSO?"}, "output": "Why do you keep contacting me about SSO?", "human_label": "unacceptable"}
+{"id": "tone-u042", "input": {"body": "stop emailing me"}, "output": "stop emailing me", "human_label": "unacceptable"}
+{"id": "tone-u043", "input": {"body": "Who gave you my address? Remove it."}, "output": "Who gave you my address? Remove it.", "human_label": "unacceptable"}
+{"id": "tone-u044", "input": {"body": "Not interested. Do not follow up."}, "output": "Not interested. Do not follow up.", "human_label": "unacceptable"}
+{"id": "tone-u045", "input": {"body": "This is the third email. Take me off the list."}, "output": "This is the third email. Take me off the list.", "human_label": "unacceptable"}
+{"id": "tone-u046", "input": {"body": "no"}, "output": "no", "human_label": "unacceptable"}
+{"id": "tone-u047", "input": {"body": "Why do you keep contacting me about the API?"}, "output": "Why do you keep contacting me about the API?", "human_label": "unacceptable"}
+{"id": "tone-u048", "input": {"body": "stop emailing me"}, "output": "stop emailing me", "human_label": "unacceptable"}
+{"id": "tone-u049", "input": {"body": "Who gave you my address? Remove it."}, "output": "Who gave you my address? Remove it.", "human_label": "unacceptable"}
+{"id": "tone-u050", "input": {"body": "Not interested. Do not follow up."}, "output": "Not interested. Do not follow up.", "human_label": "unacceptable"}
+{"id": "tone-u051", "input": {"body": "This is the third email. Take me off the list."}, "output": "This is the third email. Take me off the list.", "human_label": "unacceptable"}
+{"id": "tone-u052", "input": {"body": "no"}, "output": "no", "human_label": "unacceptable"}
+{"id": "tone-u053", "input": {"body": "Why do you keep contacting me about audit logs?"}, "output": "Why do you keep contacting me about audit logs?", "human_label": "unacceptable"}
+{"id": "tone-u054", "input": {"body": "stop emailing me"}, "output": "stop emailing me", "human_label": "unacceptable"}
+{"id": "tone-u055", "input": {"body": "Who gave you my address? Remove it."}, "output": "Who gave you my address? Remove it.", "human_label": "unacceptable"}
+{"id": "tone-u056", "input": {"body": "Not interested. Do not follow up."}, "output": "Not interested. Do not follow up.", "human_label": "unacceptable"}
+{"id": "tone-u057", "input": {"body": "This is the third email. Take me off the list."}, "output": "This is the third email. Take me off the list.", "human_label": "unacceptable"}
+{"id": "tone-u058", "input": {"body": "no"}, "output": "no", "human_label": "unacceptable"}
+{"id": "tone-u059", "input": {"body": "Why do you keep contacting me about the API?"}, "output": "Why do you keep contacting me about the API?", "human_label": "unacceptable"}

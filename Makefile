@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 
 .PHONY: help setup test test-unit test-integration lint fmt typecheck arch check dev down clean \
-	bootstrap web web-install web-check api
+	bootstrap web web-install web-check api calibrate
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -53,6 +53,11 @@ web-install: ## Install dashboard dependencies
 
 web: ## Run the dashboard (needs 'make api' and 'make bootstrap' first)
 	pnpm --dir apps/web dev
+
+calibrate: ## Recompute the reference judge calibration from recorded verdicts (free)
+	uv run evalforge calibrate evals/suites/reply-tone.yaml \
+		-e acceptable_to_followup \
+		--verdicts evals/calibration/reply-tone.verdicts.jsonl
 
 web-check: ## Lint, typecheck, test, and build the dashboard
 	pnpm --dir apps/web lint

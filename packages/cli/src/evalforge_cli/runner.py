@@ -15,11 +15,27 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from evalforge_cli.registry import build_evaluators, estimate_judge_calls
+from evalforge_cli.calibration_store import (
+    StoredCalibration,
+    evaluator_version_hash,
+    load_all,
+    status_for,
+)
+from evalforge_cli.registry import build_evaluators, estimate_judge_calls, load_rubric_text
 from evalforge_cli.suite.loader import LoadedSuite, SuiteError
 from evalforge_core import Dataset, EvalResult, RunConfig, run_suite
+from evalforge_core.calibration import CalibrationRequirement, check_requirement
+from evalforge_core.calibration_runner import report_from_dict
 from evalforge_core.compare import compare_metrics
-from evalforge_types import ExitCode, GateRule, GateSet, Metric, Severity
+from evalforge_types import (
+    CalibrationRequirementSpec,
+    CalibrationStatus,
+    ExitCode,
+    GateRule,
+    GateSet,
+    Metric,
+    Severity,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -161,7 +177,95 @@ def build_gate_set(loaded: LoadedSuite) -> GateSet | None:
         name=suite.name,
         rules=rules,
         require_dataset_match=suite.baseline.require_dataset_match,
+        # The mapping form is validated here rather than in the suite schema, so a bad
+        # threshold names the gate field it came from instead of a pydantic union error.
+        require_calibration=(
+            suite.calibration.require
+            if isinstance(suite.calibration.require, bool)
+            else CalibrationRequirementSpec(**suite.calibration.require)
+        ),
     )
+
+
+def judge_metric_keys(loaded: LoadedSuite) -> list[str]:
+    """Metric keys produced by LLM judges.
+
+    The gate engine cannot work this out for itself — a `Metric` is a key and a number —
+    and it needs to know, because gating on a judge nobody has checked is the specific
+    thing calibration exists to make visible.
+    """
+    return [spec.name for spec in loaded.suite.evaluators if spec.type == "llm_judge"]
+
+
+def resolve_calibrations(loaded: LoadedSuite) -> dict[str, CalibrationStatus]:
+    """Load stored calibration evidence and re-check it against the current thresholds.
+
+    Re-checked, not trusted. The stored record carries the `satisfied` verdict from when
+    it was produced, but the suite's thresholds may have been tightened since. Reading
+    the old boolean would make `min_kappa` decorative until somebody remembered to
+    re-run a paid calibration.
+    """
+    suite = loaded.suite
+    directory = loaded.resolve_path(suite.calibration.directory)
+    records = load_all(directory)
+
+    statuses: dict[str, CalibrationStatus] = {}
+    for spec in suite.evaluators:
+        if spec.type != "llm_judge":
+            continue
+        version = evaluator_version_hash(spec, rubric=load_rubric_text(spec, loaded))
+        status = status_for(
+            records, evaluator=spec.name, metric_key=spec.name, version_hash=version
+        )
+        if status.calibrated and not status.is_stale:
+            status = _recheck(status, spec, records)
+        statuses[spec.name] = status
+    return statuses
+
+
+def _recheck(
+    status: CalibrationStatus, spec: Any, records: list[StoredCalibration]
+) -> CalibrationStatus:
+    record = next(
+        r
+        for r in records
+        if r.evaluator == spec.name and r.version_hash == status.evaluator_version_hash
+    )
+    report = report_from_dict(record.report)
+    check = check_requirement(report, requirement_for(spec))
+    return status.model_copy(
+        update={
+            "satisfied": check.satisfied,
+            "failures": list(check.failures),
+            "warnings": list(check.warnings),
+        }
+    )
+
+
+def requirement_for(spec: Any) -> CalibrationRequirement:
+    """The thresholds one judge must meet, defaults filled in.
+
+    `None` in the suite means "use the recommended default", not "no limit". A suite that
+    omits `max_false_pass_rate` should still be protected against a judge that waves
+    through work a human rejected.
+    """
+    default = CalibrationRequirement()
+    calibration = spec.calibration
+    if calibration is None:
+        return default
+    return CalibrationRequirement(
+        min_agreement=_or(calibration.min_agreement, default.min_agreement),
+        min_kappa=_or(calibration.min_kappa, default.min_kappa),
+        max_false_pass_rate=_or(calibration.max_false_pass_rate, default.max_false_pass_rate),
+        max_false_fail_rate=_or(calibration.max_false_fail_rate, default.max_false_fail_rate),
+        min_examples=_or(calibration.min_examples, default.min_examples),
+        min_per_class=_or(calibration.min_per_class, default.min_per_class),
+        allow_position_bias=calibration.allow_position_bias,
+    )
+
+
+def _or(value: Any, fallback: Any) -> Any:
+    return fallback if value is None else value
 
 
 def plan_run(loaded: LoadedSuite) -> Plan:
@@ -226,6 +330,8 @@ async def execute(
         models=models,
         config=config,
         suite_name=suite.name,
+        judge_metrics=judge_metric_keys(loaded),
+        calibrations=resolve_calibrations(loaded),
     )
 
     comparison = None

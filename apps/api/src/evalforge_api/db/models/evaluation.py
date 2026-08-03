@@ -221,6 +221,79 @@ class EvaluatorVersion(IdentifiedBase, TimestampMixin):
     )
 
 
+class EvaluatorCalibration(IdentifiedBase, TimestampMixin):
+    """Evidence that a judge agrees with a human, keyed to an evaluator *version*.
+
+    Append-only by convention: a calibration is a measurement taken at a point in time,
+    and overwriting it would destroy the history that answers "when did this judge get
+    worse, and what changed?". The newest row for a version wins.
+
+    Keyed to the version, not the evaluator. A judge whose rubric, model, or parameters
+    changed has a different config hash and therefore no calibration at all — which is
+    the intended behaviour, because the old evidence describes a different ruler.
+    """
+
+    __tablename__ = "evaluator_calibrations"
+
+    project_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    evaluator_version_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("evaluator_versions.id", ondelete="CASCADE")
+    )
+    calibration_dataset_version_id: Mapped[uuid.UUID | None] = mapped_column(default=None)
+    #: Hash of the labelled file, so a changed number can be attributed to a changed
+    #: judge or a changed labelled set rather than being unattributable.
+    labels_hash: Mapped[str | None] = mapped_column(String(64), default=None)
+
+    n_examples: Mapped[int] = mapped_column(Integer, default=0)
+    n_errored: Mapped[int] = mapped_column(Integer, default=0)
+    agreement: Mapped[float | None] = mapped_column(Float, default=None)
+    #: Nullable on purpose. κ is undefined when both raters used a single label, and
+    #: storing 0.0 there would read as "no better than chance" for a judge that was never
+    #: wrong; storing 1.0 would certify one that always answers the same thing.
+    cohens_kappa: Mapped[float | None] = mapped_column(Float, default=None)
+    kappa_kind: Mapped[str] = mapped_column(String(20), default="unweighted")
+    kappa_undefined_reason: Mapped[str | None] = mapped_column(Text, default=None)
+    #: Also nullable, and for the same class of reason: a rate over an empty denominator
+    #: is unmeasured, not zero, and a gate must not read the two the same way.
+    false_pass_rate: Mapped[float | None] = mapped_column(Float, default=None)
+    false_fail_rate: Mapped[float | None] = mapped_column(Float, default=None)
+    human_kappa: Mapped[float | None] = mapped_column(Float, default=None)
+    n_ceiling_examples: Mapped[int] = mapped_column(Integer, default=0)
+
+    confusion_matrix: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    per_class: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list)
+    position_bias: Mapped[dict[str, Any] | None] = mapped_column(JSONB, default=None)
+
+    mean_cost: Mapped[Decimal] = mapped_column(Numeric(18, 8), default=Decimal(0))
+    p50_latency_ms: Mapped[int | None] = mapped_column(Integer, default=None)
+    p95_latency_ms: Mapped[int | None] = mapped_column(Integer, default=None)
+    judge_model: Mapped[str | None] = mapped_column(String(200), default=None)
+
+    requirement: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    satisfied: Mapped[bool] = mapped_column(Boolean, default=False)
+    failures: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    warnings: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    notes: Mapped[list[str]] = mapped_column(JSONB, default=list)
+
+    __table_args__ = (
+        Index(
+            "ix_evaluator_calibrations_version",
+            "project_id",
+            "evaluator_version_id",
+            "created_at",
+        ),
+        CheckConstraint(
+            "agreement IS NULL OR (agreement >= 0 AND agreement <= 1)",
+            name="agreement_ratio",
+        ),
+        CheckConstraint(
+            "cohens_kappa IS NULL OR (cohens_kappa >= -1 AND cohens_kappa <= 1)",
+            name="kappa_range",
+        ),
+        CheckConstraint("n_examples >= 0", name="n_examples_non_negative"),
+    )
+
+
 # ------------------------------------------------------------------- experiments
 
 
@@ -422,6 +495,11 @@ class QualityGateSet(IdentifiedBase, TimestampMixin):
     source_yaml: Mapped[str | None] = mapped_column(Text, default=None)
     require_dataset_match: Mapped[bool] = mapped_column(Boolean, default=True)
     require_calibration: Mapped[bool] = mapped_column(Boolean, default=False)
+    #: The thresholds, when the suite gave any. Stored separately from the boolean so
+    #: "enforced with the recommended defaults" and "enforced with these numbers" are
+    #: distinguishable — otherwise a tightened threshold would be invisible in the mirror
+    #: of what the repository declared.
+    calibration_requirement: Mapped[dict[str, Any] | None] = mapped_column(JSONB, default=None)
 
     rules: Mapped[list[QualityGateRule]] = relationship(back_populates="gate_set")
 

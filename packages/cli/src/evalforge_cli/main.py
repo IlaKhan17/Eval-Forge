@@ -25,11 +25,14 @@ from typing import Annotated, Any
 
 import typer
 
-from evalforge_cli import runner
+from evalforge_cli import calibration, runner
+from evalforge_cli.render import calibration as calibration_render
 from evalforge_cli.render import markdown as markdown_module
 from evalforge_cli.render import report as report_module
 from evalforge_cli.render import terminal
 from evalforge_cli.suite.loader import SuiteError, load_suite
+from evalforge_core.calibration import check_requirement
+from evalforge_core.calibration_runner import report_to_dict
 from evalforge_trajectory import PolicyError, evaluate_policy, load_policy_file
 from evalforge_types import Trace
 
@@ -288,3 +291,103 @@ def policy_check(
 
 if __name__ == "__main__":  # pragma: no cover
     app()
+
+
+@app.command()
+def calibrate(  # noqa: PLR0917 — Typer maps CLI options onto arguments
+    suite_path: Annotated[Path, typer.Argument(help="Path to the suite YAML")],
+    evaluator: Annotated[
+        str, typer.Option("--evaluator", "-e", help="Name of the llm_judge to calibrate")
+    ],
+    labels: Annotated[
+        Path | None,
+        typer.Option(
+            "--labels", help="Labelled JSONL; defaults to the judge's calibration.dataset"
+        ),
+    ] = None,
+    verdicts: Annotated[
+        Path | None,
+        typer.Option(
+            "--verdicts",
+            help="Recompute from recorded judge verdicts instead of calling the model",
+        ),
+    ] = None,
+    model_client: Annotated[
+        str | None,
+        typer.Option("--model-client", help="module:factory returning a ModelClient"),
+    ] = None,
+    concurrency: Annotated[int, typer.Option("--concurrency", help="Parallel judge calls")] = 4,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Report the plan and cost without calling the model")
+    ] = False,
+    write: Annotated[
+        bool, typer.Option("--write/--no-write", help="Store the record for CI to read")
+    ] = True,
+    output: Annotated[
+        Path | None, typer.Option("--output", "-o", help="Also write the raw report JSON here")
+    ] = None,
+) -> None:
+    """Measure a judge against human labels and record the result.
+
+    Exit 0 when the judge meets its requirement, 1 when it does not. Non-zero is
+    deliberate: calibration belongs in CI, and "the judge got worse" should be able to
+    fail a build the same way a metric regression does.
+    """
+    try:
+        loaded = load_suite(suite_path)
+        plan = calibration.plan(loaded, evaluator=evaluator, labels=labels)
+    except (SuiteError, calibration.CalibrationCommandError) as exc:
+        _fail(str(exc), runner.exit_code_for_setup_error())
+        return
+
+    style = terminal.Style(colour=terminal.use_colour(), unicode_=terminal.use_unicode())
+    typer.echo(style.paint(f"EvalForge · calibrate {evaluator}", terminal.BOLD))
+    typer.echo(f"  labelled set     {plan.labels_path} ({len(plan.cases)} examples)")
+    typer.echo(f"  label counts     {plan.label_summary}")
+    typer.echo(f"  judge version    {plan.version_hash}")
+    typer.echo(f"  judge calls      {plan.judge_calls}")
+
+    if dry_run:
+        typer.echo(style.paint("\nno model calls were made", terminal.DIM))
+        raise typer.Exit(0)
+
+    try:
+        report = calibration.produce(
+            plan, verdicts_path=verdicts, model_client=model_client, concurrency=concurrency
+        )
+    except calibration.CalibrationCommandError as exc:
+        _fail(str(exc), runner.exit_code_for_setup_error())
+        return
+    except KeyboardInterrupt:
+        _fail("cancelled", 130)
+        return
+
+    check = check_requirement(report, plan.requirement)
+    typer.echo("")
+    typer.echo(
+        calibration_render.render(
+            report,
+            check,
+            evaluator=evaluator,
+            version_hash=plan.version_hash,
+            style=style,
+        )
+    )
+
+    payload = report_to_dict(report)
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    if write:
+        stored = calibration.store(plan, report, check)
+        typer.echo(f"\nrecorded {stored}")
+        typer.echo(
+            style.paint(
+                "commit this file: it is the evidence CI reads to decide whether the "
+                "judge can be trusted",
+                terminal.DIM,
+            )
+        )
+
+    raise typer.Exit(0 if check.satisfied else 1)

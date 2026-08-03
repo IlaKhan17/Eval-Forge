@@ -88,19 +88,47 @@ class Scale(BaseModel):
 
 
 class Calibration(BaseModel):
-    """A judge's calibration requirement.
+    """One judge's calibration: which labelled set, and what it has to achieve.
 
-    Gating a merge on an unvalidated judge means blocking engineers on a number
-    nobody has checked, so the suite can demand evidence before trusting it.
+    Thresholds live with the evaluator rather than with the gate because they are a
+    property of the measurement — an unsubscribe judge needs a tighter false-pass rate
+    than a tone judge, whatever gate set happens to reference it. Whether falling short
+    *blocks* is the gate set's decision (`calibration.require`).
     """
 
     model_config = ConfigDict(extra="forbid")
 
+    #: Path to the labelled JSONL, relative to the suite file.
     dataset: str
     version: str = "latest-locked"
+    #: Labels that count as "passing", which is what makes the false-pass and false-fail
+    #: rates computable. Without it those two numbers are unmeasured, and they are the
+    #: ones that matter most.
+    passing_labels: list[str] = Field(default_factory=list)
     min_agreement: float | None = Field(default=None, ge=0, le=1)
+    min_kappa: float | None = Field(default=None, ge=-1, le=1)
     max_false_pass_rate: float | None = Field(default=None, ge=0, le=1)
+    max_false_fail_rate: float | None = Field(default=None, ge=0, le=1)
+    min_examples: int | None = Field(default=None, ge=1)
+    min_per_class: int | None = Field(default=None, ge=1)
+    allow_position_bias: bool = False
     required: bool = False
+
+
+class CalibrationPolicy(BaseModel):
+    """Suite-level calibration settings.
+
+    `require` is the enforcement switch: `false` means an uncalibrated gated judge only
+    warns, `true` means it fails the run, and a mapping overrides the thresholds that
+    apply when an evaluator does not state its own.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    #: Where calibration records live, relative to the suite file. They are committed to
+    #: git so `require` works in CI with no server — see calibration_store.py.
+    directory: str = "calibrations"
+    require: bool | dict[str, Any] = False
 
 
 class EvaluatorSpec(BaseModel):
@@ -264,6 +292,7 @@ class Suite(BaseModel):
     execution: Execution = Field(default_factory=Execution)
     evaluators: list[EvaluatorSpec] = Field(min_length=1)
     gates: dict[str, GateSpec] = Field(default_factory=dict)
+    calibration: CalibrationPolicy = Field(default_factory=CalibrationPolicy)
     baseline: BaselineSpec = Field(default_factory=BaselineSpec)
     report: ReportSpec = Field(default_factory=ReportSpec)
 

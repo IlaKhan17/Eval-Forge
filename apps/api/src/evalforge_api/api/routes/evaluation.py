@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
@@ -19,6 +20,7 @@ from evalforge_api.db.models.evaluation import (
     Dataset,
     DatasetVersion,
     Evaluator,
+    EvaluatorCalibration,
     EvaluatorVersion,
     Experiment,
     QualityGateRule,
@@ -32,7 +34,13 @@ from evalforge_api.services.datasets import DatasetService, config_hash
 from evalforge_api.services.experiments import ExperimentService, slice_key
 from evalforge_core.gates import GateReport
 from evalforge_trajectory import PolicyError, load_policy
-from evalforge_types import Example, ExampleResult, GateRule, Severity
+from evalforge_types import (
+    CalibrationRequirementSpec,
+    Example,
+    ExampleResult,
+    GateRule,
+    Severity,
+)
 
 router = APIRouter(prefix="/v1", tags=["evaluation"])
 
@@ -181,7 +189,48 @@ class GateSetIn(BaseModel):
     name: str = Field(max_length=200)
     rules: list[GateRuleIn]
     require_dataset_match: bool = True
+    #: `false`, `true` (recommended thresholds), or a mapping of overrides — the same
+    #: three forms the suite YAML accepts, so the server copy is a faithful mirror of
+    #: what the repository declared rather than a lossy summary of it.
+    require_calibration: bool | CalibrationRequirementSpec = False
     source_yaml: str | None = None
+
+
+class CalibrationIn(BaseModel):
+    """A calibration measurement, as produced by `evalforge calibrate`."""
+
+    labels_hash: str | None = Field(default=None, max_length=64)
+    calibration_dataset_version_id: uuid.UUID | None = None
+    n_examples: int = Field(ge=0)
+    n_errored: int = Field(default=0, ge=0)
+    agreement: float | None = Field(default=None, ge=0, le=1)
+    # Nullable rather than defaulted. κ is undefined when both raters used one label, and
+    # a 0.0 there would read as "no better than chance" for a judge that was never wrong.
+    cohens_kappa: float | None = Field(default=None, ge=-1, le=1)
+    kappa_kind: str = "unweighted"
+    kappa_undefined_reason: str | None = None
+    false_pass_rate: float | None = Field(default=None, ge=0, le=1)
+    false_fail_rate: float | None = Field(default=None, ge=0, le=1)
+    human_kappa: float | None = Field(default=None, ge=-1, le=1)
+    n_ceiling_examples: int = Field(default=0, ge=0)
+    confusion_matrix: dict[str, Any] = Field(default_factory=dict)
+    per_class: list[dict[str, Any]] = Field(default_factory=list)
+    position_bias: dict[str, Any] | None = None
+    mean_cost: float = 0.0
+    p50_latency_ms: int | None = None
+    p95_latency_ms: int | None = None
+    judge_model: str | None = Field(default=None, max_length=200)
+    requirement: dict[str, Any] = Field(default_factory=dict)
+    satisfied: bool = False
+    failures: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    notes: list[str] = Field(default_factory=list)
+
+
+class CalibrationOut(CalibrationIn):
+    id: uuid.UUID
+    evaluator_version_id: uuid.UUID
+    created_at: datetime
 
 
 class CompareIn(BaseModel):
@@ -698,6 +747,103 @@ def _run_out(row: Any) -> RunOut:
     )
 
 
+@router.post(
+    "/evaluator-versions/{version_id}/calibrations",
+    response_model=CalibrationOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def record_calibration(
+    version_id: uuid.UUID, body: CalibrationIn, session: SessionDep, principal: Writer
+) -> CalibrationOut:
+    """Store a calibration against an evaluator version.
+
+    Append-only: a second calibration of the same version adds a row rather than
+    replacing one. A calibration is a measurement taken at a point in time, and
+    overwriting it destroys the history that answers "when did this judge get worse, and
+    what changed?" — which is the question a drifting judge is discovered by.
+    """
+    version = await session.get(EvaluatorVersion, version_id)
+    if version is None or version.project_id != principal.project_id:
+        # 404 for a foreign row, never 403: a 403 confirms it exists.
+        raise NotFoundError("No such evaluator version.")
+
+    row = EvaluatorCalibration(
+        project_id=principal.project_id,
+        evaluator_version_id=version_id,
+        judge_model=body.judge_model or version.judge_model,
+        mean_cost=Decimal(str(body.mean_cost)),
+        **body.model_dump(exclude={"judge_model", "mean_cost"}),
+    )
+    session.add(row)
+    await session.flush()
+    return _calibration_out(row)
+
+
+@router.get(
+    "/evaluator-versions/{version_id}/calibrations",
+    response_model=list[CalibrationOut],
+)
+async def list_calibrations(
+    version_id: uuid.UUID,
+    session: SessionDep,
+    principal: Reader,
+    limit: Annotated[int, Query(ge=1, le=50)] = 10,
+) -> list[CalibrationOut]:
+    """Calibrations for one evaluator version, newest first."""
+    version = await session.get(EvaluatorVersion, version_id)
+    if version is None or version.project_id != principal.project_id:
+        raise NotFoundError("No such evaluator version.")
+
+    rows = (
+        (
+            await session.execute(
+                select(EvaluatorCalibration)
+                .where(
+                    EvaluatorCalibration.project_id == principal.project_id,
+                    EvaluatorCalibration.evaluator_version_id == version_id,
+                )
+                .order_by(EvaluatorCalibration.created_at.desc())
+                .limit(limit)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return [_calibration_out(row) for row in rows]
+
+
+def _calibration_out(row: EvaluatorCalibration) -> CalibrationOut:
+    return CalibrationOut(
+        id=row.id,
+        evaluator_version_id=row.evaluator_version_id,
+        created_at=row.created_at,
+        labels_hash=row.labels_hash,
+        calibration_dataset_version_id=row.calibration_dataset_version_id,
+        n_examples=row.n_examples,
+        n_errored=row.n_errored,
+        agreement=row.agreement,
+        cohens_kappa=row.cohens_kappa,
+        kappa_kind=row.kappa_kind,
+        kappa_undefined_reason=row.kappa_undefined_reason,
+        false_pass_rate=row.false_pass_rate,
+        false_fail_rate=row.false_fail_rate,
+        human_kappa=row.human_kappa,
+        n_ceiling_examples=row.n_ceiling_examples,
+        confusion_matrix=row.confusion_matrix,
+        per_class=row.per_class,
+        position_bias=row.position_bias,
+        mean_cost=float(row.mean_cost),
+        p50_latency_ms=row.p50_latency_ms,
+        p95_latency_ms=row.p95_latency_ms,
+        judge_model=row.judge_model,
+        requirement=row.requirement,
+        satisfied=row.satisfied,
+        failures=row.failures,
+        warnings=row.warnings,
+        notes=row.notes,
+    )
+
+
 # ------------------------------------------------------------ gates and policies
 
 
@@ -725,6 +871,12 @@ async def create_gate_set(
         version=(highest or 0) + 1,
         source_yaml=body.source_yaml,
         require_dataset_match=body.require_dataset_match,
+        require_calibration=body.require_calibration is not False,
+        calibration_requirement=(
+            body.require_calibration.model_dump()
+            if isinstance(body.require_calibration, CalibrationRequirementSpec)
+            else None
+        ),
     )
     session.add(gate_set)
     await session.flush()

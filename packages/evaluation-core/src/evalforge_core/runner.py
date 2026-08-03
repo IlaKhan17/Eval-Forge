@@ -26,7 +26,7 @@ import contextlib
 import inspect
 import json
 import time
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
@@ -37,6 +37,7 @@ from evalforge_core.dataset import Dataset
 from evalforge_core.gates import GateReport, evaluate_gates
 from evalforge_core.types import CorpusEvaluator, EvalContext, Evaluator, ModelClient
 from evalforge_types import (
+    CalibrationStatus,
     Example,
     ExampleResult,
     ExitCode,
@@ -122,6 +123,8 @@ async def run_suite(
     models: ModelClient | None = None,
     config: RunConfig | None = None,
     suite_name: str = "eval",
+    judge_metrics: Sequence[str] = (),
+    calibrations: Mapping[str, CalibrationStatus] | None = None,
     dataset_match: bool = True,
 ) -> EvalResult:
     """Execute a full evaluation and return everything it produced."""
@@ -221,6 +224,8 @@ async def run_suite(
             result.metrics,
             list(baseline) if baseline else None,
             dataset_match=dataset_match,
+            judge_metrics=judge_metrics,
+            calibrations=calibrations,
         )
 
     _check_error_ceiling(result, cfg)

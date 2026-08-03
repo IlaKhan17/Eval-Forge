@@ -8,8 +8,6 @@ prove it saw identical data rather than merely claiming the same label.
 
 from __future__ import annotations
 
-import hashlib
-import json
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -19,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from evalforge_api.db.models.evaluation import Dataset, DatasetExample, DatasetVersion
 from evalforge_api.errors import ConflictError, NotFoundError, UnprocessableError
+from evalforge_core.versioning import config_digest
 from evalforge_types import Example
 from evalforge_types import content_hash as hash_examples
 
@@ -227,9 +226,10 @@ class DatasetService:
 def config_hash(config: dict[str, object]) -> bytes:
     """Hash everything that could change a score.
 
-    Includes the judge model and its parameters, which is the point: a judge whose
-    model silently upgrades underneath you invalidates every historical number, and
-    the only defence is for the pin to be part of the version's identity.
+    Delegates to `evalforge_core.versioning`, which is the canonical implementation. It
+    has to be shared rather than reimplemented: the server stores a calibration against
+    this hash and the CLI decides locally whether that calibration still applies, so two
+    copies of the algorithm would drift and the drift would show up as silently accepting
+    a calibration for a judge that no longer exists.
     """
-    canonical = json.dumps(config, sort_keys=True, separators=(",", ":"), default=str)
-    return hashlib.sha256(canonical.encode("utf-8")).digest()
+    return config_digest(config)

@@ -180,6 +180,16 @@ def _load_schema(spec: EvaluatorSpec, loaded: LoadedSuite) -> dict[str, Any]:
     return parsed
 
 
+def load_rubric_text(spec: EvaluatorSpec, loaded: LoadedSuite) -> str:
+    """The rubric as text, wherever it came from.
+
+    Public because the evaluator's version hash is computed over the rubric *text*, not
+    its path: editing `rubrics/groundedness.md` in place redefines the metric, and a hash
+    over the path would leave the old calibration blessing a different ruler.
+    """
+    return _load_rubric(spec, loaded)
+
+
 def _load_rubric(spec: EvaluatorSpec, loaded: LoadedSuite) -> str:
     if spec.rubric:
         return spec.rubric

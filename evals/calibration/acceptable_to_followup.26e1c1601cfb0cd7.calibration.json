@@ -1,0 +1,102 @@
+{
+  "calibrated_at": "2026-08-03T12:17:24.831730+00:00",
+  "evaluator": "acceptable_to_followup",
+  "evaluator_version_hash": "26e1c1601cfb0cd7",
+  "failures": [],
+  "labels_hash": "84800e324f600a08",
+  "labels_path": "reply-tone.jsonl",
+  "report": {
+    "agreement": 0.9333333333333333,
+    "agreement_ci": [
+      0.8739473292228184,
+      0.9658351025287095
+    ],
+    "at_human_ceiling": false,
+    "confusion": {
+      "counts": [
+        {
+          "count": 54,
+          "human": "acceptable",
+          "judge": "acceptable"
+        },
+        {
+          "count": 6,
+          "human": "acceptable",
+          "judge": "unacceptable"
+        },
+        {
+          "count": 2,
+          "human": "unacceptable",
+          "judge": "acceptable"
+        },
+        {
+          "count": 58,
+          "human": "unacceptable",
+          "judge": "unacceptable"
+        }
+      ],
+      "labels": [
+        "acceptable",
+        "unacceptable"
+      ]
+    },
+    "error_rate": 0.0,
+    "false_fail_rate": 0.1,
+    "false_pass_rate": 0.03333333333333333,
+    "human_kappa": 0.7534246575342466,
+    "judge_kappa_on_ceiling_subset": 0.3513513513513512,
+    "kappa": 0.8666666666666667,
+    "kappa_ci": [
+      0.7796610169491525,
+      0.9494097807757167
+    ],
+    "kappa_kind": "unweighted",
+    "kappa_undefined_reason": null,
+    "leniency": null,
+    "mean_cost": "0.00021",
+    "n_ceiling_examples": 24,
+    "n_errored": 0,
+    "n_examples": 120,
+    "notes": [],
+    "p50_latency_ms": 780.0,
+    "p95_latency_ms": 780.0,
+    "per_class": [
+      {
+        "label": "acceptable",
+        "precision": 0.9642857142857143,
+        "recall": 0.9,
+        "support": 60,
+        "top_confusion": [
+          "unacceptable",
+          6
+        ]
+      },
+      {
+        "label": "unacceptable",
+        "precision": 0.90625,
+        "recall": 0.9666666666666667,
+        "support": 60,
+        "top_confusion": [
+          "acceptable",
+          2
+        ]
+      }
+    ],
+    "position_bias": null,
+    "scale_compression": null,
+    "total_cost": "0.02520",
+    "verbosity_bias": null
+  },
+  "requirement": {
+    "allow_position_bias": false,
+    "max_false_fail_rate": 0.15,
+    "max_false_pass_rate": 0.04,
+    "min_agreement": 0.85,
+    "min_examples": 100,
+    "min_kappa": 0.7,
+    "min_per_class": 50
+  },
+  "satisfied": true,
+  "schema": 1,
+  "warnings": []
+}

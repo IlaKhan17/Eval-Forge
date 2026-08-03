@@ -1,0 +1,63 @@
+apiVersion: evalforge.dev/v1
+kind: EvalSuite
+name: reply-tone
+description: >
+  The calibration reference suite. It gates on an LLM judge, which is exactly the
+  situation calibration exists for: without evidence that the judge agrees with a human,
+  the gate blocks merges on a number nobody has checked.
+
+  Run `evalforge calibrate evals/suites/reply-tone.yaml -e acceptable_to_followup
+  --verdicts evals/calibration/reply-tone.verdicts.jsonl` to reproduce the committed
+  record without spending anything.
+
+dataset:
+  path: ../fixtures/reply-intent.jsonl
+
+task:
+  entrypoint: examples.reply_intent:classify
+  timeout_s: 30
+
+execution:
+  concurrency: 4
+  seed: 42
+
+evaluators:
+  - name: acceptable_to_followup
+    type: llm_judge
+    # Pinned, not an alias. A provider that moves the model behind an alias invalidates
+    # every historical number, and the pin is part of the evaluator's version hash.
+    model: claude-sonnet-5
+    rubric_path: ../rubrics/reply-tone.md
+    # The judge sees the reply body and nothing else. It must never see `expected`, or it
+    # would grade against the answer key.
+    inputs: [input.body]
+    labels: [acceptable, unacceptable]
+    temperature: 0.0
+    seed: 42
+    calibration:
+      dataset: ../calibration/reply-tone.jsonl
+      # Which label counts as a pass — this is what makes the false-pass and false-fail
+      # rates computable, and those are the two numbers that matter most.
+      passing_labels: [acceptable]
+      min_agreement: 0.85
+      min_kappa: 0.7
+      # Tighter than the default 0.05: waving through an opt-out request is a CAN-SPAM
+      # exposure, not an inconvenience.
+      max_false_pass_rate: 0.04
+      max_false_fail_rate: 0.15
+
+gates:
+  acceptable_to_followup:
+    minimum: 0.9
+    blocking: true
+
+calibration:
+  directory: ../calibration
+  # A gated judge with no valid calibration fails the run. This is the recommended
+  # setting for a safety-relevant metric, and it is what makes the record in
+  # evals/calibration/ load-bearing rather than decorative.
+  require: true
+
+report:
+  formats: [terminal, json]
+  output: evalforge-tone-report.json
