@@ -117,6 +117,7 @@ same code path, and it is enforced in CI by [`.importlinter`](.importlinter).
 | [Trajectory policies](docs/TRAJECTORY_POLICIES.md) | Policy schema, normalization, algorithm |
 | [SDK and CLI](docs/SDK_AND_CLI.md) | Public API, suite YAML, GitHub Actions |
 | [GitHub Actions](docs/GITHUB_ACTIONS.md) | CI setup, exit codes, fork-PR safety |
+| [Dashboard](docs/DASHBOARD.md) | Trace viewer, proxy security, waterfall semantics |
 | [Security](docs/SECURITY.md) | Threat model, redaction, tenant isolation |
 | [Testing strategy](docs/TESTING_STRATEGY.md) | Pyramid, targets, CI stages |
 | [Implementation plan](docs/IMPLEMENTATION_PLAN.md) | Phased milestones |

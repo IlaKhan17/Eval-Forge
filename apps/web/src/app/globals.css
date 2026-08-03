@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Dark by default, and only dark for now.
+ *
+ * Not a style preference: a trace viewer is read next to a terminal and an editor,
+ * both of which are dark in most setups, and a light flash on navigation is genuinely
+ * unpleasant at 2am during an incident. A theme toggle is worth adding, but a
+ * half-working one that flickers is worse than committing to one scheme.
+ */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-slate-950 text-slate-200 antialiased;
+  font-feature-settings: "tnum" 1; /* tabular figures: duration columns must align */
+}
+
+/* Payload bodies are read as data, not prose — wrap long tokens rather than forcing a
+   horizontal scroll on the whole page. */
+.payload-body {
+  @apply whitespace-pre-wrap break-words font-mono text-xs leading-relaxed;
+}
+
+/* The waterfall can be thousands of rows; hint the compositor accordingly. */
+.waterfall-viewport {
+  contain: strict;
+}

@@ -1,0 +1,18 @@
+packages:
+  - "apps/web"
+
+# Which dependencies may run install scripts.
+#
+# pnpm blocks postinstall scripts by default, and that default is worth keeping: an
+# install script is arbitrary code execution at `pnpm install` time, which is the
+# classic npm supply-chain vector. So this is an explicit, reviewed allow-list rather
+# than a blanket `enable-pre-post-scripts`.
+allowBuilds:
+  # Downloads/links its native binary; the bundler does not work without it.
+  esbuild: true
+  # Same — Biome is a Rust binary fetched for the host platform.
+  "@biomejs/biome": true
+  # Native image codecs for next/image. Nothing in the dashboard uses next/image (the
+  # only images are inline SVG), so it stays unbuilt: less native code compiled at
+  # install time for a feature that is not used.
+  sharp: false

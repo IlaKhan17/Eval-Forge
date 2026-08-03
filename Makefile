@@ -1,7 +1,8 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
 
-.PHONY: help setup test test-unit test-integration lint fmt typecheck arch check dev down clean
+.PHONY: help setup test test-unit test-integration lint fmt typecheck arch check dev down clean \
+	bootstrap web web-install web-check api
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -38,7 +39,26 @@ check: lint typecheck arch test ## Everything CI runs on a PR
 
 dev: ## Start local services (postgres, redis, minio)
 	docker compose up -d postgres redis minio
-	@echo "✓ services up — postgres :5432  redis :6379  minio :9000 (console :9001)"
+	@echo "✓ services up — see .env for the ports (they are probed to avoid conflicts)"
+
+bootstrap: ## Create a local org, project, and API key; write apps/web/.env.local
+	uv run alembic upgrade head
+	uv run python scripts/bootstrap_dev.py --write-web-env
+
+api: ## Run the API against local services
+	uv run uvicorn evalforge_api.main:create_app --factory --reload --port 8000
+
+web-install: ## Install dashboard dependencies
+	pnpm install
+
+web: ## Run the dashboard (needs 'make api' and 'make bootstrap' first)
+	pnpm --dir apps/web dev
+
+web-check: ## Lint, typecheck, test, and build the dashboard
+	pnpm --dir apps/web lint
+	pnpm --dir apps/web typecheck
+	pnpm --dir apps/web test
+	pnpm --dir apps/web build
 
 down: ## Stop local services
 	docker compose down

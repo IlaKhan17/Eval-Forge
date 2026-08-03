@@ -147,3 +147,49 @@ jobs:
           assert "classes_recall" in blocking, blocking
           print("report contract holds:", blocking)
           PY
+
+  # Stage 5 — the dashboard. Its own job rather than steps appended to `static`:
+  # nothing here needs Python, and a Node failure should be readable without
+  # scrolling past a uv sync.
+  web:
+    name: dashboard · lint · types · tests · build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      # `--frozen-lockfile` so a lockfile that does not match package.json fails here
+      # rather than silently resolving to different versions than anyone tested.
+      - name: install
+        run: pnpm install --frozen-lockfile
+        working-directory: .
+
+      - name: biome (lint and format)
+        run: pnpm lint
+
+      - name: tsc --noEmit
+        run: pnpm typecheck
+
+      - name: vitest
+        run: pnpm test
+
+      # Last, because it is the slowest and because a type error should be reported by
+      # the step named after types.
+      - name: next build
+        run: pnpm build
+        env:
+          # The build must not require a live API or a real credential. If it ever
+          # does, that means a page is fetching at build time, which would also mean
+          # a stale dashboard in production.
+          EVALFORGE_API_URL: http://127.0.0.1:8000
+          EVALFORGE_API_KEY: ef_dev_00000000_ci-build-placeholder-not-a-real-key

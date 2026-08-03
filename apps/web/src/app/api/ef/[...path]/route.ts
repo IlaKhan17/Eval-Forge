@@ -1,0 +1,123 @@
+/**
+ * Read-only proxy to the EvalForge API.
+ *
+ * Exists so the API key never reaches the browser. See `src/lib/api.ts` for why that
+ * matters and `src/lib/proxy-policy.ts` for what is allowed through.
+ */
+
+import { checkProxyRequest, filterQuery } from "@/lib/proxy-policy"
+import { ConfigError, serverConfig } from "@/lib/server-config"
+import { NextResponse } from "next/server"
+
+/** Fail fast rather than holding a connection open behind a spinner forever. */
+const UPSTREAM_TIMEOUT_MS = 30_000
+
+function problem(status: number, type: string, title: string, detail: string): NextResponse {
+  // Same problem+json shape the API uses, so the client's error handling does not
+  // need a second code path for proxy-originated failures.
+  return NextResponse.json(
+    { type, title, status, detail },
+    { status, headers: { "content-type": "application/problem+json" } },
+  )
+}
+
+async function handle(request: Request, path: string[]): Promise<NextResponse> {
+  const target = `/${path.join("/")}`
+  const decision = checkProxyRequest(request.method, target)
+  if (!decision.allowed) {
+    return problem(
+      403,
+      "https://evalforge.dev/problems/proxy-forbidden",
+      "Not proxied",
+      decision.reason ?? "Not allowed.",
+    )
+  }
+
+  let config: { apiUrl: string; apiKey: string }
+  try {
+    config = serverConfig()
+  } catch (error) {
+    if (error instanceof ConfigError) {
+      // 503, not 500: the dashboard is not misbehaving, it is not configured. The
+      // detail text is the actual fix, so it is passed through verbatim.
+      return problem(
+        503,
+        "https://evalforge.dev/problems/dashboard-not-configured",
+        "Dashboard is not configured",
+        error.message,
+      )
+    }
+    throw error
+  }
+
+  const incoming = new URL(request.url)
+  const query = filterQuery(incoming.searchParams).toString()
+  const upstream = `${config.apiUrl}${target}${query ? `?${query}` : ""}`
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS)
+  // Also abort when the browser goes away, so a closed tab does not leave the
+  // upstream request running.
+  request.signal.addEventListener("abort", () => controller.abort())
+
+  try {
+    const response = await fetch(upstream, {
+      method: request.method,
+      headers: {
+        authorization: `Bearer ${config.apiKey}`,
+        accept: "application/json",
+      },
+      signal: controller.signal,
+      // Never cache: a trace list is live data, and a cached authenticated response
+      // is exactly the kind of thing that leaks between projects later on.
+      cache: "no-store",
+      redirect: "manual",
+    })
+
+    const body = await response.text()
+    const headers = new Headers({
+      "content-type": response.headers.get("content-type") ?? "application/json",
+      "cache-control": "no-store",
+    })
+    // Useful for correlating a dashboard error with a server log; harmless to expose.
+    const requestId = response.headers.get("x-request-id")
+    if (requestId) headers.set("x-request-id", requestId)
+
+    return new NextResponse(body, { status: response.status, headers })
+  } catch (error) {
+    if (controller.signal.aborted) {
+      return problem(
+        504,
+        "https://evalforge.dev/problems/upstream-timeout",
+        "Upstream timed out",
+        `The API did not respond within ${UPSTREAM_TIMEOUT_MS / 1000}s.`,
+      )
+    }
+    return problem(
+      502,
+      "https://evalforge.dev/problems/upstream-unreachable",
+      "Upstream unreachable",
+      // The upstream URL is not echoed: it may contain an internal hostname, and the
+      // browser has no use for it.
+      error instanceof Error ? error.message : "Could not reach the EvalForge API.",
+    )
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ path: string[] }> },
+): Promise<NextResponse> {
+  const { path } = await context.params
+  return handle(request, path)
+}
+
+export async function HEAD(
+  request: Request,
+  context: { params: Promise<{ path: string[] }> },
+): Promise<NextResponse> {
+  const { path } = await context.params
+  return handle(request, path)
+}
