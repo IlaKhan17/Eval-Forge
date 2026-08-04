@@ -196,6 +196,67 @@ jobs:
           print("worker schedule:", names)
           PY
 
+  # Stage 3c — the OTLP receiver. The acceptance criterion for this path is a round trip, so
+  # it needs the real database: protobuf in, rows out, read back through the trace API.
+  otlp:
+    name: OTLP receiver · OpenInference mapping
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: evalforge
+          POSTGRES_PASSWORD: evalforge
+          POSTGRES_DB: evalforge
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      POSTGRES_USER: evalforge
+      POSTGRES_PASSWORD: evalforge
+      POSTGRES_DB: evalforge
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      JWT_SECRET: ci-only-not-a-real-secret
+      ENV: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages
+
+      - name: attribute mapping and wire decoding
+        run: uv run pytest apps/api/tests/test_otlp_mapping.py -q
+
+      - name: round trip through the real endpoint
+        run: uv run pytest apps/api/tests/test_otlp_receiver.py -m integration -q
+
+      - name: the OpenTelemetry example still runs
+        # With no endpoint configured it prints spans instead of exporting, which is enough
+        # to catch the example rotting — a broken example is a broken promise, since it is
+        # the thing people copy.
+        run: uv run python examples/langgraph-agent/agent.py
+
+      - name: the collector config is valid YAML with the pipeline we document
+        run: |
+          uv run python - <<'PY'
+          import yaml
+          config = yaml.safe_load(open("infra/otel/collector-config.yaml"))
+          pipeline = config["service"]["pipelines"]["traces"]
+          assert pipeline["exporters"] == ["otlphttp/evalforge"], pipeline
+          # Scrubbing must come before sampling, or secrets survive in whatever the sampler
+          # kept. Asserted because it is an ordering nobody notices when it is wrong.
+          processors = pipeline["processors"]
+          assert processors.index("attributes/scrub") < processors.index("probabilistic_sampler")
+          endpoint = config["exporters"]["otlphttp/evalforge"]["endpoint"]
+          # The exporter appends /v1/traces itself; an endpoint that already ends in it would
+          # produce /v1/traces/v1/traces and a 404 on every export.
+          assert endpoint.endswith("/v1/otlp"), endpoint
+          print("collector pipeline:", processors)
+          PY
+
   # Stage 4b — calibration. Runs offline from recorded judge verdicts, so it needs no
   # provider credential and works on a fork pull request. That is the point: if this
   # could not run without a secret, `require_calibration` would be untestable in exactly

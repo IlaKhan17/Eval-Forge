@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 
 .PHONY: help setup test test-unit test-integration lint fmt typecheck arch check dev down clean \
-	bootstrap web web-install web-check api calibrate worker online-eval
+	bootstrap web web-install web-check api calibrate worker online-eval otlp-example
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -47,6 +47,12 @@ bootstrap: ## Create a local org, project, and API key; write apps/web/.env.loca
 
 worker: ## Run the background worker (online eval, rollups, retention)
 	uv run arq evalforge_api.worker.main.WorkerSettings
+
+otlp-example: ## Run the plain-OpenTelemetry example against a local API
+	@test -n "$$EVALFORGE_API_KEY" || (echo "set EVALFORGE_API_KEY (see 'make bootstrap')" && exit 1)
+	OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:8000/v1/otlp \
+	OTEL_EXPORTER_OTLP_HEADERS="authorization=Bearer $$EVALFORGE_API_KEY" \
+	uv run python examples/langgraph-agent/agent.py
 
 online-eval: ## Process one batch of online evaluations now, without the worker
 	uv run python -c "$$ONLINE_EVAL_SNIPPET"

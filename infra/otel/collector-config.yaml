@@ -1,0 +1,96 @@
+# OpenTelemetry Collector, forwarding traces to EvalForge.
+#
+# Use this when you already run a Collector, or when you want the buffering, retry, and
+# redaction a Collector gives you before anything leaves your network. If you do not run
+# one, point your application's exporter straight at EvalForge instead — the receiver
+# speaks OTLP/HTTP directly and this file is then unnecessary complexity.
+#
+#   docker run -v $PWD/infra/otel/collector-config.yaml:/etc/otelcol/config.yaml \
+#     -e EVALFORGE_ENDPOINT=https://your-evalforge \
+#     -e EVALFORGE_API_KEY=ef_prod_... \
+#     -p 4317:4317 -p 4318:4318 otel/opentelemetry-collector-contrib:latest
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # Batching is what makes the exporter efficient, and its size is what decides how often a
+  # trace gets split across requests. EvalForge handles split traces (the trace name arrives
+  # with the root span, and a later batch of children cannot overwrite it), so a large batch
+  # is safe.
+  batch:
+    timeout: 5s
+    send_batch_size: 512
+    send_batch_max_size: 1024
+
+  # A hard ceiling on the Collector's own memory. Without it a downstream outage turns the
+  # Collector into the outage.
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 75
+    spike_limit_percentage: 20
+
+  # Strip attributes that should never leave your network.
+  #
+  # EvalForge redacts on ingest as well, but redacting here is strictly better when you can:
+  # data that never crosses the boundary cannot be stored by mistake, and the Collector runs
+  # inside your trust boundary while the receiver does not.
+  attributes/scrub:
+    actions:
+      - key: http.request.header.authorization
+        action: delete
+      - key: http.request.header.cookie
+        action: delete
+      - key: api_key
+        action: delete
+      # Hashed rather than deleted, so a session can still be followed across traces without
+      # storing the identifier itself.
+      - key: user.id
+        action: hash
+
+  # Keep the volume affordable. Head sampling is applied *before* export, so it also reduces
+  # what you pay to send.
+  #
+  # Left at 100% on purpose. EvalForge samples on ingest for the *paid* evaluations and runs
+  # trajectory policies on every trace it receives, so sampling here throws away coverage of
+  # the free safety checks. Turn it down only if the trace volume itself is the problem.
+  probabilistic_sampler:
+    sampling_percentage: 100
+
+exporters:
+  otlphttp/evalforge:
+    # The exporter appends `/v1/traces`, so the endpoint stops at `/v1/otlp`.
+    endpoint: ${env:EVALFORGE_ENDPOINT}/v1/otlp
+    headers:
+      authorization: Bearer ${env:EVALFORGE_API_KEY}
+    compression: gzip
+    # A retry queue, so a receiver restart does not cost the spans in flight. EvalForge
+    # answers a malformed body with 400 (never retried) and a storage fault with 503
+    # (retried), so this queue drains rather than spinning.
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 60s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 4
+      queue_size: 1000
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      # Order matters: limit memory first, then scrub, then sample, then batch. Scrubbing
+      # after sampling would leave secrets in whatever the sampler kept.
+      processors: [memory_limiter, attributes/scrub, probabilistic_sampler, batch]
+      exporters: [otlphttp/evalforge]
+
+  telemetry:
+    logs:
+      level: info

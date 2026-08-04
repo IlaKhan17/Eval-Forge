@@ -24,7 +24,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any, cast
 
-from sqlalchemy import Table, select
+from sqlalchemy import Table, case, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -373,19 +373,32 @@ class IngestService:
         touched: set[str],
     ) -> None:
         declared = {t.trace_id: t for t in batch.traces}
-        # A trace can arrive after its spans, or never. Stub one from the rollup so
-        # the spans are reachable either way.
-        for trace_id in touched:
-            declared.setdefault(trace_id, None)  # type: ignore[arg-type]
 
-        rows: list[dict[str, Any]] = []
-        for trace_id, declaration in declared.items():
+        declared_rows: list[dict[str, Any]] = []
+        stub_rows: list[dict[str, Any]] = []
+        for trace_id in touched | set(declared):
+            declaration = declared.get(trace_id)
             rollup = rollups.get(trace_id, _Rollup())
-            rows.append(self._trace_row(trace_id, declaration, rollup, environment_id, batch))
+            row = self._trace_row(trace_id, declaration, rollup, environment_id, batch)
+            (declared_rows if declaration is not None else stub_rows).append(row)
 
+        # Two statements, because a stub must never overwrite what a declaration said.
+        #
+        # A trace's spans routinely arrive in several batches — that is the normal
+        # behaviour of OTLP's BatchSpanProcessor, and it happens with the SDK too when a
+        # long trace flushes more than once. A later batch of child spans carries no trace
+        # declaration, so it is stubbed; if that stub took part in the same upsert it would
+        # reset `name` to "unknown" and blank the metadata, tags, and state that the first
+        # batch established. One SET clause for both cases silently destroys data on the
+        # second batch of every multi-batch trace.
+        await self._upsert_declared_traces(declared_rows)
+        await self._upsert_stub_traces(stub_rows)
+        self.result.accepted_traces = len(declared_rows) + len(stub_rows)
+
+    async def _upsert_declared_traces(self, rows: list[dict[str, Any]]) -> None:
+        """Traces the client described. The declaration is authoritative."""
         if not rows:
             return
-
         statement = insert(TRACES).values(rows)
         statement = statement.on_conflict_do_update(
             constraint="uq_traces_project_trace",
@@ -397,6 +410,8 @@ class IngestService:
                 "metadata": statement.excluded.metadata,
                 "tags": statement.excluded.tags,
                 "state": statement.excluded.state,
+                "session_id": statement.excluded.session_id,
+                "user_ref": statement.excluded.user_ref,
                 # Absolute, because the values were recomputed from the spans table
                 # rather than accumulated from this batch.
                 "span_count": statement.excluded.span_count,
@@ -407,7 +422,40 @@ class IngestService:
             },
         )
         await self.session.execute(statement)
-        self.result.accepted_traces = len(rows)
+
+    async def _upsert_stub_traces(self, rows: list[dict[str, Any]]) -> None:
+        """Traces inferred from their spans, because no declaration has arrived.
+
+        Only the facts the spans actually establish are updated. Descriptive fields are
+        left alone, so a stub cannot undo a declaration from an earlier batch.
+        """
+        if not rows:
+            return
+        statement = insert(TRACES).values(rows)
+        statement = statement.on_conflict_do_update(
+            constraint="uq_traces_project_trace",
+            set_={
+                # A trace only ever grows later, and spans can arrive out of order, so the
+                # end time is the greatest seen rather than the newest written.
+                "ended_at": func.greatest(TRACES.c.ended_at, statement.excluded.ended_at),
+                "duration_ms": func.greatest(TRACES.c.duration_ms, statement.excluded.duration_ms),
+                # A stub may escalate a trace to `error` but never downgrade one. Losing an
+                # error because a later batch of healthy spans arrived would hide exactly
+                # the traces worth looking at.
+                "status": case(
+                    (statement.excluded.error_count > 0, "error"),
+                    else_=TRACES.c.status,
+                ),
+                "span_count": statement.excluded.span_count,
+                "total_tokens": statement.excluded.total_tokens,
+                "total_cost": statement.excluded.total_cost,
+                "error_count": statement.excluded.error_count,
+                "dropped_span_count": func.greatest(
+                    TRACES.c.dropped_span_count, statement.excluded.dropped_span_count
+                ),
+            },
+        )
+        await self.session.execute(statement)
 
     def _trace_row(
         self,

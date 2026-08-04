@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from evalforge_api.api.routes import evaluation, health, ingest, online, traces
+from evalforge_api.api.routes import evaluation, health, ingest, online, otlp, traces
 from evalforge_api.db.partitions import ensure_partitions
 from evalforge_api.db.session import dispose_engine, get_sessionmaker, init_engine
 from evalforge_api.errors import (
@@ -82,6 +82,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(traces.router)
     app.include_router(evaluation.router)
     app.include_router(online.router)
+    app.include_router(otlp.router)
     return app
 
 

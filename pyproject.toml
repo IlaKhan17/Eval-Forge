@@ -37,6 +37,8 @@ dev = [
     "mypy>=1.13",
     "import-linter>=2.1",
     "types-pyyaml>=6.0.12.20260724",
+    "opentelemetry-sdk>=1.29",
+    "opentelemetry-exporter-otlp-proto-http>=1.29",
 ]
 
 # ---------------------------------------------------------------- pytest
@@ -93,6 +95,13 @@ disallow_untyped_defs = false
 # and that adapter is behind the ObjectStore protocol, which *is* typed.
 [[tool.mypy.overrides]]
 module = ["boto3.*", "botocore.*"]
+ignore_missing_imports = true
+
+# The generated protobuf modules and google.protobuf ship no usable stubs. Confined to
+# evalforge_api.otlp.decode, which converts them to plain dataclasses immediately — so no
+# untyped value escapes into the mapping or the ingest path.
+[[tool.mypy.overrides]]
+module = ["google.protobuf.*", "opentelemetry.proto.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
