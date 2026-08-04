@@ -115,6 +115,7 @@ same code path, and it is enforced in CI by [`.importlinter`](.importlinter).
 | [API design](docs/API_DESIGN.md) | Endpoints, auth, pagination, idempotency |
 | [Evaluation engine](docs/EVALUATION_ENGINE.md) | Evaluators, execution, calibration, gates |
 | [Calibration](docs/CALIBRATION.md) | Making a judge trustworthy, or its untrustworthiness visible |
+| [Online evaluation](docs/ONLINE_EVALUATION.md) | Checking production traces, review queues, promotion, retention |
 | [Trajectory policies](docs/TRAJECTORY_POLICIES.md) | Policy schema, normalization, algorithm |
 | [SDK and CLI](docs/SDK_AND_CLI.md) | Public API, suite YAML, GitHub Actions |
 | [GitHub Actions](docs/GITHUB_ACTIONS.md) | CI setup, exit codes, fork-PR safety |

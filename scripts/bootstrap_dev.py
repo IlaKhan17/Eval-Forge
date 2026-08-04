@@ -34,7 +34,7 @@ from evalforge_api.settings import get_settings
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-DEFAULT_SCOPES = ("ingest", "read", "write")
+DEFAULT_SCOPES = ("ingest", "read", "write", "annotate")
 
 
 async def bootstrap(

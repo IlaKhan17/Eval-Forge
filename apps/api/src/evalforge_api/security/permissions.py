@@ -74,6 +74,12 @@ SCOPE_PERMISSIONS: dict[str, frozenset[Permission]] = {
             Permission.PROJECT_READ,
         }
     ),
+    # Deliberately its own scope rather than part of `write`. An annotation is *ground
+    # truth* — the thing judge calibration is measured against and golden datasets are
+    # promoted from — so the authority to create one is not the same as the authority to
+    # register an evaluator or run an experiment. Keeping them separate means a CI key
+    # cannot inject labels, and a key handed to an annotation tool cannot rewrite gates.
+    "annotate": frozenset({Permission.ANNOTATION_WRITE, Permission.PROJECT_READ}),
 }
 
 
@@ -97,6 +103,23 @@ class Principal:
 
     def can(self, permission: Permission) -> bool:
         return permission in self.permissions
+
+    @property
+    def project(self) -> uuid.UUID:
+        """The project this credential is scoped to, narrowed.
+
+        Raises rather than returning None. Every caller that reaches here has already passed
+        a guard requiring a project-scoped credential, so threading `UUID | None` further
+        forces a `type: ignore` at each use site — and a silenced type error at twenty call
+        sites is how a genuine None eventually slips into a tenant filter.
+        """
+        if self.project_id is None:
+            msg = (
+                "principal is not project-scoped; a route guard should have rejected this "
+                "request before reaching a tenant-scoped query"
+            )
+            raise RuntimeError(msg)
+        return self.project_id
 
     @property
     def is_user(self) -> bool:

@@ -38,7 +38,7 @@ from evalforge_api.db.base import (
 
 ROLES = ("owner", "admin", "developer", "reviewer", "viewer")
 CAPTURE_MODES = ("full", "redacted", "metadata_only", "disabled")
-SCOPES = ("ingest", "read", "write")
+SCOPES = ("ingest", "read", "write", "annotate")
 
 
 class Organization(IdentifiedBase, TimestampMixin, SoftDeleteMixin):

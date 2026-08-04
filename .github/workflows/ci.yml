@@ -148,6 +148,54 @@ jobs:
           print("report contract holds:", blocking)
           PY
 
+  # Stage 3b — the worker's jobs, against the real database. They cannot be unit-tested
+  # meaningfully: SKIP LOCKED claiming needs two concurrent transactions, ON CONFLICT
+  # idempotency needs the real constraints, and retention needs real partitions.
+  online:
+    name: online evaluation · review · promotion
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: evalforge
+          POSTGRES_PASSWORD: evalforge
+          POSTGRES_DB: evalforge
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      POSTGRES_USER: evalforge
+      POSTGRES_PASSWORD: evalforge
+      POSTGRES_DB: evalforge
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      JWT_SECRET: ci-only-not-a-real-secret
+      ENV: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages
+
+      - name: online evaluation, queues, promotion, retention
+        run: uv run pytest apps/api/tests/test_online_eval.py -m integration -q
+
+      - name: the worker's configuration loads
+        run: |
+          # A worker whose settings object is broken fails at deploy time, not in a test,
+          # so this asserts the schedule is constructible before anything ships.
+          uv run python - <<'PY'
+          from evalforge_api.worker.main import WorkerSettings
+          names = [f.__name__ for f in WorkerSettings.functions]
+          assert names == ["online_eval", "release_leases", "rollup", "retention"], names
+          assert len(WorkerSettings.cron_jobs) == 4
+          assert WorkerSettings.max_jobs == 1, "these jobs are database-bound; concurrency buys lock contention"
+          print("worker schedule:", names)
+          PY
+
   # Stage 4b — calibration. Runs offline from recorded judge verdicts, so it needs no
   # provider credential and works on a fork pull request. That is the point: if this
   # could not run without a secret, `require_calibration` would be untestable in exactly

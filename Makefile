@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 
 .PHONY: help setup test test-unit test-integration lint fmt typecheck arch check dev down clean \
-	bootstrap web web-install web-check api calibrate
+	bootstrap web web-install web-check api calibrate worker online-eval
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -45,6 +45,12 @@ bootstrap: ## Create a local org, project, and API key; write apps/web/.env.loca
 	uv run alembic upgrade head
 	uv run python scripts/bootstrap_dev.py --write-web-env
 
+worker: ## Run the background worker (online eval, rollups, retention)
+	uv run arq evalforge_api.worker.main.WorkerSettings
+
+online-eval: ## Process one batch of online evaluations now, without the worker
+	uv run python -c "$$ONLINE_EVAL_SNIPPET"
+
 api: ## Run the API against local services
 	uv run uvicorn evalforge_api.main:create_app --factory --reload --port 8000
 
@@ -71,3 +77,23 @@ down: ## Stop local services
 clean: ## Remove caches and build artifacts
 	rm -rf .mypy_cache .ruff_cache .pytest_cache htmlcov .coverage dist build
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
+
+# Runs one batch in-process, for draining a backlog or checking a rule without waiting for
+# the worker's cadence.
+export ONLINE_EVAL_SNIPPET
+define ONLINE_EVAL_SNIPPET
+import asyncio
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from evalforge_api.settings import get_settings
+from evalforge_api.worker import jobs
+
+async def main():
+    engine = create_async_engine(get_settings().sqlalchemy_url)
+    async with async_sessionmaker(engine)() as session:
+        report = await jobs.run_online_eval(session)
+        await session.commit()
+        print(report)
+    await engine.dispose()
+
+asyncio.run(main())
+endef

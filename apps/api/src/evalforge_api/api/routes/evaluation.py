@@ -312,7 +312,7 @@ async def create_dataset(body: DatasetIn, session: SessionDep, principal: Writer
         raise ConflictError(f"A dataset with slug {body.slug!r} already exists.")
 
     row = Dataset(
-        project_id=principal.project_id,
+        project_id=principal.project,
         name=body.name,
         slug=body.slug,
         kind=body.kind,
@@ -352,7 +352,7 @@ async def create_version(
         raise NotFoundError("No such dataset.")
 
     row = DatasetVersion(
-        project_id=principal.project_id,
+        project_id=principal.project,
         dataset_id=dataset_id,
         version=body.version,
         parent_version_id=body.parent_version_id,
@@ -368,7 +368,7 @@ async def create_version(
 async def append_examples(
     version_id: uuid.UUID, body: ExamplesIn, session: SessionDep, principal: Writer
 ) -> VersionOut:
-    service = DatasetService(session, project_id=principal.project_id)  # type: ignore[arg-type]
+    service = DatasetService(session, project_id=principal.project)
     await service.append_examples(version_id, body.examples)
     return _version_out(await service.get_version(version_id))
 
@@ -377,7 +377,7 @@ async def append_examples(
 async def list_examples(
     version_id: uuid.UUID, session: SessionDep, principal: Reader
 ) -> list[Example]:
-    service = DatasetService(session, project_id=principal.project_id)  # type: ignore[arg-type]
+    service = DatasetService(session, project_id=principal.project)
     await service.get_version(version_id)
     return await service.load_examples(version_id)
 
@@ -387,7 +387,7 @@ async def lock_version(version_id: uuid.UUID, session: SessionDep, principal: Wr
     """Freeze the version and record its content hash. Idempotent."""
     if not principal.can(Permission.DATASET_LOCK):
         raise ForbiddenError("Locking a dataset requires the 'dataset.lock' permission.")
-    service = DatasetService(session, project_id=principal.project_id)  # type: ignore[arg-type]
+    service = DatasetService(session, project_id=principal.project)
     outcome = await service.lock(version_id)
     return _version_out(outcome.version)
 
@@ -397,7 +397,7 @@ async def resolve_version(
     dataset: str, version: str, session: SessionDep, principal: Reader
 ) -> VersionOut:
     """Resolve `slug` + label to a version, so suite files can use readable names."""
-    service = DatasetService(session, project_id=principal.project_id)  # type: ignore[arg-type]
+    service = DatasetService(session, project_id=principal.project)
     return _version_out(await service.resolve(dataset, version))
 
 
@@ -433,7 +433,7 @@ async def create_evaluator(
         return {"id": str(existing.id), "slug": existing.slug, "created": False}
 
     row = Evaluator(
-        project_id=principal.project_id,
+        project_id=principal.project,
         name=body.name,
         slug=body.slug,
         evaluator_type=body.evaluator_type,
@@ -499,7 +499,7 @@ async def create_evaluator_version(
     ).scalar_one_or_none()
 
     row = EvaluatorVersion(
-        project_id=principal.project_id,
+        project_id=principal.project,
         evaluator_id=evaluator_id,
         version=(highest or 0) + 1,
         config=body.config,
@@ -529,7 +529,7 @@ async def create_experiment(
 ) -> ExperimentOut:
     dataset_hash: bytes | None = None
     if body.dataset_version_id is not None:
-        service = DatasetService(session, project_id=principal.project_id)  # type: ignore[arg-type]
+        service = DatasetService(session, project_id=principal.project)
         version = await service.get_version(body.dataset_version_id)
         if not version.is_locked:
             # An unlocked dataset can change under the experiment, which makes the
@@ -542,7 +542,7 @@ async def create_experiment(
         dataset_hash = version.content_hash
 
     row = Experiment(
-        project_id=principal.project_id,
+        project_id=principal.project,
         name=body.name,
         suite_name=body.suite_name,
         dataset_version_id=body.dataset_version_id,
@@ -569,7 +569,7 @@ async def create_experiment(
 async def open_run(
     experiment_id: uuid.UUID, session: SessionDep, principal: Runner, trigger: str = "cli"
 ) -> RunOut:
-    service = ExperimentService(session, project_id=principal.project_id)  # type: ignore[arg-type]
+    service = ExperimentService(session, project_id=principal.project)
     return _run_out(await service.open_run(experiment_id, trigger=trigger))
 
 
@@ -577,7 +577,7 @@ async def open_run(
 async def append_results(
     run_id: uuid.UUID, body: ResultsIn, session: SessionDep, principal: Runner
 ) -> ResultsOut:
-    service = ExperimentService(session, project_id=principal.project_id)  # type: ignore[arg-type]
+    service = ExperimentService(session, project_id=principal.project)
     stored, skipped = await service.append_results(run_id, body.results)
     return ResultsOut(stored=stored, skipped=skipped)
 
@@ -586,13 +586,13 @@ async def append_results(
 async def complete_run(
     run_id: uuid.UUID, body: CompleteIn, session: SessionDep, principal: Runner
 ) -> RunOut:
-    service = ExperimentService(session, project_id=principal.project_id)  # type: ignore[arg-type]
+    service = ExperimentService(session, project_id=principal.project)
     return _run_out(await service.complete_run(run_id, status=body.status, error=body.error))
 
 
 @router.post("/experiment-runs/{run_id}/cancel", response_model=RunOut)
 async def cancel_run(run_id: uuid.UUID, session: SessionDep, principal: Runner) -> RunOut:
-    service = ExperimentService(session, project_id=principal.project_id)  # type: ignore[arg-type]
+    service = ExperimentService(session, project_id=principal.project)
     return _run_out(await service.cancel_run(run_id))
 
 
@@ -600,7 +600,7 @@ async def cancel_run(run_id: uuid.UUID, session: SessionDep, principal: Runner) 
 async def run_metrics(
     run_id: uuid.UUID, session: SessionDep, principal: Reader
 ) -> list[dict[str, Any]]:
-    service = ExperimentService(session, project_id=principal.project_id)  # type: ignore[arg-type]
+    service = ExperimentService(session, project_id=principal.project)
     await service.get_run(run_id)
     return [
         {
@@ -618,7 +618,7 @@ async def run_metrics(
 
 @router.post("/experiments/compare", response_model=CompareOut)
 async def compare(body: CompareIn, session: SessionDep, principal: Reader) -> CompareOut:
-    service = ExperimentService(session, project_id=principal.project_id)  # type: ignore[arg-type]
+    service = ExperimentService(session, project_id=principal.project)
     candidate = await service.get_run(body.candidate_run_id)
 
     baseline_id = body.baseline_run_id
@@ -697,7 +697,7 @@ async def promote_baseline(
     Curation, not a data change, which is why it is the one mutable field on an
     otherwise immutable record.
     """
-    service = ExperimentService(session, project_id=principal.project_id)  # type: ignore[arg-type]
+    service = ExperimentService(session, project_id=principal.project)
     experiment = await service.get_experiment(experiment_id)
 
     previous = (
@@ -768,7 +768,7 @@ async def record_calibration(
         raise NotFoundError("No such evaluator version.")
 
     row = EvaluatorCalibration(
-        project_id=principal.project_id,
+        project_id=principal.project,
         evaluator_version_id=version_id,
         judge_model=body.judge_model or version.judge_model,
         mean_cost=Decimal(str(body.mean_cost)),
@@ -866,7 +866,7 @@ async def create_gate_set(
     ).scalar_one_or_none()
 
     gate_set = QualityGateSet(
-        project_id=principal.project_id,
+        project_id=principal.project,
         name=body.name,
         version=(highest or 0) + 1,
         source_yaml=body.source_yaml,
@@ -896,7 +896,7 @@ async def create_gate_set(
         )
         session.add(
             QualityGateRule(
-                project_id=principal.project_id,
+                project_id=principal.project,
                 gate_set_id=gate_set.id,
                 metric_key=validated.metric_key,
                 minimum=validated.minimum,
@@ -931,7 +931,7 @@ async def create_policy(body: PolicyIn, session: SessionDep, principal: Writer) 
         return {"id": str(existing.id), "slug": existing.slug, "created": False}
 
     row = TrajectoryPolicy(
-        project_id=principal.project_id,
+        project_id=principal.project,
         name=body.name,
         slug=body.slug,
         description=body.description,
@@ -1007,7 +1007,7 @@ async def create_policy_version(
     ).scalar_one_or_none()
 
     row = TrajectoryPolicyVersion(
-        project_id=principal.project_id,
+        project_id=principal.project,
         policy_id=policy_id,
         version=(highest or 0) + 1,
         source_yaml=body.source_yaml,
