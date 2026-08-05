@@ -34,6 +34,7 @@ EVALUATOR_TYPES = (
     "classification",
     "ranking",
     "calibration",
+    "discrimination",
 )
 
 
@@ -161,6 +162,10 @@ class EvaluatorSpec(BaseModel):
     seed: int | None = 42
     inputs: list[str] = Field(default_factory=list)
     labels: list[str] = Field(default_factory=list)
+    #: Which of `labels` count as a pass, turning a classify judge's label into a gateable rate.
+    #: Declared on the evaluator rather than only under `calibration`, because it changes what the
+    #: judge scores and not merely how it is calibrated.
+    passing_labels: list[str] = Field(default_factory=list)
     scale: Scale = Field(default_factory=Scale)
     votes: int = 1
     timeout_s: float = 60.0
@@ -178,6 +183,9 @@ class EvaluatorSpec(BaseModel):
     ranking_field: str | None = None
     relevant_field: str | None = None
     confidence_field: str | None = None
+    #: A boolean output field saying whether the prediction was right, for cases where
+    #: correctness is not a prediction/label comparison.
+    correct_field: str | None = None
     percentiles: list[int] = Field(default_factory=lambda: [50, 95, 99])
 
     @model_validator(mode="after")

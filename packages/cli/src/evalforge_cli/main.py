@@ -85,8 +85,17 @@ def eval(  # noqa: PLR0917 — Typer maps CLI options onto arguments
     verbose: Annotated[
         bool, typer.Option("--verbose", "-v", help="Show every sliced metric")
     ] = False,
+    model_client: Annotated[
+        str | None,
+        typer.Option("--model-client", help="module:factory returning a ModelClient, for judges"),
+    ] = None,
 ) -> None:
-    """Run a suite, apply its gates, and exit non-zero on a blocking failure."""
+    """Run a suite, apply its gates, and exit non-zero on a blocking failure.
+
+    A suite with LLM judges needs `--model-client` (or `EVALFORGE_MODEL_CLIENT`). Provider SDKs
+    are deliberately absent from `evaluation-core` so local mode works with no dependencies, so
+    the model access is supplied by the project being evaluated.
+    """
     try:
         loaded = load_suite(suite_path, overrides=_parse_overrides(set_))
     except SuiteError as exc:
@@ -97,8 +106,22 @@ def eval(  # noqa: PLR0917 — Typer maps CLI options onto arguments
         _print_plan(loaded)
         raise typer.Exit(0)
 
+    needs_models = any(spec.type == "llm_judge" for spec in loaded.suite.evaluators)
+    models = None
+    if needs_models:
+        try:
+            models = calibration.load_model_client(model_client)
+        except calibration.CalibrationCommandError as exc:
+            # Refused before running anything. A judge with no client returns an errored score
+            # on every example, which surfaces as "metric with no measurements" — a confusing
+            # way to say "you forgot to pass a model client".
+            _fail(str(exc), runner.exit_code_for_setup_error())
+            return
+
     try:
-        outcome = asyncio.run(runner.execute(loaded, journal=journal, resume=resume, limit=limit))
+        outcome = asyncio.run(
+            runner.execute(loaded, models=models, journal=journal, resume=resume, limit=limit)
+        )
     except runner.RunError as exc:
         _fail(str(exc), runner.exit_code_for_setup_error())
         return

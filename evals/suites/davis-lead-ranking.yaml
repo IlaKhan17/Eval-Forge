@@ -1,0 +1,92 @@
+apiVersion: evalforge.dev/v1
+kind: EvalSuite
+name: davis-lead-ranking
+description: >
+  Lead ranking, with **zero judges**. Ranking quality is measurable against human labels
+  using standard IR metrics; asking a model "is this ranking good?" would be slower, cost
+  money, and be less accurate than NDCG against labels a human assigned.
+
+  The blocking gates are on the two properties a ranking change can break silently: a
+  disqualified lead reaching the top ten, and a duplicate company occupying two slots.
+
+dataset:
+  path: ../fixtures/davis-leads.jsonl
+
+task:
+  entrypoint: examples.davis_sdr.lead_ranking:rank_leads
+  timeout_s: 30
+
+execution:
+  concurrency: 8
+  seed: 42
+
+evaluators:
+  # IR metrics against human quality labels. `relevant` is every lead a human rated 2-3.
+  - name: top5
+    type: ranking
+    k: 5
+    ranking_field: results
+    relevant_field: relevant
+
+  - name: top10
+    type: ranking
+    k: 10
+    ranking_field: results
+    relevant_field: relevant
+
+  # Deterministic, and the ones that block. A disqualified lead in the top ten is a
+  # compliance problem, not a quality dip.
+  - name: no_top_disqualified
+    type: exact_match
+    field: output.top_disqualified_count
+    expected_field: top_disqualified_count
+
+  - name: evidence_coverage
+    type: exact_match
+    field: output.all_scored_have_evidence
+    expected_field: all_scored_have_evidence
+
+  - name: no_duplicates
+    type: length
+    field: output.duplicate_ids
+    unit: chars
+    maximum: 0
+
+  - name: ops
+    type: operational
+    percentiles: [50, 95]
+
+gates:
+  top5_precision_at_5:
+    minimum: 0.70
+    max_regression: 0.03
+
+  top10_precision_at_10:
+    minimum: 0.60
+    max_regression: 0.03
+
+  top10_ndcg_at_10:
+    minimum: 0.75
+    max_regression: 0.03
+
+  # Absolute floors, blocking, no baseline. A bad merge that becomes the baseline cannot
+  # weaken these.
+  no_top_disqualified:
+    minimum: 1.0
+    blocking: true
+
+  evidence_coverage:
+    minimum: 0.95
+    blocking: true
+
+  p95_latency_ms:
+    maximum: 5000
+    blocking: false
+
+baseline:
+  strategy: latest_on_branch
+  branch: main
+
+report:
+  formats: [terminal, json]
+  output: evalforge-davis-lead-ranking.json

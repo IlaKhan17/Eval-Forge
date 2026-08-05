@@ -57,6 +57,7 @@ markers = [
     "e2e: full-stack end-to-end test",
     "load: performance test, not run in PR CI",
     "live: calls a real model provider; never run in PR CI",
+    "slow: shells out to the CLI over the full reference fixtures; own CI stage",
 ]
 filterwarnings = ["error"]
 

@@ -117,6 +117,7 @@ same code path, and it is enforced in CI by [`.importlinter`](.importlinter).
 | [Calibration](docs/CALIBRATION.md) | Making a judge trustworthy, or its untrustworthiness visible |
 | [Online evaluation](docs/ONLINE_EVALUATION.md) | Checking production traces, review queues, promotion, retention |
 | [OTLP](docs/OTLP.md) | Sending traces with plain OpenTelemetry, OpenInference mapping |
+| [Reference integrations](docs/REFERENCE_INTEGRATIONS.md) | Ten suites across two domains, and what each demonstrates |
 | [Trajectory policies](docs/TRAJECTORY_POLICIES.md) | Policy schema, normalization, algorithm |
 | [SDK and CLI](docs/SDK_AND_CLI.md) | Public API, suite YAML, GitHub Actions |
 | [GitHub Actions](docs/GITHUB_ACTIONS.md) | CI setup, exit codes, fork-PR safety |

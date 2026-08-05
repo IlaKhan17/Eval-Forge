@@ -64,6 +64,7 @@ class LLMJudge(EvaluatorBase):
         scale: tuple[int, int] = (1, 5),
         normalize: bool = True,
         labels: Sequence[str] | None = None,
+        passing_labels: Sequence[str] | None = None,
         temperature: float = 0.0,
         seed: int | None = 42,
         votes: int = 1,
@@ -93,6 +94,19 @@ class LLMJudge(EvaluatorBase):
         self.scale = scale
         self.normalize = normalize
         self.labels = list(labels) if labels else None
+        # Which labels count as a pass. Without it a classify judge emits a label and no numeric
+        # value, so there is nothing for a gate to threshold — the metric simply does not exist,
+        # and the gate reports "metric missing" *after* the judge calls have been paid for.
+        self.passing_labels = list(passing_labels) if passing_labels else None
+        if mode == "classify" and passing_labels:
+            unknown = set(self.passing_labels or []) - set(self.labels or [])
+            if unknown:
+                msg = (
+                    f"Judge {name!r}: passing_labels {sorted(unknown)} are not among its "
+                    f"labels {self.labels}. A passing label the judge can never emit would "
+                    "make the metric permanently zero."
+                )
+                raise ValueError(msg)
         self.temperature = temperature
         self.seed = seed
         self.votes = votes
@@ -238,6 +252,13 @@ class LLMJudge(EvaluatorBase):
             return Score(
                 metric=self.name,
                 label=str(label),
+                # A pass rate when the suite said which labels pass, and no numeric value
+                # otherwise — a 0.0 default would read as "every example failed".
+                value=(
+                    (1.0 if str(label) in self.passing_labels else 0.0)
+                    if self.passing_labels
+                    else None
+                ),
                 reasoning=reasoning,
                 cost=cost,
                 latency_ms=latency,
@@ -288,6 +309,9 @@ class LLMJudge(EvaluatorBase):
             return Score(
                 metric=self.name,
                 label=winner,
+                value=(
+                    (1.0 if winner in self.passing_labels else 0.0) if self.passing_labels else None
+                ),
                 confidence=agreement,
                 reasoning=reasoning,
                 cost=total_cost,

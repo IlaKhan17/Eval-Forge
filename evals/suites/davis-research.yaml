@@ -1,0 +1,116 @@
+apiVersion: evalforge.dev/v1
+kind: EvalSuite
+name: davis-research
+description: >
+  Prospect research — the suite that shows where the deterministic/judge line falls.
+
+  Whether a citation *exists and resolves* is deterministic, free, and exact. Whether the
+  cited source *actually supports the claim* is irreducibly semantic. Running a judge on the
+  first would be waste; running a regex on the second is impossible.
+
+dataset:
+  path: ../fixtures/davis-research.jsonl
+
+task:
+  entrypoint: examples.davis_sdr.research:research_prospect
+  timeout_s: 30
+
+execution:
+  concurrency: 8
+  judge_concurrency: 4
+  seed: 42
+
+evaluators:
+  # Identity. Researching the wrong person is not a quality dip; it is a different person.
+  - name: correct_person
+    type: exact_match
+    field: output.person_id
+    expected_field: person_id
+
+  - name: correct_company
+    type: exact_match
+    field: output.company_id
+    expected_field: company_id
+
+  # Citations: free, exact, and separate metrics because each has a different fix. A missing
+  # citation is a prompt problem; an unresolvable one is a retrieval problem.
+  - name: citation_present
+    type: exact_match
+    field: output.all_claims_cited
+    expected_field: all_claims_cited
+
+  - name: citation_resolves
+    type: exact_match
+    field: output.all_citations_resolve
+    expected_field: all_citations_resolve
+
+  - name: source_freshness_days
+    type: numeric_range
+    field: output.source_freshness_days
+    maximum: 500
+
+  # The residue that genuinely needs a judge.
+  - name: claim_groundedness
+    type: llm_judge
+    model: claude-sonnet-5
+    rubric_path: ../rubrics/claim-groundedness.md
+    labels: [supported, unsupported]
+    # The claim and its source, and nothing else. Never `expected`, which holds the human's
+    # support label — a judge handed the answer key grades itself.
+    inputs: [output.claims_with_sources]
+    temperature: 0.0
+    seed: 42
+    calibration:
+      dataset: ../calibration/claim-groundedness.jsonl
+      passing_labels: [supported]
+      min_agreement: 0.85
+      min_kappa: 0.7
+      # Tighter than the default. These claims go into outbound email about real companies; a
+      # judge that waves through an unsupported one creates defamation exposure, not a
+      # quality dip.
+      max_false_pass_rate: 0.04
+      max_false_fail_rate: 0.20
+
+  - name: ops
+    type: operational
+    percentiles: [50, 95]
+
+gates:
+  correct_person:
+    minimum: 0.98
+    blocking: true
+
+  correct_company:
+    minimum: 0.98
+    blocking: true
+
+  citation_present:
+    minimum: 1.0
+    blocking: true
+
+  citation_resolves:
+    minimum: 1.0
+    blocking: true
+
+  claim_groundedness:
+    minimum: 0.85
+    max_regression: 0.03
+    blocking: true
+
+  source_freshness_days:
+    minimum: 0.9
+    blocking: false
+
+calibration:
+  directory: ../calibration
+  # A judge gating outbound claims about real companies must be calibrated. This is the
+  # recommended setting for a safety-relevant metric.
+  require: true
+
+baseline:
+  strategy: latest_on_branch
+  branch: main
+
+report:
+  formats: [terminal, json]
+  output: evalforge-davis-research.json

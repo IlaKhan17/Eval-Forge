@@ -14,6 +14,7 @@ from evalforge_core.evaluators import (
     CalibrationEvaluator,
     ClassificationEvaluator,
     Contains,
+    DiscriminationEvaluator,
     ExactMatch,
     JsonSchemaMatch,
     LengthWithin,
@@ -30,7 +31,9 @@ if TYPE_CHECKING:
     from evalforge_cli.suite.loader import LoadedSuite
     from evalforge_cli.suite.schema import EvaluatorSpec
 
-CORPUS_TYPES = frozenset({"classification", "ranking", "calibration", "operational"})
+CORPUS_TYPES = frozenset(
+    {"classification", "ranking", "calibration", "discrimination", "operational"}
+)
 
 
 class RegistryError(ValueError):
@@ -117,6 +120,7 @@ def _build_one(spec: EvaluatorSpec, loaded: LoadedSuite) -> Any:  # noqa: PLR091
             inputs=spec.inputs,
             mode="classify" if spec.labels else "rubric",
             labels=spec.labels or None,
+            passing_labels=_passing_labels(spec),
             scale=(spec.scale.min, spec.scale.max),
             normalize=spec.scale.normalize,
             temperature=spec.temperature,
@@ -147,8 +151,16 @@ def _build_one(spec: EvaluatorSpec, loaded: LoadedSuite) -> Any:  # noqa: PLR091
             relevant_field=spec.relevant_field or "relevant",
         )
 
+    if spec.type == "discrimination":
+        return DiscriminationEvaluator(
+            name=spec.name,
+            score_field=spec.prediction_field or "predicted",
+            outcome_field=spec.label_field or "correct",
+        )
+
     if spec.type == "calibration":
         return CalibrationEvaluator(
+            correct_field=spec.correct_field,
             name=spec.name,
             confidence_field=spec.confidence_field or "confidence",
             prediction_field=spec.prediction_field or "intent",
@@ -178,6 +190,20 @@ def _load_schema(spec: EvaluatorSpec, loaded: LoadedSuite) -> dict[str, Any]:
         msg = f"evaluator {spec.name!r}: schema at {path} is not a JSON object"
         raise RegistryError(msg)
     return parsed
+
+
+def _passing_labels(spec: EvaluatorSpec) -> list[str] | None:
+    """The judge's passing labels, from the evaluator or its calibration block.
+
+    Two places because a suite that only calibrates does not need the evaluator-level field, and
+    one that only gates does not need the calibration block. Preferring the evaluator keeps the
+    scoring definition next to the scoring.
+    """
+    if spec.passing_labels:
+        return spec.passing_labels
+    if spec.calibration and spec.calibration.passing_labels:
+        return list(spec.calibration.passing_labels)
+    return None
 
 
 def load_rubric_text(spec: EvaluatorSpec, loaded: LoadedSuite) -> str:

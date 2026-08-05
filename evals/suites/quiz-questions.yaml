@@ -1,0 +1,121 @@
+apiVersion: evalforge.dev/v1
+kind: EvalSuite
+name: quiz-questions
+description: >
+  Question generation — where a judge cannot be the sole arbiter of correctness.
+
+  A quiz platform that teaches wrong answers is worse than useless, and a judge is *exactly as
+  likely to be wrong as the generator* and correlated in its errors: both are language models
+  reasoning over the same passage. So `answer_correctness` is human ground truth and the judge
+  is calibrated against it, never substituted for it.
+
+  Everything mechanical is deterministic: schema validity, exactly-one-keyed-answer,
+  near-duplicate detection, citation presence and resolution.
+
+dataset:
+  path: ../fixtures/quiz-questions.jsonl
+
+task:
+  entrypoint: examples.adaptquiz.questions:generate_question
+  timeout_s: 30
+
+execution:
+  concurrency: 8
+  judge_concurrency: 4
+  seed: 42
+  slice_by: [topic]
+
+evaluators:
+  - name: schema_valid
+    type: exact_match
+    field: output.schema_valid
+    expected_field: schema_valid
+
+  # Blocking. A question with two keyed answers is unanswerable, and it is a counting problem.
+  - name: single_correct_answer
+    type: exact_match
+    field: output.single_correct_answer
+    expected_field: single_correct_answer
+
+  - name: citation_present
+    type: exact_match
+    field: output.citation_present
+    expected_field: citation_present
+
+  - name: citation_resolves
+    type: exact_match
+    field: output.citation_resolves
+    expected_field: citation_resolves
+
+  - name: duplicate_rate
+    type: numeric_range
+    field: output.duplicate_rate
+    maximum: 0.05
+
+  - name: objective_alignment
+    type: exact_match
+    field: output.objective
+    expected_field: objective
+
+  # The narrow, mechanical question a judge *can* answer: is this the right citation for this
+  # answer? Not whether the answer is factually correct, which is the human's to decide.
+  - name: citation_support
+    type: llm_judge
+    model: claude-sonnet-5
+    rubric_path: ../rubrics/citation-support.md
+    labels: [supported, unsupported]
+    inputs: [output.question_text, output.keyed_answer, output.citation_text]
+    temperature: 0.0
+    seed: 42
+    calibration:
+      dataset: ../calibration/citation-support.jsonl
+      passing_labels: [supported]
+      min_agreement: 0.85
+      min_kappa: 0.7
+      # A question whose citation does not support its answer teaches from the wrong passage.
+      max_false_pass_rate: 0.04
+
+  - name: ops
+    type: operational
+    percentiles: [50, 95]
+
+gates:
+  schema_valid:
+    minimum: 1.0
+    blocking: true
+
+  single_correct_answer:
+    minimum: 1.0
+    blocking: true
+
+  citation_present:
+    minimum: 1.0
+    blocking: true
+
+  citation_resolves:
+    minimum: 1.0
+    blocking: true
+
+  duplicate_rate:
+    minimum: 0.95
+    blocking: true
+
+  objective_alignment:
+    minimum: 0.85
+
+  citation_support:
+    minimum: 0.85
+    blocking: true
+    max_regression: 0.03
+
+calibration:
+  directory: ../calibration
+  require: true
+
+baseline:
+  strategy: latest_on_branch
+  branch: main
+
+report:
+  formats: [terminal, json]
+  output: evalforge-quiz-questions.json

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Outbound email",
+  "type": "object",
+  "required": ["subject", "body", "claims"],
+  "properties": {
+    "subject": {"type": "string", "minLength": 10, "maxLength": 78},
+    "body": {"type": "string", "minLength": 200, "maxLength": 1200},
+    "claims": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+      "minItems": 1,
+      "maxItems": 5
+    }
+  }
+}

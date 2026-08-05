@@ -1,0 +1,145 @@
+{
+  "calibrated_at": "2026-08-04T11:47:20.708035+00:00",
+  "evaluator": "summary_factuality",
+  "evaluator_version_hash": "04ecc5002b2d68ad",
+  "failures": [],
+  "labels_hash": "b45f3598ceca7f4e",
+  "labels_path": "summary-factuality.jsonl",
+  "report": {
+    "agreement": 0.39166666666666666,
+    "agreement_ci": [
+      0.30899055515182583,
+      0.4810638369102923
+    ],
+    "at_human_ceiling": false,
+    "confusion": {
+      "counts": [
+        {
+          "count": 24,
+          "human": "1",
+          "judge": "2"
+        },
+        {
+          "count": 23,
+          "human": "2",
+          "judge": "2"
+        },
+        {
+          "count": 1,
+          "human": "2",
+          "judge": "4"
+        },
+        {
+          "count": 24,
+          "human": "3",
+          "judge": "2"
+        },
+        {
+          "count": 24,
+          "human": "4",
+          "judge": "4"
+        },
+        {
+          "count": 24,
+          "human": "5",
+          "judge": "4"
+        }
+      ],
+      "labels": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    "error_rate": 0.0,
+    "false_fail_rate": 0.0,
+    "false_pass_rate": 0.013888888888888888,
+    "human_kappa": 0.9577464788732388,
+    "judge_kappa_on_ceiling_subset": 0.7333333333333331,
+    "kappa": 0.7888888888888891,
+    "kappa_ci": [
+      0.7483718176435766,
+      0.8192771084337347
+    ],
+    "kappa_kind": "quadratic",
+    "kappa_undefined_reason": null,
+    "leniency": -0.18333333333333335,
+    "mean_cost": "0.00021",
+    "n_ceiling_examples": 20,
+    "n_errored": 0,
+    "n_examples": 120,
+    "notes": [],
+    "p50_latency_ms": 640.0,
+    "p95_latency_ms": 640.0,
+    "per_class": [
+      {
+        "label": "1",
+        "precision": 0.0,
+        "recall": 0.0,
+        "support": 24,
+        "top_confusion": [
+          "2",
+          24
+        ]
+      },
+      {
+        "label": "2",
+        "precision": 0.323943661971831,
+        "recall": 0.9583333333333334,
+        "support": 24,
+        "top_confusion": [
+          "4",
+          1
+        ]
+      },
+      {
+        "label": "3",
+        "precision": 0.0,
+        "recall": 0.0,
+        "support": 24,
+        "top_confusion": [
+          "2",
+          24
+        ]
+      },
+      {
+        "label": "4",
+        "precision": 0.4897959183673469,
+        "recall": 1.0,
+        "support": 24,
+        "top_confusion": null
+      },
+      {
+        "label": "5",
+        "precision": 0.0,
+        "recall": 0.0,
+        "support": 24,
+        "top_confusion": [
+          "4",
+          24
+        ]
+      }
+    ],
+    "position_bias": null,
+    "scale_compression": 0.6951218917890908,
+    "total_cost": "0.02520",
+    "verbosity_bias": 0.3338732696662348
+  },
+  "requirement": {
+    "allow_position_bias": false,
+    "max_false_fail_rate": 0.2,
+    "max_false_pass_rate": 0.05,
+    "min_agreement": 0.35,
+    "min_examples": 100,
+    "min_kappa": 0.6,
+    "min_per_class": 20
+  },
+  "satisfied": true,
+  "schema": 1,
+  "warnings": [
+    "agreement 0.392 clears 0.350, but its 95% interval [0.309, 0.481] straddles the threshold. The set is too small to resolve the question; label more examples.",
+    "verbosity bias +0.33: the judge scores longer outputs more generously than the humans did, independent of quality."
+  ]
+}

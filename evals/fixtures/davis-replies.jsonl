@@ -1,0 +1,1200 @@
+{"expected": {"intent": "needs_information"}, "id": "reply-0467", "input": {"body": "more about the integration Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0397", "input": {"body": "no thanks Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0949", "input": {"body": "the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0253", "input": {"body": "Thanks — no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1174", "input": {"body": "Hi, ok Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0229", "input": {"body": "Thanks — let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0352", "input": {"body": "Thanks — no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "referral"}, "id": "reply-0796", "input": {"body": "try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0929", "input": {"body": "Hi, the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "referral"}, "id": "reply-0781", "input": {"body": "forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "referral"}, "id": "reply-0768", "input": {"body": "Hi, try my colleague Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0329", "input": {"body": "Hi, we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0528", "input": {"body": "Hi, can you send pricing Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1134", "input": {"body": "Thanks — we use a competitor already Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1167", "input": {"body": "Thanks — hmm Thanks."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0567", "input": {"body": "Thanks — can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1114", "input": {"body": "Hi, we use a competitor already Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0856", "input": {"body": "we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0820", "input": {"body": "Hello. we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1095", "input": {"body": "Hello. we evaluated another vendor Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0986", "input": {"body": "Thanks — too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1199", "input": {"body": "Thanks — sure"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0176", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0249", "input": {"body": "not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0080", "input": {"body": "happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0137", "input": {"body": "Hi, happy to meet Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-0999", "input": {"body": "not the right time Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0983", "input": {"body": "Hi, the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1155", "input": {"body": "Thanks — hmm Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0716", "input": {"body": "Hi, i am not the right person Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0823", "input": {"body": "Hi, we are an existing customer Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0108", "input": {"body": "Hello. can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0158", "input": {"body": "happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0501", "input": {"body": "Hello. can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0510", "input": {"body": "Hello. can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0905", "input": {"body": "Thanks — the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0340", "input": {"body": "no thanks Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0529", "input": {"body": "tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0132", "input": {"body": "Hello. can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0382", "input": {"body": "Thanks — no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0511", "input": {"body": "tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0747", "input": {"body": "you want our cto Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0151", "input": {"body": "Thanks — let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0903", "input": {"body": "Hi, the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0372", "input": {"body": "Thanks — not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0029", "input": {"body": "unsubscribe me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0478", "input": {"body": "tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1187", "input": {"body": "sure Thanks."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0692", "input": {"body": "i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0440", "input": {"body": "Thanks — more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0284", "input": {"body": "Hello. we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0842", "input": {"body": "Hi, we already use you Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0696", "input": {"body": "Hi, i am not the right person Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0838", "input": {"body": "Hello. we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0239", "input": {"body": "happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0304", "input": {"body": "Thanks — no thanks Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1078", "input": {"body": "check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0591", "input": {"body": "can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1006", "input": {"body": "check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0913", "input": {"body": "Hello. the price is high Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0623", "input": {"body": "Thanks — on leave until monday Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1048", "input": {"body": "Hi, check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0616", "input": {"body": "Thanks — i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0260", "input": {"body": "Hi, we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0487", "input": {"body": "Thanks — tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0375", "input": {"body": "Thanks — not interested Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1117", "input": {"body": "Hello. we evaluated another vendor"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0689", "input": {"body": "on leave until monday Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0686", "input": {"body": "i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1145", "input": {"body": "Hello. sure Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0876", "input": {"body": "Hello. we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0063", "input": {"body": "Thanks — can we meet tuesday Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0683", "input": {"body": "Hi, on leave until monday Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0302", "input": {"body": "Hi, we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0571", "input": {"body": "Hello. tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0420", "input": {"body": "Hi, can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-0998", "input": {"body": "Thanks — check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0031", "input": {"body": "Hello. stop emailing me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1027", "input": {"body": "Hi, not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "referral"}, "id": "reply-0767", "input": {"body": "Hello. forwarding to our head of ops Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0818", "input": {"body": "Thanks — we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0083", "input": {"body": "Hello. happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0421", "input": {"body": "tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0734", "input": {"body": "Hi, i am not the right person Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0589", "input": {"body": "tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "referral"}, "id": "reply-0758", "input": {"body": "Hello. try my colleague Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0926", "input": {"body": "Hello. too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0335", "input": {"body": "Thanks — we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0409", "input": {"body": "Hi, no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0255", "input": {"body": "not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0196", "input": {"body": "Hello. let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1160", "input": {"body": "Hi, sure Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0552", "input": {"body": "can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1075", "input": {"body": "Hi, not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0303", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0123", "input": {"body": "Hello. can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0047", "input": {"body": "Thanks — unsubscribe me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "referral"}, "id": "reply-0803", "input": {"body": "forwarding to our head of ops Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-0991", "input": {"body": "Hello. not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0157", "input": {"body": "Hi, let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1046", "input": {"body": "Hi, check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0727", "input": {"body": "Hello. you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0155", "input": {"body": "happy to meet Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0678", "input": {"body": "Hi, i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0593", "input": {"body": "Hello. more about the integration Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0879", "input": {"body": "we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0742", "input": {"body": "i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0060", "input": {"body": "can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0680", "input": {"body": "Hello. i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1096", "input": {"body": "Thanks — we use a competitor already Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0724", "input": {"body": "Hello. i am not the right person Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0673", "input": {"body": "on leave until monday Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0136", "input": {"body": "Hello. let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0512", "input": {"body": "Thanks — more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0380", "input": {"body": "Thanks — we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0201", "input": {"body": "can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1088", "input": {"body": "Hi, we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0455", "input": {"body": "Thanks — more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1029", "input": {"body": "Hi, not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "referral"}, "id": "reply-0773", "input": {"body": "Hello. forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0274", "input": {"body": "Thanks — no thanks Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0561", "input": {"body": "Hello. can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0987", "input": {"body": "Hello. the price is high Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0840", "input": {"body": "we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1069", "input": {"body": "Thanks — not the right time Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0741", "input": {"body": "Hello. you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0488", "input": {"body": "Thanks — more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "referral"}, "id": "reply-0760", "input": {"body": "Hello. try my colleague Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0575", "input": {"body": "Hi, more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0536", "input": {"body": "Hello. more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0411", "input": {"body": "not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1152", "input": {"body": "Hello. hmm Thanks."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1003", "input": {"body": "Hello. not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0354", "input": {"body": "not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0343", "input": {"body": "no thanks Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0027", "input": {"body": "Hi, please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0886", "input": {"body": "Hello. we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0718", "input": {"body": "i am not the right person Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0046", "input": {"body": "Hello. stop emailing me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0145", "input": {"body": "let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0722", "input": {"body": "Thanks — i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1091", "input": {"body": "Thanks — we evaluated another vendor"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0539", "input": {"body": "more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0922", "input": {"body": "Thanks — too expensive for us Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0826", "input": {"body": "Hi, we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1015", "input": {"body": "not the right time Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0000", "input": {"body": "please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0248", "input": {"body": "Hello. we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0342", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0869", "input": {"body": "Hello. we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0008", "input": {"body": "Hi, unsubscribe me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0364", "input": {"body": "no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1166", "input": {"body": "sure"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0323", "input": {"body": "Hi, we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0133", "input": {"body": "Hi, let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0225", "input": {"body": "Hi, can we meet tuesday Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-0997", "input": {"body": "not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0877", "input": {"body": "Hi, we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0165", "input": {"body": "Hello. can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0924", "input": {"body": "Hello. too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0595", "input": {"body": "Hello. tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0895", "input": {"body": "Hello. we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0197", "input": {"body": "happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0703", "input": {"body": "you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0021", "input": {"body": "Hello. please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0015", "input": {"body": "please remove me from your list Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0261", "input": {"body": "not interested Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0235", "input": {"body": "Hello. let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0438", "input": {"body": "Hi, can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0213", "input": {"body": "Hi, can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0451", "input": {"body": "tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0899", "input": {"body": "Hello. we are an existing customer Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0442", "input": {"body": "Thanks — tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0821", "input": {"body": "we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0226", "input": {"body": "Hi, let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "referral"}, "id": "reply-0809", "input": {"body": "Hello. forwarding to our head of ops Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0714", "input": {"body": "Thanks — i am not the right person Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0366", "input": {"body": "Hi, not interested Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0020", "input": {"body": "unsubscribe me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0592", "input": {"body": "Thanks — tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0038", "input": {"body": "Thanks — unsubscribe me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0149", "input": {"body": "Hi, happy to meet Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0256", "input": {"body": "Hi, no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0028", "input": {"body": "Hello. stop emailing me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0854", "input": {"body": "Hi, we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0709", "input": {"body": "you want our cto Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0152", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0019", "input": {"body": "Thanks — stop emailing me Thanks."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0967", "input": {"body": "Hello. the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0322", "input": {"body": "no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0471", "input": {"body": "Thanks — can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0830", "input": {"body": "Hi, we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0521", "input": {"body": "Hello. more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0109", "input": {"body": "Hi, let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0588", "input": {"body": "Hello. can you send pricing Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1159", "input": {"body": "Hi, ok Thanks."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0925", "input": {"body": "Thanks — the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0682", "input": {"body": "i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0648", "input": {"body": "Hi, i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0071", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0509", "input": {"body": "Hello. more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0597", "input": {"body": "Hello. can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0325", "input": {"body": "Hi, no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0726", "input": {"body": "Hi, i am not the right person Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1071", "input": {"body": "Thanks — not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0057", "input": {"body": "please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0184", "input": {"body": "Thanks — let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0513", "input": {"body": "Thanks — can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0632", "input": {"body": "Hi, i am out of office Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0313", "input": {"body": "Hello. no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0885", "input": {"body": "we are an existing customer Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1170", "input": {"body": "Thanks — hmm"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0541", "input": {"body": "Thanks — tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0273", "input": {"body": "Hello. not interested Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0272", "input": {"body": "we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1077", "input": {"body": "not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0064", "input": {"body": "let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0907", "input": {"body": "Hi, the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1115", "input": {"body": "Hi, we evaluated another vendor Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1081", "input": {"body": "Thanks — we evaluated another vendor Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0721", "input": {"body": "Hello. you want our cto Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1031", "input": {"body": "Hi, not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0392", "input": {"body": "Hi, we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0944", "input": {"body": "Hi, too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "referral"}, "id": "reply-0755", "input": {"body": "forwarding to our head of ops Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0417", "input": {"body": "Hi, not interested Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0009", "input": {"body": "please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0078", "input": {"body": "Hi, can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0980", "input": {"body": "too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0377", "input": {"body": "we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0546", "input": {"body": "Hi, can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0643", "input": {"body": "Thanks — on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1107", "input": {"body": "Hi, we evaluated another vendor"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0106", "input": {"body": "Thanks — let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0346", "input": {"body": "Hello. no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0647", "input": {"body": "Thanks — on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "referral"}, "id": "reply-0794", "input": {"body": "Hello. try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1106", "input": {"body": "Thanks — we use a competitor already Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0606", "input": {"body": "Thanks — i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0024", "input": {"body": "Thanks — please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0405", "input": {"body": "not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0533", "input": {"body": "Hello. more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0415", "input": {"body": "Thanks — no thanks Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0086", "input": {"body": "Hello. happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1072", "input": {"body": "Thanks — check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0234", "input": {"body": "can we meet tuesday Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0258", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0361", "input": {"body": "Hello. no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0484", "input": {"body": "tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "referral"}, "id": "reply-0805", "input": {"body": "Hello. forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1042", "input": {"body": "Hi, check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0560", "input": {"body": "Thanks — more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0674", "input": {"body": "Hello. i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0725", "input": {"body": "Thanks — you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0749", "input": {"body": "Hello. you want our cto Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0819", "input": {"body": "we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0518", "input": {"body": "Hello. more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0037", "input": {"body": "Thanks — stop emailing me Thanks."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0419", "input": {"body": "Thanks — we are all set Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0449", "input": {"body": "Hi, more about the integration Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0545", "input": {"body": "Hi, more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0666", "input": {"body": "Hi, i am out of office Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0672", "input": {"body": "Hello. i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0223", "input": {"body": "let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0163", "input": {"body": "let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0577", "input": {"body": "Thanks — tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0095", "input": {"body": "happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0194", "input": {"body": "happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0428", "input": {"body": "Hi, more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1161", "input": {"body": "Thanks — hmm"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0336", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0939", "input": {"body": "the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0587", "input": {"body": "Hello. more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0582", "input": {"body": "Hello. can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "referral"}, "id": "reply-0795", "input": {"body": "forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0091", "input": {"body": "Hello. let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1143", "input": {"body": "Thanks — hmm Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "referral"}, "id": "reply-0762", "input": {"body": "try my colleague Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0393", "input": {"body": "Hello. not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0286", "input": {"body": "no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0598", "input": {"body": "tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0416", "input": {"body": "Hello. we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1047", "input": {"body": "Thanks — not the right time Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0585", "input": {"body": "Thanks — can you send pricing Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0453", "input": {"body": "Hi, can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0054", "input": {"body": "Hi, please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0608", "input": {"body": "Hello. i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0459", "input": {"body": "can you send pricing Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0728", "input": {"body": "Thanks — i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0192", "input": {"body": "Hello. can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0875", "input": {"body": "Thanks — we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1073", "input": {"body": "Thanks — not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1034", "input": {"body": "check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0429", "input": {"body": "Hi, can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0413", "input": {"body": "we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0831", "input": {"body": "Hi, we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-0994", "input": {"body": "Hi, check back next quarter Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1002", "input": {"body": "Thanks — check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0866", "input": {"body": "Thanks — we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1058", "input": {"body": "Hello. check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0448", "input": {"body": "Thanks — tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0699", "input": {"body": "Hi, you want our cto Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0072", "input": {"body": "can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0224", "input": {"body": "Thanks — happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0394", "input": {"body": "Hi, no thanks Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0076", "input": {"body": "Thanks — let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0216", "input": {"body": "Hi, can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1010", "input": {"body": "Hello. check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0520", "input": {"body": "Hello. tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1090", "input": {"body": "Thanks — we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0254", "input": {"body": "we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0526", "input": {"body": "Hi, tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0381", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0330", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0555", "input": {"body": "Hi, can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "referral"}, "id": "reply-0756", "input": {"body": "Hi, try my colleague Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0153", "input": {"body": "can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0200", "input": {"body": "Hello. happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0833", "input": {"body": "we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0199", "input": {"body": "Thanks — let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1087", "input": {"body": "Thanks — we evaluated another vendor Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "referral"}, "id": "reply-0793", "input": {"body": "forwarding to our head of ops Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0523", "input": {"body": "Thanks — tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0355", "input": {"body": "Hello. no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1181", "input": {"body": "Hi, sure"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0331", "input": {"body": "Hello. no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0418", "input": {"body": "Thanks — no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0923", "input": {"body": "Hello. the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0627", "input": {"body": "Hi, on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0089", "input": {"body": "Hello. happy to meet Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0493", "input": {"body": "Hello. tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0243", "input": {"body": "Thanks — not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0850", "input": {"body": "Hi, we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "referral"}, "id": "reply-0759", "input": {"body": "forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0244", "input": {"body": "Thanks — no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-0992", "input": {"body": "check back next quarter Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0452", "input": {"body": "Thanks — more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0607", "input": {"body": "Hello. on leave until monday Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1001", "input": {"body": "Hi, not the right time Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1050", "input": {"body": "Hi, check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0403", "input": {"body": "Hello. no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "referral"}, "id": "reply-0761", "input": {"body": "Thanks — forwarding to our head of ops Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0644", "input": {"body": "i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0339", "input": {"body": "not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0717", "input": {"body": "you want our cto Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0975", "input": {"body": "Hi, the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0183", "input": {"body": "Hello. can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0874", "input": {"body": "Hello. we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0693", "input": {"body": "you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0190", "input": {"body": "Thanks — let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0864", "input": {"body": "Hello. we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1126", "input": {"body": "we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1182", "input": {"body": "Hello. hmm Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0971", "input": {"body": "Hello. the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1085", "input": {"body": "we evaluated another vendor Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0425", "input": {"body": "Thanks — more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0859", "input": {"body": "Hi, we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0701", "input": {"body": "Hi, you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0519", "input": {"body": "Hi, can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1038", "input": {"body": "Hello. check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0017", "input": {"body": "Thanks — unsubscribe me Thanks."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0515", "input": {"body": "Hello. more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0888", "input": {"body": "we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0811", "input": {"body": "Hello. we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1070", "input": {"body": "Hi, check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1197", "input": {"body": "hmm Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0301", "input": {"body": "no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0602", "input": {"body": "Hi, i am out of office Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0319", "input": {"body": "Hello. no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0867", "input": {"body": "Hi, we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0251", "input": {"body": "Hello. we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0240", "input": {"body": "Hi, not interested Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0822", "input": {"body": "we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0847", "input": {"body": "Hi, we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0362", "input": {"body": "Thanks — we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0396", "input": {"body": "Thanks — not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0563", "input": {"body": "Hello. more about the integration Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1079", "input": {"body": "Thanks — not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0402", "input": {"body": "Thanks — not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0941", "input": {"body": "Hello. the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0042", "input": {"body": "Hi, please remove me from your list Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0626", "input": {"body": "Thanks — i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0131", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0141", "input": {"body": "Hi, can we meet tuesday Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0424", "input": {"body": "Hi, tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0173", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0479", "input": {"body": "Hello. more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0531", "input": {"body": "Thanks — can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0004", "input": {"body": "stop emailing me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0422", "input": {"body": "Thanks — more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0891", "input": {"body": "we are an existing customer Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0032", "input": {"body": "Thanks — unsubscribe me Thanks."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0245", "input": {"body": "Hi, we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "referral"}, "id": "reply-0779", "input": {"body": "Thanks — forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0729", "input": {"body": "you want our cto Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1018", "input": {"body": "check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0491", "input": {"body": "more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0277", "input": {"body": "Hello. no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0177", "input": {"body": "Thanks — can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1184", "input": {"body": "sure"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0005", "input": {"body": "Hi, unsubscribe me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0267", "input": {"body": "Hello. not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0188", "input": {"body": "Hi, happy to meet Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0002", "input": {"body": "unsubscribe me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0813", "input": {"body": "Hi, we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0307", "input": {"body": "Thanks — no thanks Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0619", "input": {"body": "Thanks — on leave until monday Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0620", "input": {"body": "Thanks — i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0537", "input": {"body": "Thanks — can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0445", "input": {"body": "tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0138", "input": {"body": "Hi, can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1040", "input": {"body": "Hi, check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0573", "input": {"body": "Hello. can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0893", "input": {"body": "Hello. we are an existing customer Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1177", "input": {"body": "ok Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0708", "input": {"body": "Hello. i am not the right person Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0658", "input": {"body": "i am out of office Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0963", "input": {"body": "Thanks — the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0547", "input": {"body": "Hello. tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1196", "input": {"body": "Hello. sure Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0522", "input": {"body": "Hello. can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0687", "input": {"body": "Hello. on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0901", "input": {"body": "Hello. the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0581", "input": {"body": "Thanks — more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1009", "input": {"body": "Thanks — not the right time Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0410", "input": {"body": "Thanks — we are all set Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "referral"}, "id": "reply-0801", "input": {"body": "forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0324", "input": {"body": "Thanks — not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0104", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0315", "input": {"body": "Hello. not interested Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0300", "input": {"body": "Hi, not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1062", "input": {"body": "check back next quarter Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0378", "input": {"body": "Hi, not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0950", "input": {"body": "Thanks — too expensive for us Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0154", "input": {"body": "Thanks — let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0036", "input": {"body": "Thanks — please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0374", "input": {"body": "we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1065", "input": {"body": "Thanks — not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0562", "input": {"body": "Hi, tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0951", "input": {"body": "Hi, the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0090", "input": {"body": "Hi, can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0483", "input": {"body": "can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0320", "input": {"body": "Thanks — we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1061", "input": {"body": "Hello. not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1154", "input": {"body": "Hi, sure"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0942", "input": {"body": "too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0430", "input": {"body": "Thanks — tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0039", "input": {"body": "Hi, please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "referral"}, "id": "reply-0771", "input": {"body": "Hi, forwarding to our head of ops Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0252", "input": {"body": "Hi, not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0073", "input": {"body": "let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-0993", "input": {"body": "Hi, not the right time Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0391", "input": {"body": "no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0670", "input": {"body": "Thanks — i am out of office Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0503", "input": {"body": "Hi, more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0117", "input": {"body": "Thanks — can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0056", "input": {"body": "Hello. unsubscribe me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0873", "input": {"body": "we are an existing customer Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0516", "input": {"body": "Thanks — can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1023", "input": {"body": "not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "referral"}, "id": "reply-0750", "input": {"body": "Hi, try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0156", "input": {"body": "can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0006", "input": {"body": "Hi, please remove me from your list Thanks."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0953", "input": {"body": "Thanks — the price is high Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0282", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0853", "input": {"body": "Hi, we are an existing customer Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1157", "input": {"body": "Thanks — sure Thanks."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "referral"}, "id": "reply-0792", "input": {"body": "Hello. try my colleague Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0909", "input": {"body": "the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1139", "input": {"body": "Thanks — we evaluated another vendor Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0603", "input": {"body": "Hi, on leave until monday Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0404", "input": {"body": "we are all set Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0370", "input": {"body": "Thanks — no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0142", "input": {"body": "Thanks — let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0660", "input": {"body": "i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0309", "input": {"body": "Hello. not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1016", "input": {"body": "check back next quarter Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0676", "input": {"body": "Hello. i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0026", "input": {"body": "unsubscribe me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0580", "input": {"body": "tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0160", "input": {"body": "let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0480", "input": {"body": "can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0657", "input": {"body": "Hi, on leave until monday Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1112", "input": {"body": "Hello. we use a competitor already Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0461", "input": {"body": "Hello. more about the integration Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0059", "input": {"body": "Hello. unsubscribe me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0351", "input": {"body": "Thanks — not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0965", "input": {"body": "Thanks — the price is high Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0270", "input": {"body": "Hi, not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0360", "input": {"body": "Hello. not interested Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0407", "input": {"body": "Hi, we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0504", "input": {"body": "Hi, can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0075", "input": {"body": "Hi, can we meet tuesday Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0897", "input": {"body": "we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0140", "input": {"body": "happy to meet Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0220", "input": {"body": "Hi, let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0334", "input": {"body": "no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1007", "input": {"body": "not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0376", "input": {"body": "Thanks — no thanks Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0293", "input": {"body": "we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0489", "input": {"body": "Hello. can you send pricing Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0538", "input": {"body": "Hello. tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0968", "input": {"body": "Thanks — too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0948", "input": {"body": "Thanks — too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0312", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0936", "input": {"body": "too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0508", "input": {"body": "Hi, tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0475", "input": {"body": "Hello. tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0634", "input": {"body": "Hello. i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0605", "input": {"body": "on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0740", "input": {"body": "Thanks — i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0069", "input": {"body": "Hi, can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1068", "input": {"body": "Thanks — check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1104", "input": {"body": "Hi, we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0082", "input": {"body": "let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0549", "input": {"body": "Hello. can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0715", "input": {"body": "Hi, you want our cto Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0048", "input": {"body": "please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0093", "input": {"body": "Thanks — can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0125", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0317", "input": {"body": "we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0022", "input": {"body": "stop emailing me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1130", "input": {"body": "Hi, we use a competitor already Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1094", "input": {"body": "we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0236", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0294", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0437", "input": {"body": "Hi, more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0285", "input": {"body": "Hello. not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0684", "input": {"body": "Thanks — i am out of office Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1055", "input": {"body": "Hi, not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1035", "input": {"body": "not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1026", "input": {"body": "check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "referral"}, "id": "reply-0804", "input": {"body": "try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0492", "input": {"body": "Hello. can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0041", "input": {"body": "unsubscribe me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0186", "input": {"body": "Hello. can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1128", "input": {"body": "Hi, we use a competitor already Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1057", "input": {"body": "not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0097", "input": {"body": "Hello. let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0720", "input": {"body": "Thanks — i am not the right person Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1185", "input": {"body": "hmm"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0872", "input": {"body": "we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0210", "input": {"body": "Thanks — can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0554", "input": {"body": "Thanks — more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1030", "input": {"body": "Thanks — check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1093", "input": {"body": "Thanks — we evaluated another vendor Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0016", "input": {"body": "Thanks — stop emailing me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0233", "input": {"body": "Hi, happy to meet Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1193", "input": {"body": "Thanks — sure Thanks."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0279", "input": {"body": "not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0556", "input": {"body": "Hi, tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0652", "input": {"body": "Hi, i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "referral"}, "id": "reply-0774", "input": {"body": "Hello. try my colleague Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-0996", "input": {"body": "Hello. check back next quarter Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1043", "input": {"body": "Thanks — not the right time Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0257", "input": {"body": "Thanks — we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0540", "input": {"body": "Thanks — can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0204", "input": {"body": "can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0916", "input": {"body": "Hello. too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1064", "input": {"body": "Hi, check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0110", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0289", "input": {"body": "Thanks — no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0700", "input": {"body": "i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0542", "input": {"body": "Hello. more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0852", "input": {"body": "Hi, we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0574", "input": {"body": "tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0829", "input": {"body": "Hello. we are an existing customer Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0198", "input": {"body": "Thanks — can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1132", "input": {"body": "Thanks — we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0638", "input": {"body": "i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0327", "input": {"body": "Hello. not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0464", "input": {"body": "Hello. more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0861", "input": {"body": "Hi, we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0959", "input": {"body": "Hello. the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "referral"}, "id": "reply-0766", "input": {"body": "Hello. try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0739", "input": {"body": "Hello. you want our cto Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0928", "input": {"body": "too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0628", "input": {"body": "i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0548", "input": {"body": "Thanks — more about the integration Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1144", "input": {"body": "ok"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1120", "input": {"body": "we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0062", "input": {"body": "Hi, happy to meet Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0353", "input": {"body": "Thanks — we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0938", "input": {"body": "Hi, too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0166", "input": {"body": "Thanks — let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1014", "input": {"body": "Thanks — check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1086", "input": {"body": "Thanks — we use a competitor already Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0291", "input": {"body": "Hi, not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0202", "input": {"body": "let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1063", "input": {"body": "not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0558", "input": {"body": "Hi, can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0733", "input": {"body": "you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0359", "input": {"body": "we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0613", "input": {"body": "on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1102", "input": {"body": "we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0271", "input": {"body": "Hello. no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0214", "input": {"body": "Hello. let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0544", "input": {"body": "Hi, tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0665", "input": {"body": "Thanks — on leave until monday Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "referral"}, "id": "reply-0780", "input": {"body": "Hello. try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1111", "input": {"body": "we evaluated another vendor Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0345", "input": {"body": "not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "referral"}, "id": "reply-0752", "input": {"body": "Thanks — try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0228", "input": {"body": "can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1119", "input": {"body": "we evaluated another vendor"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0710", "input": {"body": "i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0865", "input": {"body": "Thanks — we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0930", "input": {"body": "Thanks — too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0460", "input": {"body": "Thanks — tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1039", "input": {"body": "not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0535", "input": {"body": "Hi, tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0719", "input": {"body": "Thanks — you want our cto Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0675", "input": {"body": "Thanks — on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0969", "input": {"body": "the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0956", "input": {"body": "Thanks — too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0164", "input": {"body": "Thanks — happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0468", "input": {"body": "Hi, can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0034", "input": {"body": "stop emailing me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0857", "input": {"body": "Hello. we are an existing customer Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0880", "input": {"body": "we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0247", "input": {"body": "Hi, no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0389", "input": {"body": "we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0863", "input": {"body": "we are an existing customer Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1108", "input": {"body": "Thanks — we use a competitor already Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0736", "input": {"body": "Hello. i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0371", "input": {"body": "we are all set Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0116", "input": {"body": "happy to meet Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0025", "input": {"body": "Hello. stop emailing me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0390", "input": {"body": "not interested Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0633", "input": {"body": "Hello. on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1124", "input": {"body": "Hello. we use a competitor already Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0423", "input": {"body": "Hello. can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "referral"}, "id": "reply-0799", "input": {"body": "Thanks — forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0203", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1148", "input": {"body": "Thanks — sure"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0630", "input": {"body": "Hello. i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0114", "input": {"body": "Thanks — can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "referral"}, "id": "reply-0791", "input": {"body": "forwarding to our head of ops Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0868", "input": {"body": "Thanks — we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0281", "input": {"body": "Hi, we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0043", "input": {"body": "Hi, stop emailing me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1164", "input": {"body": "Hello. hmm Thanks."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0663", "input": {"body": "Thanks — on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0900", "input": {"body": "Hi, too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0911", "input": {"body": "Thanks — the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0232", "input": {"body": "Hi, let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0858", "input": {"body": "we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0650", "input": {"body": "Thanks — i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1141", "input": {"body": "Hello. ok"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0514", "input": {"body": "Thanks — tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0730", "input": {"body": "Thanks — i am not the right person Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1191", "input": {"body": "Thanks — hmm"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0637", "input": {"body": "on leave until monday Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0952", "input": {"body": "too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0485", "input": {"body": "Hello. more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0010", "input": {"body": "Thanks — stop emailing me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0824", "input": {"body": "Hi, we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0299", "input": {"body": "Hello. we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0697", "input": {"body": "Thanks — you want our cto Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0113", "input": {"body": "Thanks — happy to meet Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0631", "input": {"body": "Hi, on leave until monday Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0469", "input": {"body": "Thanks — tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0612", "input": {"body": "Thanks — i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0629", "input": {"body": "Thanks — on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0049", "input": {"body": "Hello. stop emailing me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0207", "input": {"body": "can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0482", "input": {"body": "more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0250", "input": {"body": "Thanks — no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0881", "input": {"body": "we are an existing customer Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1053", "input": {"body": "Thanks — not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0655", "input": {"body": "on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0122", "input": {"body": "Hello. happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0395", "input": {"body": "Thanks — we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0964", "input": {"body": "Thanks — too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0690", "input": {"body": "Thanks — i am not the right person Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1156", "input": {"body": "Hello. ok Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0957", "input": {"body": "Hello. the price is high Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1100", "input": {"body": "Hi, we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0332", "input": {"body": "we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1195", "input": {"body": "ok"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0974", "input": {"body": "too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0550", "input": {"body": "Hello. tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0087", "input": {"body": "Thanks — can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0296", "input": {"body": "Hi, we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1060", "input": {"body": "Hi, check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0148", "input": {"body": "Hi, let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0074", "input": {"body": "Hello. happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0053", "input": {"body": "Hi, unsubscribe me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1005", "input": {"body": "Thanks — not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "referral"}, "id": "reply-0757", "input": {"body": "Hello. forwarding to our head of ops Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0474", "input": {"body": "Thanks — can you send pricing Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "referral"}, "id": "reply-0772", "input": {"body": "Hello. try my colleague Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0618", "input": {"body": "i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0143", "input": {"body": "happy to meet Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0615", "input": {"body": "Hello. on leave until monday Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1179", "input": {"body": "Hello. hmm"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0653", "input": {"body": "Hi, on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0945", "input": {"body": "Hi, the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0892", "input": {"body": "we already use you Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "referral"}, "id": "reply-0776", "input": {"body": "Thanks — try my colleague Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0237", "input": {"body": "Thanks — can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0848", "input": {"body": "Hi, we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1074", "input": {"body": "Hello. check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0283", "input": {"body": "Hello. no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0030", "input": {"body": "please remove me from your list Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0851", "input": {"body": "Hello. we are an existing customer Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1089", "input": {"body": "Thanks — we evaluated another vendor Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1118", "input": {"body": "we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1011", "input": {"body": "not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0844", "input": {"body": "Thanks — we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1032", "input": {"body": "Hi, check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1008", "input": {"body": "Thanks — check back next quarter Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0706", "input": {"body": "Hi, i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1136", "input": {"body": "we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "referral"}, "id": "reply-0808", "input": {"body": "try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0088", "input": {"body": "Hi, let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0238", "input": {"body": "Hi, let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0070", "input": {"body": "Thanks — let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0426", "input": {"body": "can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1135", "input": {"body": "we evaluated another vendor"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0649", "input": {"body": "on leave until monday Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0269", "input": {"body": "Hi, we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0259", "input": {"body": "Thanks — no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0321", "input": {"body": "Thanks — not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1082", "input": {"body": "Hi, we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0172", "input": {"body": "let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0553", "input": {"body": "Thanks — tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0456", "input": {"body": "Hi, can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1113", "input": {"body": "Hello. we evaluated another vendor Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0013", "input": {"body": "Hello. stop emailing me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0825", "input": {"body": "Hello. we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0960", "input": {"body": "Thanks — too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1180", "input": {"body": "ok Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0175", "input": {"body": "Thanks — let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1022", "input": {"body": "check back next quarter Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0530", "input": {"body": "Hello. more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0162", "input": {"body": "can we meet tuesday Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0896", "input": {"body": "Thanks — we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0061", "input": {"body": "Hi, let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0656", "input": {"body": "Hello. i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0287", "input": {"body": "Thanks — we are all set Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0579", "input": {"body": "Hello. can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "referral"}, "id": "reply-0770", "input": {"body": "Hello. try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0962", "input": {"body": "Hello. too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0600", "input": {"body": "Thanks — i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "referral"}, "id": "reply-0784", "input": {"body": "Thanks — try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0527", "input": {"body": "Thanks — more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0834", "input": {"body": "Hello. we already use you Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0386", "input": {"body": "Hi, we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1017", "input": {"body": "Hello. not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0168", "input": {"body": "Hi, can we meet tuesday Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0664", "input": {"body": "Hi, i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0466", "input": {"body": "tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0883", "input": {"body": "Thanks — we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0185", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0462", "input": {"body": "can you send pricing Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0973", "input": {"body": "Thanks — the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0369", "input": {"body": "Thanks — not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0227", "input": {"body": "Thanks — happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0917", "input": {"body": "Thanks — the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1052", "input": {"body": "Hello. check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1151", "input": {"body": "Thanks — sure"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1044", "input": {"body": "check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0688", "input": {"body": "Hi, i am out of office Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0884", "input": {"body": "Hello. we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1019", "input": {"body": "Thanks — not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0661", "input": {"body": "Thanks — on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0195", "input": {"body": "Hi, can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0126", "input": {"body": "Thanks — can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0262", "input": {"body": "Thanks — no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1059", "input": {"body": "Hello. not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0502", "input": {"body": "Thanks — tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0436", "input": {"body": "Thanks — tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0349", "input": {"body": "Hi, no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0985", "input": {"body": "Hi, the price is high Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0669", "input": {"body": "Thanks — on leave until monday Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0092", "input": {"body": "Thanks — happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0463", "input": {"body": "Hi, tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0306", "input": {"body": "not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0432", "input": {"body": "Thanks — can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0305", "input": {"body": "Thanks — we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0003", "input": {"body": "Thanks — please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0559", "input": {"body": "tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0096", "input": {"body": "can we meet tuesday Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1133", "input": {"body": "Thanks — we evaluated another vendor"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1171", "input": {"body": "ok"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0931", "input": {"body": "the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0189", "input": {"body": "can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1024", "input": {"body": "Hello. check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0815", "input": {"body": "Hi, we are an existing customer Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0121", "input": {"body": "Hello. let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0144", "input": {"body": "Hi, can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1109", "input": {"body": "Hi, we evaluated another vendor"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1025", "input": {"body": "Hi, not the right time Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0211", "input": {"body": "let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0399", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1149", "input": {"body": "Hello. hmm Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0128", "input": {"body": "Hi, happy to meet Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "referral"}, "id": "reply-0783", "input": {"body": "Hello. forwarding to our head of ops Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0150", "input": {"body": "can we meet tuesday Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0050", "input": {"body": "Hi, unsubscribe me Thanks."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0316", "input": {"body": "Hi, no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0385", "input": {"body": "Hello. no thanks Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0012", "input": {"body": "Hello. please remove me from your list Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "referral"}, "id": "reply-0788", "input": {"body": "Hello. try my colleague Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0447", "input": {"body": "can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0870", "input": {"body": "Hi, we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0572", "input": {"body": "Thanks — more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0357", "input": {"body": "not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0191", "input": {"body": "Hello. happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0169", "input": {"body": "Hello. let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0890", "input": {"body": "Thanks — we already use you Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0147", "input": {"body": "Thanks — can we meet tuesday Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0599", "input": {"body": "Hi, more about the integration Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1054", "input": {"body": "check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "referral"}, "id": "reply-0763", "input": {"body": "Thanks — forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0434", "input": {"body": "more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0280", "input": {"body": "Hi, no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0067", "input": {"body": "Thanks — let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0230", "input": {"body": "Hi, happy to meet Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1076", "input": {"body": "check back next quarter Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0208", "input": {"body": "Hi, let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0246", "input": {"body": "Thanks — not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0551", "input": {"body": "Hi, more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0743", "input": {"body": "you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0182", "input": {"body": "happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1176", "input": {"body": "Hello. hmm Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0454", "input": {"body": "Hi, tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0094", "input": {"body": "Hi, let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1190", "input": {"body": "sure Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "referral"}, "id": "reply-0790", "input": {"body": "Hi, try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0946", "input": {"body": "Hello. too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0981", "input": {"body": "the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1125", "input": {"body": "we evaluated another vendor"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0525", "input": {"body": "Hi, can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1083", "input": {"body": "Hello. we evaluated another vendor Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0007", "input": {"body": "Hello. stop emailing me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0318", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1137", "input": {"body": "Hi, we evaluated another vendor"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1162", "input": {"body": "Hi, ok"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0667", "input": {"body": "Thanks — on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0100", "input": {"body": "Hi, let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0458", "input": {"body": "Hi, more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0978", "input": {"body": "Thanks — too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0348", "input": {"body": "not interested Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1097", "input": {"body": "Thanks — we evaluated another vendor Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0146", "input": {"body": "Thanks — happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1175", "input": {"body": "sure"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0517", "input": {"body": "Hello. tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0406", "input": {"body": "Thanks — no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0384", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0450", "input": {"body": "Hi, can you send pricing Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0694", "input": {"body": "i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0011", "input": {"body": "Hello. unsubscribe me Thanks."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "referral"}, "id": "reply-0775", "input": {"body": "Hello. forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0412", "input": {"body": "Hello. no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0845", "input": {"body": "we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0159", "input": {"body": "Hi, can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0367", "input": {"body": "Hello. no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0295", "input": {"body": "Hello. no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0898", "input": {"body": "we already use you Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1101", "input": {"body": "we evaluated another vendor Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0932", "input": {"body": "Hello. too expensive for us Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0102", "input": {"body": "Hi, can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0906", "input": {"body": "Thanks — too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0023", "input": {"body": "Thanks — unsubscribe me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1198", "input": {"body": "Hi, ok Thanks."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0604", "input": {"body": "i am out of office Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0904", "input": {"body": "Hello. too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0835", "input": {"body": "Thanks — we are an existing customer Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0636", "input": {"body": "Hi, i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0970", "input": {"body": "Hello. too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0298", "input": {"body": "Hi, no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0954", "input": {"body": "Thanks — too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0640", "input": {"body": "Hi, i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0712", "input": {"body": "i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0849", "input": {"body": "Hi, we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0609", "input": {"body": "Thanks — on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1036", "input": {"body": "Hi, check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0635", "input": {"body": "Hello. on leave until monday Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0651", "input": {"body": "on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0918", "input": {"body": "Hello. too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0476", "input": {"body": "Hi, more about the integration Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0481", "input": {"body": "tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0707", "input": {"body": "Hello. you want our cto Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0882", "input": {"body": "Hello. we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1173", "input": {"body": "Hi, hmm"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0099", "input": {"body": "Hello. can we meet tuesday Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0055", "input": {"body": "Thanks — stop emailing me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1127", "input": {"body": "Thanks — we evaluated another vendor Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0433", "input": {"body": "Hi, tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "referral"}, "id": "reply-0751", "input": {"body": "Thanks — forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0955", "input": {"body": "Hi, the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "referral"}, "id": "reply-0800", "input": {"body": "Thanks — try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0358", "input": {"body": "Hi, no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0846", "input": {"body": "Hi, we already use you Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0446", "input": {"body": "more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0505", "input": {"body": "tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0221", "input": {"body": "happy to meet Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0594", "input": {"body": "can you send pricing Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0915", "input": {"body": "the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0111", "input": {"body": "Thanks — can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0139", "input": {"body": "let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0887", "input": {"body": "Thanks — we are an existing customer Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0496", "input": {"body": "Thanks — tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1172", "input": {"body": "Thanks — sure"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1178", "input": {"body": "Thanks — sure"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0337", "input": {"body": "no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0738", "input": {"body": "i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0174", "input": {"body": "Hi, can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0068", "input": {"body": "happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0268", "input": {"body": "Thanks — no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0217", "input": {"body": "Hello. let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0702", "input": {"body": "Hi, i am not the right person Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0532", "input": {"body": "Hi, tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0379", "input": {"body": "Hi, no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0119", "input": {"body": "Thanks — happy to meet Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1103", "input": {"body": "Hi, we evaluated another vendor"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1153", "input": {"body": "Hi, ok Thanks."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0408", "input": {"body": "Hi, not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0568", "input": {"body": "Hi, tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0889", "input": {"body": "Thanks — we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0398", "input": {"body": "Hi, we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0645", "input": {"body": "Hello. on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0989", "input": {"body": "Thanks — the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0001", "input": {"body": "Thanks — stop emailing me Thanks."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0338", "input": {"body": "we are all set Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0206", "input": {"body": "Thanks — happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0566", "input": {"body": "Thanks — more about the integration Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0065", "input": {"body": "Thanks — happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1140", "input": {"body": "Hi, hmm"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0982", "input": {"body": "Hello. too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0499", "input": {"body": "tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0871", "input": {"body": "Hi, we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0101", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0746", "input": {"body": "Hi, i am not the right person Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-0995", "input": {"body": "not the right time Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0472", "input": {"body": "Thanks — tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0431", "input": {"body": "Hello. more about the integration Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0810", "input": {"body": "Hi, we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1056", "input": {"body": "Hello. check back next quarter Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0134", "input": {"body": "happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0622", "input": {"body": "Hello. i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0735", "input": {"body": "Hello. you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1021", "input": {"body": "Thanks — not the right time Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0363", "input": {"body": "Thanks — not interested Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0617", "input": {"body": "Thanks — on leave until monday Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1131", "input": {"body": "we evaluated another vendor"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0685", "input": {"body": "Hello. on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0966", "input": {"body": "Hi, too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0127", "input": {"body": "let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1158", "input": {"body": "Hi, hmm"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0292", "input": {"body": "Hi, no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0161", "input": {"body": "Hello. happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0219", "input": {"body": "can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0543", "input": {"body": "Hello. can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0365", "input": {"body": "Hi, we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1099", "input": {"body": "Thanks — we evaluated another vendor Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0368", "input": {"body": "Hi, we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0578", "input": {"body": "Thanks — more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0215", "input": {"body": "Thanks — happy to meet Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0401", "input": {"body": "Hi, we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0977", "input": {"body": "Hi, the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0333", "input": {"body": "not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0642", "input": {"body": "Hello. i am out of office Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1000", "input": {"body": "Hi, check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0737", "input": {"body": "Thanks — you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1194", "input": {"body": "Hello. hmm Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0275", "input": {"body": "Thanks — we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1049", "input": {"body": "Hi, not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0841", "input": {"body": "we are an existing customer Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0241", "input": {"body": "Hi, no thanks Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0681", "input": {"body": "Thanks — on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0266", "input": {"body": "Hi, we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0193", "input": {"body": "Hello. let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0586", "input": {"body": "Hello. tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0084", "input": {"body": "Hi, can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0812", "input": {"body": "Hi, we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1028", "input": {"body": "Hi, check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0085", "input": {"body": "Hi, let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1116", "input": {"body": "Thanks — we use a competitor already Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "referral"}, "id": "reply-0777", "input": {"body": "Thanks — forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0723", "input": {"body": "Hello. you want our cto Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1188", "input": {"body": "Hi, hmm"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "referral"}, "id": "reply-0754", "input": {"body": "Hi, try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0427", "input": {"body": "Hello. tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0569", "input": {"body": "Hello. more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0691", "input": {"body": "Hello. you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0118", "input": {"body": "let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "referral"}, "id": "reply-0753", "input": {"body": "forwarding to our head of ops Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0816", "input": {"body": "we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0611", "input": {"body": "Hello. on leave until monday Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0290", "input": {"body": "we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0921", "input": {"body": "Thanks — the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0347", "input": {"body": "Hi, we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0470", "input": {"body": "Hi, more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0288", "input": {"body": "Thanks — not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0524", "input": {"body": "more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0045", "input": {"body": "Hi, please remove me from your list Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-0990", "input": {"body": "Hello. check back next quarter Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0222", "input": {"body": "can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1129", "input": {"body": "Thanks — we evaluated another vendor Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0679", "input": {"body": "Hi, on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0843", "input": {"body": "Hi, we are an existing customer Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0308", "input": {"body": "Hi, we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1150", "input": {"body": "Hello. ok Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0326", "input": {"body": "Hi, we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "referral"}, "id": "reply-0765", "input": {"body": "Hi, forwarding to our head of ops Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0910", "input": {"body": "Hello. too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1037", "input": {"body": "Hi, not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "referral"}, "id": "reply-0769", "input": {"body": "forwarding to our head of ops Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1189", "input": {"body": "Hi, ok Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0704", "input": {"body": "Hello. i am not the right person Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "referral"}, "id": "reply-0806", "input": {"body": "try my colleague Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0624", "input": {"body": "Hello. i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0018", "input": {"body": "please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0040", "input": {"body": "stop emailing me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "referral"}, "id": "reply-0785", "input": {"body": "Hello. forwarding to our head of ops Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "referral"}, "id": "reply-0786", "input": {"body": "Hello. try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0310", "input": {"body": "Hi, no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0014", "input": {"body": "Hi, unsubscribe me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0570", "input": {"body": "can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0668", "input": {"body": "Thanks — i am out of office Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1098", "input": {"body": "Hi, we use a competitor already Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0614", "input": {"body": "Thanks — i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1169", "input": {"body": "Thanks — sure Thanks."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0745", "input": {"body": "Thanks — you want our cto Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1146", "input": {"body": "Thanks — hmm Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0947", "input": {"body": "Thanks — the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0179", "input": {"body": "happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0565", "input": {"body": "Thanks — tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0698", "input": {"body": "Hello. i am not the right person"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1033", "input": {"body": "Hi, not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0912", "input": {"body": "too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0659", "input": {"body": "on leave until monday Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0457", "input": {"body": "Hi, tell me more"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1110", "input": {"body": "Hi, we use a competitor already Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1012", "input": {"body": "Hi, check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0534", "input": {"body": "can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0817", "input": {"body": "we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1123", "input": {"body": "Thanks — we evaluated another vendor Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1051", "input": {"body": "Hello. not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0731", "input": {"body": "you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0744", "input": {"body": "Hi, i am not the right person Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0940", "input": {"body": "too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0839", "input": {"body": "Hello. we are an existing customer Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0103", "input": {"body": "Thanks — let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0564", "input": {"body": "can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1165", "input": {"body": "Hello. ok Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0044", "input": {"body": "Hello. unsubscribe me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0988", "input": {"body": "Hi, too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1192", "input": {"body": "Thanks — ok Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0732", "input": {"body": "Hello. i am not the right person Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0584", "input": {"body": "Hello. more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1092", "input": {"body": "Hello. we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0894", "input": {"body": "Hi, we already use you Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1045", "input": {"body": "Thanks — not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1080", "input": {"body": "Hello. we use a competitor already Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0328", "input": {"body": "Thanks — no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0961", "input": {"body": "Hello. the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0264", "input": {"body": "Hello. not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0052", "input": {"body": "Hello. stop emailing me Best regards."}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "referral"}, "id": "reply-0789", "input": {"body": "forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0984", "input": {"body": "Hello. too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0077", "input": {"body": "happy to meet Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0827", "input": {"body": "we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0972", "input": {"body": "Hello. too expensive for us Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0387", "input": {"body": "Hello. not interested Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1066", "input": {"body": "Thanks — check back next quarter Thanks."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0231", "input": {"body": "can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1004", "input": {"body": "Thanks — check back next quarter"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0937", "input": {"body": "the price is high"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "referral"}, "id": "reply-0802", "input": {"body": "Hi, try my colleague Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0878", "input": {"body": "Hello. we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1041", "input": {"body": "not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0576", "input": {"body": "Hello. can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0862", "input": {"body": "Thanks — we already use you Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0486", "input": {"body": "can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0933", "input": {"body": "the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0178", "input": {"body": "Thanks — let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0596", "input": {"body": "Hello. more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0414", "input": {"body": "not interested Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0654", "input": {"body": "Hello. i am out of office Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0500", "input": {"body": "Hi, more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0695", "input": {"body": "you want our cto"}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0958", "input": {"body": "Hello. too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0713", "input": {"body": "Hello. you want our cto Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0311", "input": {"body": "Hi, we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0908", "input": {"body": "too expensive for us Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0276", "input": {"body": "Hello. not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0170", "input": {"body": "happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0557", "input": {"body": "Thanks — more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "referral"}, "id": "reply-0782", "input": {"body": "Hello. try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1020", "input": {"body": "check back next quarter Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0180", "input": {"body": "can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0828", "input": {"body": "Thanks — we already use you Thanks."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1183", "input": {"body": "Hi, ok Thanks."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0497", "input": {"body": "Thanks — more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0130", "input": {"body": "Hi, let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0601", "input": {"body": "Hi, on leave until monday Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0832", "input": {"body": "Hi, we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0495", "input": {"body": "Hello. can you send pricing Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "referral"}, "id": "reply-0797", "input": {"body": "forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0641", "input": {"body": "on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0935", "input": {"body": "Thanks — the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0314", "input": {"body": "Hello. we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0124", "input": {"body": "Thanks — let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0066", "input": {"body": "can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0610", "input": {"body": "Hello. i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "referral"}, "id": "reply-0798", "input": {"body": "Hi, try my colleague Thanks."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0837", "input": {"body": "Hello. we are an existing customer"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0711", "input": {"body": "Thanks — you want our cto Thanks."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0473", "input": {"body": "Hi, more about the integration Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0914", "input": {"body": "Hi, too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1147", "input": {"body": "ok Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0443", "input": {"body": "Thanks — more about the integration Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0441", "input": {"body": "Hello. can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0400", "input": {"body": "Hello. no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0081", "input": {"body": "Hi, can we meet tuesday"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1186", "input": {"body": "Hello. ok Thanks."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0035", "input": {"body": "Hello. unsubscribe me"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0465", "input": {"body": "can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0209", "input": {"body": "Hi, happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0477", "input": {"body": "can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0507", "input": {"body": "Hi, can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0107", "input": {"body": "happy to meet Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0112", "input": {"body": "Hello. let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0814", "input": {"body": "Hi, we already use you Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "referral"}, "id": "reply-0787", "input": {"body": "Hi, forwarding to our head of ops"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1138", "input": {"body": "Hi, we use a competitor already Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0490", "input": {"body": "tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0976", "input": {"body": "Thanks — too expensive for us Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0187", "input": {"body": "Hi, let us get a calendar invite"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0855", "input": {"body": "Thanks — we are an existing customer Best regards."}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0748", "input": {"body": "i am not the right person Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0242", "input": {"body": "Hi, we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0494", "input": {"body": "Hello. more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0051", "input": {"body": "Hi, please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0583", "input": {"body": "Hi, tell me more Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0902", "input": {"body": "too expensive for us"}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0344", "input": {"body": "Hi, we are all set Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0671", "input": {"body": "Thanks — on leave until monday Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1013", "input": {"body": "not the right time Best regards."}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0263", "input": {"body": "Thanks — we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1122", "input": {"body": "Thanks — we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0297", "input": {"body": "Thanks — not interested"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0181", "input": {"body": "Thanks — let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0373", "input": {"body": "Hi, no thanks Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1105", "input": {"body": "Thanks — we evaluated another vendor Best regards."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0120", "input": {"body": "Thanks — can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0439", "input": {"body": "Hi, tell me more Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0836", "input": {"body": "Hi, we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0435", "input": {"body": "Thanks — can you send pricing Best regards."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0033", "input": {"body": "Hi, please remove me from your list"}, "metadata": {"intent": "unsubscribe"}}
+{"expected": {"intent": "referral"}, "id": "reply-0778", "input": {"body": "Hi, try my colleague"}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0278", "input": {"body": "Hello. we are all set Thanks."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0171", "input": {"body": "can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0212", "input": {"body": "happy to meet Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0934", "input": {"body": "too expensive for us Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0218", "input": {"body": "Thanks — happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0662", "input": {"body": "Hi, i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0943", "input": {"body": "Hello. the price is high Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0639", "input": {"body": "Hi, on leave until monday Thanks."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0135", "input": {"body": "Hi, can we meet tuesday Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0677", "input": {"body": "Thanks — on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0167", "input": {"body": "Hello. happy to meet Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0919", "input": {"body": "the price is high Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0388", "input": {"body": "Hello. no thanks"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0105", "input": {"body": "Thanks — can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0205", "input": {"body": "Thanks — let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0646", "input": {"body": "Thanks — i am out of office"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0356", "input": {"body": "Hi, we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1084", "input": {"body": "Thanks — we use a competitor already"}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0098", "input": {"body": "happy to meet"}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1168", "input": {"body": "Hello. ok Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "referral"}, "id": "reply-0764", "input": {"body": "Thanks — try my colleague Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "timing_objection"}, "id": "reply-1067", "input": {"body": "Thanks — not the right time"}, "metadata": {"intent": "timing_objection"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0506", "input": {"body": "Hi, more about the integration"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0498", "input": {"body": "Hi, can you send pricing Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "already_a_customer"}, "id": "reply-0860", "input": {"body": "Hello. we already use you"}, "metadata": {"intent": "already_a_customer"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0920", "input": {"body": "Hello. too expensive for us Thanks."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0350", "input": {"body": "Thanks — we are all set"}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0265", "input": {"body": "Hi, no thanks Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0927", "input": {"body": "the price is high Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0625", "input": {"body": "on leave until monday"}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0115", "input": {"body": "let us get a calendar invite Thanks."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "out_of_office"}, "id": "reply-0621", "input": {"body": "Thanks — on leave until monday Best regards."}, "metadata": {"intent": "out_of_office"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0444", "input": {"body": "Hi, can you send pricing"}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1142", "input": {"body": "Hi, sure"}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0079", "input": {"body": "Hi, let us get a calendar invite Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "meeting_requested"}, "id": "reply-0129", "input": {"body": "can we meet tuesday Best regards."}, "metadata": {"intent": "meeting_requested"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0383", "input": {"body": "Hi, we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "wrong_person"}, "id": "reply-0705", "input": {"body": "Hello. you want our cto Best regards."}, "metadata": {"intent": "wrong_person"}}
+{"expected": {"intent": "competitor_mention"}, "id": "reply-1121", "input": {"body": "Thanks — we evaluated another vendor Thanks."}, "metadata": {"intent": "competitor_mention"}}
+{"expected": {"intent": "referral"}, "id": "reply-0807", "input": {"body": "Hi, forwarding to our head of ops Best regards."}, "metadata": {"intent": "referral"}}
+{"expected": {"intent": "needs_information"}, "id": "reply-0590", "input": {"body": "Hi, more about the integration Thanks."}, "metadata": {"intent": "needs_information"}}
+{"expected": {"intent": "ambiguous"}, "id": "reply-1163", "input": {"body": "Thanks — sure Best regards."}, "metadata": {"intent": "ambiguous"}}
+{"expected": {"intent": "not_interested"}, "id": "reply-0341", "input": {"body": "Thanks — we are all set Best regards."}, "metadata": {"intent": "not_interested"}}
+{"expected": {"intent": "pricing_objection"}, "id": "reply-0979", "input": {"body": "the price is high Best regards."}, "metadata": {"intent": "pricing_objection"}}
+{"expected": {"intent": "unsubscribe"}, "id": "reply-0058", "input": {"body": "stop emailing me"}, "metadata": {"intent": "unsubscribe"}}

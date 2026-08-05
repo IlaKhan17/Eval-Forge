@@ -18,6 +18,7 @@ from evalforge_core.evaluators.operational import OperationalEvaluator
 from evalforge_core.evaluators.statistical import (
     CalibrationEvaluator,
     ClassificationEvaluator,
+    DiscriminationEvaluator,
     RankingEvaluator,
     confusion_matrix,
     expected_calibration_error,
@@ -29,6 +30,7 @@ __all__ = [
     "CalibrationEvaluator",
     "ClassificationEvaluator",
     "Contains",
+    "DiscriminationEvaluator",
     "ExactMatch",
     "JsonSchemaMatch",
     "LLMJudge",

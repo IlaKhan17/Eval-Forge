@@ -1,0 +1,130 @@
+apiVersion: evalforge.dev/v1
+kind: EvalSuite
+name: quiz-learning
+description: >
+  Adaptive learning — ordinary supervised evaluation, and the section where teams most often
+  reach for an LLM judge when they should not.
+
+  "Did the mastery model predict well?" is answered by holding out the learner's next answer
+  and measuring AUC against it: standard, cheap, exactly reproducible. Asking a model whether a
+  probability was a good probability is strictly worse.
+
+  AUC rather than accuracy, because the useful property is *ranking*. A predictor that outputs
+  0.4 for everyone who fails and 0.6 for everyone who passes discriminates perfectly and scores
+  0% accurate at a 0.5 threshold. Brier and calibration error cover whether the numbers mean
+  what they say.
+
+  Exactly one metric here uses a judge, and it is the least consequential one.
+
+dataset:
+  path: ../fixtures/quiz-sessions.jsonl
+
+task:
+  entrypoint: examples.adaptquiz.learning:predict_mastery
+  timeout_s: 30
+
+execution:
+  concurrency: 8
+  judge_concurrency: 4
+  seed: 42
+  slice_by: [concept]
+
+evaluators:
+  - name: concept_tag
+    type: exact_match
+    field: output.concept
+    expected_field: concept
+
+  - name: prerequisite_detection
+    type: set_comparison
+    field: output.prerequisites
+    expected_field: prerequisites
+    mode: equals
+
+  - name: misconception
+    type: classification
+    prediction_field: misconception
+    label_field: misconception
+    averaging: macro
+
+  # The metric this suite exists to demonstrate: held-out next-answer prediction, no judge.
+  - name: mastery
+    type: discrimination
+    prediction_field: predicted
+    label_field: correct
+
+  # Reliability of the model's *decisions*: when it says it is 80% sure, is it right 80% of the
+  # time? `confidence` is confidence in the prediction the model made, not the probability of
+  # success — for a learner at mastery 0.2 the model is 80% sure they will get it wrong, and
+  # feeding 0.2 in here would score a confident, correct rejection as badly calibrated.
+  - name: mastery_calibration
+    type: calibration
+    confidence_field: confidence
+    prediction_field: predicted_correct
+    label_field: correct
+
+  - name: next_question_relevance
+    type: llm_judge
+    model: claude-sonnet-5
+    rubric_path: ../rubrics/next-question-relevance.md
+    scale: {min: 1, max: 5, normalize: true}
+    inputs: [output.concept, output.predicted_mastery, output.next_question]
+    temperature: 0.0
+    seed: 42
+    calibration:
+      dataset: ../calibration/next-question-relevance.jsonl
+      passing_labels: ["4", "5"]
+      # Exact agreement is the wrong statistic to threshold on an ordinal scale: it penalises a
+      # 4-vs-5 disagreement exactly as much as 1-vs-5. Weighted kappa is distance-aware and is
+      # what the real bar is set on here; the agreement floor is kept low deliberately so it
+      # catches a judge that has stopped answering rather than one that is a point off.
+      min_agreement: 0.35
+      min_kappa: 0.5
+      # 20, not the default 50. On a 1-5 scale the default would demand 250 labels; weighted
+      # kappa measures distance on the scale rather than per-class recall, so it already accounts
+      # for near misses and the extra 130 annotations sharpen little. The floor still guards
+      # against a rubric point being entirely unmeasured, which is what it is for.
+      min_per_class: 20
+      # Loose on purpose. This is the least consequential metric in the suite, and a tight
+      # requirement on a low-stakes judge is how a gate becomes something people bypass.
+      max_false_pass_rate: 0.20
+
+  - name: ops
+    type: operational
+    percentiles: [50, 95]
+
+gates:
+  concept_tag:
+    minimum: 0.90
+
+  prerequisite_detection:
+    minimum: 0.80
+
+  misconception_macro_f1:
+    minimum: 0.60
+
+  # 0.65, not 0.70. The realised AUC on this fixture is around 0.70, and a gate set at the
+  # observed value is a gate that fails on ordinary noise — which is how a suite trains people
+  # to rerun CI rather than read it.
+  mastery_auc:
+    minimum: 0.65
+    max_regression: 0.03
+
+  mastery_calibration_brier:
+    maximum: 0.25
+
+  next_question_relevance:
+    minimum: 0.60
+    blocking: false
+
+calibration:
+  directory: ../calibration
+  require: true
+
+baseline:
+  strategy: latest_on_branch
+  branch: main
+
+report:
+  formats: [terminal, json]
+  output: evalforge-quiz-learning.json

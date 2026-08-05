@@ -1,0 +1,91 @@
+apiVersion: evalforge.dev/v1
+kind: EvalSuite
+name: quiz-ingestion
+description: >
+  Document ingestion. **Entirely deterministic**, and the clearest case in this project of
+  where evaluation is the wrong tool.
+
+  This is a parsing problem with ground truth. An LLM judge would be slower, costlier, and
+  less accurate than a string comparison against an annotated reference.
+
+  Several of these metrics are honestly just unit tests over a fixture corpus, and they belong
+  in the application's own pytest suite. They are co-located here because they are cheap to run
+  alongside the rest and their *trend* is informative — extraction coverage drifting from 0.99
+  to 0.96 after a library upgrade is worth a gate. If this suite were the only thing being
+  measured, it would not justify an evaluation platform.
+
+dataset:
+  path: ../fixtures/quiz-ingestion.jsonl
+
+task:
+  entrypoint: examples.adaptquiz.ingestion:ingest_document
+  timeout_s: 30
+
+execution:
+  concurrency: 8
+  seed: 42
+
+evaluators:
+  - name: text_extraction_coverage
+    type: numeric_range
+    field: output.text_extraction_coverage
+    minimum: 0.95
+
+  - name: heading_detection
+    type: set_comparison
+    field: output.headings
+    expected_field: headings
+    mode: equals
+
+  - name: table_extraction
+    type: set_comparison
+    field: output.table_cells
+    expected_field: table_cells
+    mode: jaccard
+
+  - name: equation_extraction
+    type: set_comparison
+    field: output.equations
+    expected_field: equations
+    mode: equals
+
+  # Blocking. A citation pointing at the wrong sentence sends a learner to the wrong place,
+  # which is worse than no citation at all.
+  - name: citation_location
+    type: exact_match
+    field: output.citations_located
+    expected_field: citations_located
+
+  - name: cross_page_integrity
+    type: numeric_range
+    field: output.cross_page_integrity
+    minimum: 0.90
+
+  - name: ops
+    type: operational
+    percentiles: [50, 95]
+
+gates:
+  text_extraction_coverage:
+    minimum: 0.95
+    blocking: true
+
+  heading_detection:
+    minimum: 0.85
+
+  table_extraction:
+    minimum: 0.75
+
+  equation_extraction:
+    minimum: 0.70
+
+  citation_location:
+    minimum: 0.95
+    blocking: true
+
+  cross_page_integrity:
+    minimum: 0.90
+
+report:
+  formats: [terminal, json]
+  output: evalforge-quiz-ingestion.json

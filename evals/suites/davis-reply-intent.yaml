@@ -1,0 +1,96 @@
+apiVersion: evalforge.dev/v1
+kind: EvalSuite
+name: davis-reply-intent
+description: >
+  Reply classification across 12 classes — the canonical illustration of why protected
+  metrics exist, and of defence in depth.
+
+  Be precise about the arithmetic, because it determines the mitigation. This fixture
+  over-samples `unsubscribe` to 5% (60 of 1 200) so per-class recall is measurable at all; at
+  1% a 1 200-example set would carry twelve of them and the recall figure would be noise. At
+  *this* prevalence, destroying unsubscribe recall costs 5 points of overall accuracy, which
+  an aggregate gate would also catch.
+
+  In production, where `unsubscribe` is nearer 1%, the same collapse costs 0.79 points —
+  comfortably inside any plausible aggregate tolerance, and a CAN-SPAM violation. The
+  aggregate is not uniformly blind; it is blind *below a prevalence threshold set by the gate
+  tolerance*, and that threshold is invisible to whoever writes the gate. You cannot choose a
+  tolerance that protects every rare class without blocking on ordinary noise in the common
+  ones.
+
+  Which is the argument for the gate below: an absolute floor on the class itself does not
+  depend on prevalence at all. And the *consequence* — a follow-up sent after an unsubscribe —
+  is caught independently by a trajectory rule, so two mechanisms have to fail before it ships.
+
+dataset:
+  path: ../fixtures/davis-replies.jsonl
+
+task:
+  entrypoint: examples.davis_sdr.replies:classify_reply
+  timeout_s: 30
+  retries: 1
+
+execution:
+  concurrency: 16
+  seed: 42
+  slice_by: [intent]
+
+evaluators:
+  # Emits per-class recall as sliced metrics whether or not anyone gates on them, so a
+  # rare-class collapse is at least *visible* even when nobody wrote the gate.
+  - name: classes
+    type: classification
+    prediction_field: intent
+    label_field: intent
+    averaging: macro
+
+  - name: intent_accuracy
+    type: exact_match
+    field: output.intent
+    expected_field: intent
+
+  # A model that says 0.9 should be right about 90% of the time. A confidently wrong
+  # classifier is more dangerous than an uncertain one, because a downstream rule will act
+  # on the confidence.
+  - name: confidence
+    type: calibration
+    confidence_field: confidence
+    prediction_field: intent
+    label_field: intent
+
+  - name: ops
+    type: operational
+    percentiles: [50, 95]
+
+gates:
+  classes_macro_f1:
+    minimum: 0.78
+    max_regression: 0.02
+
+  intent_accuracy:
+    minimum: 0.80
+    max_regression: 0.02
+
+  # The protected metric. An absolute floor, blocking, and sliced to the rare class — so it
+  # depends on no baseline that a bad merge could have weakened.
+  classes_recall:
+    minimum: 0.98
+    blocking: true
+    slice:
+      class: unsubscribe
+
+  confidence_ece:
+    maximum: 0.15
+    blocking: false
+
+  p95_latency_ms:
+    maximum: 5000
+    blocking: false
+
+baseline:
+  strategy: latest_on_branch
+  branch: main
+
+report:
+  formats: [terminal, json]
+  output: evalforge-davis-reply-intent.json

@@ -1,0 +1,128 @@
+apiVersion: evalforge.dev/v1
+kind: EvalSuite
+name: davis-meetings
+description: >
+  Meeting intelligence. Dates and owners are deterministic; only the factuality of prose needs
+  a judge.
+
+  A date either parses to the right day or it does not. An owner either is or is not in the
+  attendee list. Both are exact comparisons against human-extracted ground truth, and a judge
+  would be slower and *less* accurate at either.
+
+dataset:
+  path: ../fixtures/davis-meetings.jsonl
+
+task:
+  entrypoint: examples.davis_sdr.meetings:extract_meeting
+  timeout_s: 30
+
+execution:
+  concurrency: 8
+  judge_concurrency: 4
+  seed: 42
+
+evaluators:
+  - name: date_extraction
+    type: set_comparison
+    field: output.dates
+    expected_field: dates
+    mode: equals
+
+  - name: owner_attribution
+    type: set_comparison
+    field: output.owners
+    expected_field: owners
+    mode: equals
+
+  - name: owners_are_attendees
+    type: exact_match
+    field: output.owners_all_attendees
+    expected_field: owners_all_attendees
+
+  # Jaccard rather than exact equality: an action item extracted with slightly different
+  # wording is still the same action item, and demanding string equality would report a
+  # regression every time the phrasing shifted.
+  - name: action_items
+    type: set_comparison
+    field: output.action_items
+    expected_field: action_items
+    mode: jaccard
+
+  - name: competitor_extraction
+    type: set_comparison
+    field: output.competitors
+    expected_field: competitors
+    mode: equals
+
+  - name: objection_extraction
+    type: set_comparison
+    field: output.objections
+    expected_field: objections
+    mode: subset
+
+  - name: summary_factuality
+    type: llm_judge
+    model: claude-sonnet-5
+    rubric_path: ../rubrics/summary-factuality.md
+    scale: {min: 1, max: 5, normalize: true}
+    inputs: [output.summary, output.transcript]
+    temperature: 0.0
+    seed: 42
+    calibration:
+      dataset: ../calibration/summary-factuality.jsonl
+      passing_labels: ["4", "5"]
+      # Exact agreement is the wrong statistic to threshold on an ordinal scale: it penalises a
+      # 4-vs-5 disagreement exactly as much as 1-vs-5. Weighted kappa is distance-aware and is
+      # what the real bar is set on here; the agreement floor is kept low deliberately so it
+      # catches a judge that has stopped answering rather than one that is a point off.
+      min_agreement: 0.35
+      min_kappa: 0.6
+      # 20, not the default 50. On a 1-5 scale the default would demand 250 labels; weighted
+      # kappa measures distance on the scale rather than per-class recall, so it already accounts
+      # for near misses and the extra 130 annotations sharpen little. The floor still guards
+      # against a rubric point being entirely unmeasured, which is what it is for.
+      min_per_class: 20
+
+  - name: ops
+    type: operational
+    percentiles: [50, 95]
+
+gates:
+  date_extraction:
+    minimum: 0.95
+    blocking: true
+
+  owner_attribution:
+    minimum: 0.90
+
+  owners_are_attendees:
+    minimum: 1.0
+    blocking: true
+
+  action_items:
+    minimum: 0.85
+
+  competitor_extraction:
+    minimum: 0.90
+
+  objection_extraction:
+    minimum: 0.80
+
+  # Blocking, and gated hardest of the judges in this project. A summary that invents a
+  # commitment creates a false obligation for a real person.
+  summary_factuality:
+    minimum: 0.70
+    blocking: true
+    max_regression: 0.05
+
+calibration:
+  directory: ../calibration
+  require: true
+
+baseline:
+  strategy: latest_on_branch
+  branch: main
+
+report:
+  formats: [terminal, json]
+  output: evalforge-davis-meetings.json

@@ -346,3 +346,89 @@ def brier_score(points: Sequence[tuple[float, bool]]) -> float:
     if not points:
         return 0.0
     return mean([(confidence - (1.0 if correct else 0.0)) ** 2 for confidence, correct in points])
+
+
+class DiscriminationEvaluator:
+    """ROC-AUC over a predicted score against a binary outcome.
+
+    Exists because "does this model rank the right cases higher?" is an ordinary supervised
+    learning question with an ordinary answer, and it is the place teams most often reach for
+    an LLM judge when they should be doing ordinary ML evaluation. Asking a model whether a
+    mastery prediction was good is strictly worse than measuring it against the next answer
+    the learner actually gave.
+
+    AUC rather than accuracy, because the useful property is *ranking*: a mastery predictor
+    that outputs 0.4 for everyone who fails and 0.6 for everyone who passes is perfectly
+    discriminating and 0% accurate at a 0.5 threshold.
+    """
+
+    version = 1
+
+    def __init__(
+        self,
+        *,
+        score_field: str = "predicted",
+        outcome_field: str = "correct",
+        name: str = "discrimination",
+    ) -> None:
+        self.name = name
+        self.score_field = score_field
+        self.outcome_field = outcome_field
+
+    def evaluate_corpus(self, results: Sequence[ExampleResult]) -> list[Metric]:
+        points: list[tuple[float, bool]] = []
+        for result in results:
+            if not result.ok or result.expected is None:
+                continue
+            score = try_resolve(result.output, self.score_field)
+            if not isinstance(score, int | float) or isinstance(score, bool):
+                continue
+            outcome = result.expected.get(self.outcome_field)
+            if outcome is None:
+                continue
+            points.append((float(score), bool(outcome)))
+
+        value, reason = roc_auc(points)
+        if value is None:
+            # Zero measurements, not 0.5. An AUC of 0.5 means "no better than chance", which
+            # is a measured result; a set with only one class has no AUC at all, and reporting
+            # chance-level there would look like a real finding.
+            return [Metric(key=f"{self.name}_auc", value=0.0, count=0, unit=reason)]
+        return [Metric(key=f"{self.name}_auc", value=value, count=len(points))]
+
+
+def roc_auc(points: Sequence[tuple[float, bool]]) -> tuple[float | None, str]:
+    """ROC-AUC by the rank-sum identity, returning `(value, reason_if_undefined)`.
+
+    Computed as the Mann-Whitney U statistic over midranks rather than by integrating a
+    trapezoid over thresholds. The two agree exactly, and the rank form handles ties
+    correctly without any special-casing — which matters here because a mastery predictor
+    emitting a handful of discrete probabilities produces ties constantly.
+
+    Undefined when either class is empty: AUC asks "how often does a positive outrank a
+    negative", and with no negatives there is nothing to outrank.
+    """
+    positives = [score for score, outcome in points if outcome]
+    negatives = [score for score, outcome in points if not outcome]
+    if not positives or not negatives:
+        return None, "auc undefined: only one outcome class present"
+
+    ordered = sorted(points, key=lambda item: item[0])
+    ranks: list[float] = [0.0] * len(ordered)
+    index = 0
+    while index < len(ordered):
+        stop = index
+        while stop + 1 < len(ordered) and ordered[stop + 1][0] == ordered[index][0]:
+            stop += 1
+        # Midrank for a tied group, which is what makes a tie count as half a win.
+        shared = (index + stop) / 2 + 1
+        for position in range(index, stop + 1):
+            ranks[position] = shared
+        index = stop + 1
+
+    positive_rank_sum = math.fsum(
+        rank for rank, (_, outcome) in zip(ranks, ordered, strict=True) if outcome
+    )
+    n_pos, n_neg = len(positives), len(negatives)
+    statistic = positive_rank_sum - n_pos * (n_pos + 1) / 2
+    return statistic / (n_pos * n_neg), ""

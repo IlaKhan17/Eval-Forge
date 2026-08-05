@@ -348,6 +348,64 @@ jobs:
               shutil.move(moved, record)
           PY
 
+  # Stage 4c — the reference integrations. Ten suites across two unrelated domains, run against
+  # committed fixtures with a stub judge, so no provider credential is involved.
+  #
+  # The job's real assertion is not that the suites pass. It is that each one *fails* when its
+  # defect is injected: a suite whose gates cannot fire gives false assurance, which is worse than
+  # having no suite.
+  reference:
+    name: reference suites · Davis & AdaptQuiz
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages
+
+      - name: every suite validates and plans for free
+        run: uv run pytest packages/cli/tests/test_reference_suites.py -q -m "not slow"
+
+      - name: a clean run passes and every injected regression is caught
+        run: uv run pytest packages/cli/tests/test_reference_suites.py -q -m slow
+
+      - name: the fixtures and calibration sets regenerate byte-identically
+        run: |
+          # A generated fixture that is not reproducible is a fixture whose numbers move under
+          # you, and the whole value of a golden dataset is that they do not.
+          uv run python scripts/gen_reference_fixtures.py
+          uv run python scripts/gen_calibration_sets.py
+          git diff --exit-code -- evals/fixtures evals/calibration
+
+      - name: no domain term leaked into the platform
+        # The control, rather than discipline. If "davis" or "adaptquiz" ever appears under apps/
+        # or packages/, the reference integrations have stopped being examples.
+        run: ./scripts/check-domain-leak.sh
+
+      - name: every gated judge is calibrated
+        run: |
+          # `require_calibration: true` on the judge suites means this is already enforced by the
+          # gates above. Asserted separately so the *reason* the records are committed is explicit:
+          # they are the evidence CI reads, not documentation.
+          uv run python - <<'PY'
+          from pathlib import Path
+          records = sorted(p.name for p in Path("evals/calibration").glob("*.calibration.json"))
+          judges = {
+              "claim_groundedness",
+              "grounded_personalization",
+              "summary_factuality",
+              "citation_support",
+              "next_question_relevance",
+              "acceptable_to_followup",
+          }
+          covered = {name.split(".")[0] for name in records}
+          missing = judges - covered
+          assert not missing, f"judges with no committed calibration: {sorted(missing)}"
+          print(f"{len(records)} calibration record(s) committed")
+          PY
+
   # Stage 5 — the dashboard. Its own job rather than steps appended to `static`:
   # nothing here needs Python, and a Node failure should be readable without
   # scrolling past a uv sync.

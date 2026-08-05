@@ -193,7 +193,7 @@ def produce(
             ordinal_order=plan_.ordinal_order,
         )
 
-    models = _load_model_client(model_client)
+    models = load_model_client(model_client)
     return asyncio.run(
         run_calibration(
             plan_.judge,
@@ -252,7 +252,7 @@ def _optional_str(value: Any) -> str | None:
     return None if value is None or value == "" else str(value)
 
 
-def _load_model_client(entrypoint: str | None) -> Any:
+def load_model_client(entrypoint: str | None) -> Any:
     """Import a `module:factory` that returns a ModelClient.
 
     Provider adapters are not part of this package — `evaluation-core` must stay free of
