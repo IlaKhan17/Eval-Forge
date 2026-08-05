@@ -150,7 +150,7 @@ Every request has an `X-Request-Id` in logs. Audit logs answer "who accessed wha
 
 ## 14. Explicitly accepted risks (MVP)
 
-1. No RLS until Phase 12 — mitigated by layers 1 and 2 (application predicate + test suite).
+1. ~~No RLS until Phase 12~~ — **done** (Phase 12). Policies on all 26 tenant-scoped tables, `FORCE`d, with `WITH CHECK`. The residual risk moved rather than disappearing: RLS is inert unless the application connects as a non-superuser role, so `/readyz` reports the state and refusing to check it is the new failure mode. See [HARDENING.md](HARDENING.md).
 2. No hardware MFA / SSO — self-hosted deployments are behind the customer's own perimeter.
 3. Judge injection is mitigated, not eliminated — hence the rule that security-critical properties use deterministic checks.
 4. Presigned URLs are bearer credentials for their 60-second lifetime.

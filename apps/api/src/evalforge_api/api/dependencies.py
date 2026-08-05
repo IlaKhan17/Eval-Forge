@@ -18,6 +18,7 @@ from fastapi import Depends, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from evalforge_api.db import rls
 from evalforge_api.db.models.identity import ApiKey, Membership, Project, User
 from evalforge_api.db.session import get_sessionmaker
 from evalforge_api.errors import ForbiddenError, NotFoundError, UnauthorizedError
@@ -56,13 +57,28 @@ def _bearer(request: Request) -> str:
 
 
 async def get_principal(request: Request, session: SessionDep, settings: SettingsDep) -> Principal:
-    """Resolve the caller from an API key or a session JWT."""
+    """Resolve the caller from an API key or a session JWT, and bind the tenant for RLS.
+
+    The tenant is established here, immediately after the credential resolves, because this is the
+    first moment it is known — and because binding it anywhere a request body could influence would
+    defeat the policy it feeds. `SET LOCAL` scopes it to the transaction, so a pooled connection
+    cannot carry a tenant into the next request.
+
+    Note the ordering constraint this creates: `api_keys` cannot itself be under a tenant policy,
+    since the lookup below is what *discovers* the tenant. That exception is recorded in
+    `db.rls.UNPROTECTED_TABLES` with its reasoning.
+    """
     token = _bearer(request)
 
     if key_utils.parse_prefix(token) is not None:
         principal = await _principal_from_api_key(token, session)
     else:
         principal = await _principal_from_jwt(token, session, settings)
+
+    # Layer 3. Every query in this transaction from here on is filtered by the database as well as
+    # by the repository predicate, so a missing `project_id` in a hand-written query returns nothing
+    # instead of another tenant's rows.
+    await rls.set_tenant(session, principal.project_id)
 
     request.state.principal = principal
     return principal

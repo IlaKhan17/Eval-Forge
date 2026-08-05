@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 
 .PHONY: help setup test test-unit test-integration lint fmt typecheck arch check dev down clean \
-	bootstrap web web-install web-check api calibrate worker online-eval otlp-example
+	bootstrap web web-install web-check api calibrate worker online-eval otlp-example partitions app-role
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -44,6 +44,9 @@ dev: ## Start local services (postgres, redis, minio)
 bootstrap: ## Create a local org, project, and API key; write apps/web/.env.local
 	uv run alembic upgrade head
 	uv run python scripts/bootstrap_dev.py --write-web-env
+
+partitions: ## Create the partitions the coming months need (needs DDL privileges)
+	uv run python -c "$$PARTITIONS_SNIPPET"
 
 worker: ## Run the background worker (online eval, rollups, retention)
 	uv run arq evalforge_api.worker.main.WorkerSettings
@@ -103,3 +106,26 @@ async def main():
 
 asyncio.run(main())
 endef
+
+export PARTITIONS_SNIPPET
+define PARTITIONS_SNIPPET
+import asyncio
+from sqlalchemy.ext.asyncio import create_async_engine
+from evalforge_api.db.partitions import ensure_partitions, missing_partitions
+from evalforge_api.settings import get_settings
+
+async def main():
+    engine = create_async_engine(get_settings().sqlalchemy_url)
+    async with engine.begin() as connection:
+        created = await ensure_partitions(connection)
+        missing = await missing_partitions(connection)
+    print(f"ensured {len(created)} partition(s); missing for this month: {missing or 'none'}")
+    await engine.dispose()
+
+asyncio.run(main())
+endef
+
+app-role: ## Create the unprivileged role the application should connect as
+	@test -n "$$APP_ROLE_PASSWORD" || (echo "set APP_ROLE_PASSWORD (e.g. \$$(openssl rand -hex 24))" && exit 1)
+	docker exec -i evalforge-postgres-1 psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" \
+		-v role_password="$$APP_ROLE_PASSWORD" < scripts/create_app_role.sql

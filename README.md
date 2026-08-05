@@ -123,6 +123,7 @@ same code path, and it is enforced in CI by [`.importlinter`](.importlinter).
 | [GitHub Actions](docs/GITHUB_ACTIONS.md) | CI setup, exit codes, fork-PR safety |
 | [Dashboard](docs/DASHBOARD.md) | Trace viewer, proxy security, waterfall semantics |
 | [Security](docs/SECURITY.md) | Threat model, redaction, tenant isolation |
+| [Hardening](docs/HARDENING.md) | Row-level security, the application role, what is not done |
 | [Testing strategy](docs/TESTING_STRATEGY.md) | Pyramid, targets, CI stages |
 | [Implementation plan](docs/IMPLEMENTATION_PLAN.md) | Phased milestones |
 | [ADRs](docs/ADR.md) | 17 architecture decision records |

@@ -15,7 +15,7 @@ from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from evalforge_api.api.routes import evaluation, health, ingest, online, otlp, traces
-from evalforge_api.db.partitions import ensure_partitions
+from evalforge_api.db.partitions import missing_partitions
 from evalforge_api.db.session import dispose_engine, get_sessionmaker, init_engine
 from evalforge_api.errors import (
     ApiError,
@@ -57,10 +57,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         engine = init_engine(config)
-        # Partitions must exist before the first insert of a new month, so this runs
-        # at every startup rather than only at migration time.
-        async with engine.begin() as connection:
-            await ensure_partitions(connection)
+        # Partitions are *verified* here, not created.
+        #
+        # Creating them at startup was the original design and is wrong for two reasons. It needs
+        # DDL privileges, and the application role deliberately has none — a role that can reshape
+        # the schema is a role that can create a table without an RLS policy, and attaching a
+        # partition additionally requires owning the parent. It also races with itself: every
+        # replica runs this on boot.
+        #
+        # Ownership moved to the migration (which creates the first months) and the worker's
+        # `maintain_partitions` job (which stays ahead of the calendar). Startup only reports a gap,
+        # loudly, because ingestion into a missing range fails outright.
+        async with engine.connect() as connection:
+            missing = await missing_partitions(connection)
+        if missing:
+            logger.error(
+                "no partition covers the current month for: %s. Ingestion will fail. Run "
+                "`make partitions` or let the worker's maintenance job catch up.",
+                ", ".join(missing),
+            )
         try:
             yield
         finally:

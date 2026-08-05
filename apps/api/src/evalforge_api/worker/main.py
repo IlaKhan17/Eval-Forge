@@ -77,6 +77,21 @@ async def rollup(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:  # 
     return await _with_session("rollup_online_metrics", jobs.rollup_online_metrics)
 
 
+async def partitions(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:  # noqa: ARG001
+    """Create the partitions the coming months need. DDL, so it needs a privileged connection."""
+    async with _session_factory()() as session:
+        connection = await session.connection()
+        try:
+            report = await jobs.maintain_partitions(session, connection=connection)
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            logger.exception("job maintain_partitions failed")
+            raise
+    logger.info("job maintain_partitions: %s", report)
+    return {"job": "maintain_partitions", **report.detail}
+
+
 async def retention(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:  # noqa: ARG001
     """Retention needs a raw connection as well as a session, for the DDL."""
     async with _session_factory()() as session:
@@ -100,7 +115,7 @@ def redis_settings(settings: Settings | None = None) -> RedisSettings:
 class WorkerSettings:
     """arq's configuration object, discovered by `arq evalforge_api.worker.main.WorkerSettings`."""
 
-    functions: ClassVar[list[Any]] = [online_eval, release_leases, rollup, retention]
+    functions: ClassVar[list[Any]] = [online_eval, release_leases, rollup, retention, partitions]
     cron_jobs: ClassVar[list[CronJob]] = [
         cron(online_eval, second=0, run_at_startup=True),
         cron(release_leases, minute={0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55}, second=30),
@@ -108,6 +123,9 @@ class WorkerSettings:
         # 03:17 rather than 03:00: a job scheduled on the hour competes with every other
         # system scheduled on the hour, and retention holds DDL locks.
         cron(retention, hour=3, minute=17, second=0),
+        # Daily and at startup. Ingestion into an uncovered month fails outright, so this must not
+        # wait for a schedule after a deploy that crossed a month boundary.
+        cron(partitions, hour=3, minute=5, second=0, run_at_startup=True),
     ]
     # One at a time. These jobs are database-bound, and running four concurrently mostly
     # produces lock contention with ingestion rather than throughput.
@@ -123,6 +141,7 @@ class WorkerSettings:
 __all__ = [
     "WorkerSettings",
     "online_eval",
+    "partitions",
     "redis_settings",
     "release_leases",
     "retention",

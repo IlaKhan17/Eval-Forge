@@ -97,6 +97,16 @@ async def ensure_partitions(
             created.append(f"{table}_{month.suffix}")
             month = month.next()
         await connection.execute(text(default_partition_statement(table)))
+
+    # RLS on the parent covers queries *through* the parent, which is how the application reads.
+    # It does not give a newly attached partition its own policy, so a direct query on the child
+    # would bypass it. Applied here rather than only in the migration because partitions are
+    # created at every startup, months after the migration ran.
+    from evalforge_api.db.rls import apply_policies  # noqa: PLC0415 — avoids an import cycle
+
+    await apply_policies(
+        connection, [*created, *(f"{table}_default" for table, _ in PARTITIONED_TABLES)]
+    )
     return created
 
 
@@ -142,3 +152,31 @@ async def drop_partitions_before(
             await connection.execute(text(f"DROP TABLE IF EXISTS {name}"))
             dropped.append(name)
     return dropped
+
+
+async def missing_partitions(
+    connection: AsyncConnection, *, now: datetime | None = None
+) -> list[str]:
+    """Partitioned tables with no partition covering the current month.
+
+    A read-only check, so the application can run it without DDL privileges. It deliberately does
+    not consider the DEFAULT partition sufficient: rows landing there are stored but unpartitioned,
+    which defeats retention-by-drop and is exactly the state worth reporting.
+    """
+    moment = now or datetime.now(UTC)
+    suffix = MonthRange.of(moment).suffix
+    existing = {
+        str(name)
+        for name in (
+            await connection.execute(
+                text(
+                    "SELECT c.relname FROM pg_class c "
+                    "JOIN pg_namespace n ON n.oid = c.relnamespace "
+                    "WHERE n.nspname = current_schema() AND c.relkind = 'r'"
+                )
+            )
+        )
+        .scalars()
+        .all()
+    }
+    return [table for table, _ in PARTITIONED_TABLES if f"{table}_{suffix}" not in existing]

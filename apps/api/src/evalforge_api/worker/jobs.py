@@ -30,6 +30,7 @@ from typing import Any
 
 from evalforge_api.db.models.identity import Project
 from evalforge_api.db.models.online import OnlineEvaluation, ReviewAssignment, ReviewQueue
+from evalforge_api.db.partitions import ensure_partitions, missing_partitions
 from evalforge_api.services.online_eval import DEFAULT_BATCH_SIZE, OnlineEvalService
 from evalforge_api.services.retention import RetentionService, drop_expired_partitions
 from evalforge_api.services.review import ReviewService
@@ -202,6 +203,39 @@ async def rollup_online_metrics(
     return report
 
 
+async def maintain_partitions(
+    session: AsyncSession,  # noqa: ARG001 — uniform job signature; this one only needs DDL
+    *,
+    connection: Any = None,
+    now: datetime | None = None,
+) -> JobReport:
+    """Create the partitions the coming months will need.
+
+    Owned by the worker rather than by API startup, because it is DDL: the application role has no
+    schema privileges by design (a role that can create tables can create one without an RLS
+    policy, and attaching a partition needs ownership of the parent). Running it here also means it
+    happens once rather than on every replica's boot.
+
+    Idempotent — `CREATE TABLE IF NOT EXISTS` — so a schedule that overlaps a migration is safe.
+    Runs well ahead of the calendar: ingestion into an uncovered range fails outright, so being
+    early costs an empty table and being late costs data.
+    """
+    report = JobReport(job="maintain_partitions")
+    if connection is None:
+        report.detail["skipped"] = "no privileged connection supplied"
+        return report
+
+    created = await ensure_partitions(connection, now=now)
+    missing = await missing_partitions(connection, now=now)
+    report.detail["ensured"] = created
+    report.detail["still_missing"] = missing
+    if missing:
+        # Reported rather than raised: the sweep may have failed on one table and succeeded on the
+        # rest, and losing the successes to an exception would be worse.
+        report.errors = len(missing)
+    return report
+
+
 async def sweep_retention(
     session: AsyncSession,
     *,
@@ -277,6 +311,7 @@ async def queue_health(session: AsyncSession, *, project_id: uuid.UUID) -> dict[
 __all__ = [
     "JobReport",
     "active_project_ids",
+    "maintain_partitions",
     "queue_health",
     "release_expired_leases",
     "rollup_online_metrics",

@@ -196,6 +196,75 @@ jobs:
           print("worker schedule:", names)
           PY
 
+  # Stage 3a2 — row-level security. Runs as a deliberately unprivileged role, because the default
+  # development role is a superuser and superusers are exempt from every policy: a suite that ran as
+  # that role would pass while proving nothing.
+  rls:
+    name: row-level security · tenant isolation
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: evalforge
+          POSTGRES_PASSWORD: evalforge
+          POSTGRES_DB: evalforge
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      POSTGRES_USER: evalforge
+      POSTGRES_PASSWORD: evalforge
+      POSTGRES_DB: evalforge
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      JWT_SECRET: ci-only-not-a-real-secret
+      ENV: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages
+
+      - name: the database refuses a cross-tenant read and write
+        run: uv run pytest apps/api/tests/test_rls.py -m integration -q
+
+      - name: the policy migration round-trips
+        run: |
+          # Down and up, because the downgrade discovers policies from the catalogue rather than
+          # from a code list that can change under it — a mismatch that once left an orphaned
+          # policy on api_keys and broke authentication entirely.
+          uv run alembic upgrade head
+          uv run alembic downgrade -1
+          uv run python - <<'PY'
+          import asyncio
+          from sqlalchemy import text
+          from sqlalchemy.ext.asyncio import create_async_engine
+          from evalforge_api.settings import get_settings
+
+          async def main():
+              engine = create_async_engine(get_settings().sqlalchemy_url)
+              async with engine.connect() as conn:
+                  count = (await conn.execute(
+                      text("SELECT count(*) FROM pg_policy WHERE polname LIKE '%tenant_isolation'")
+                  )).scalar_one()
+              assert count == 0, f"{count} policies survived the downgrade"
+              print("downgrade left no policies behind")
+              await engine.dispose()
+
+          asyncio.run(main())
+          PY
+          uv run alembic upgrade head
+
+      - name: the app role script produces a role RLS applies to
+        run: |
+          PGPASSWORD=evalforge psql -h 127.0.0.1 -U evalforge -d evalforge \
+            -v role_password=ci-only-not-a-real-password -f scripts/create_app_role.sql \
+            | tee /tmp/role.txt
+          grep -q "rls applies" /tmp/role.txt
+
   # Stage 3c — the OTLP receiver. The acceptance criterion for this path is a round trip, so
   # it needs the real database: protobuf in, rows out, read back through the trace API.
   otlp:
