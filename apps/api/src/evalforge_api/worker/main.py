@@ -24,13 +24,15 @@ from arq.connections import RedisSettings
 from arq.cron import CronJob, cron
 from evalforge_api.db.session import get_sessionmaker, init_engine
 from evalforge_api.settings import Settings, get_settings
-from evalforge_api.worker import jobs
+from evalforge_api.worker import deadletter, jobs
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 logger = logging.getLogger("evalforge.worker")
 
 
-async def _with_session(name: str, run: Any, **kwargs: Any) -> dict[str, Any]:
+async def _with_session(
+    name: str, run: Any, ctx: dict[Any, Any] | None = None, **kwargs: Any
+) -> dict[str, Any]:
     """Run one job in its own session and return its report.
 
     The session is per job, not per worker. A worker holding one session for its lifetime
@@ -41,15 +43,48 @@ async def _with_session(name: str, run: Any, **kwargs: Any) -> dict[str, Any]:
         try:
             report = await run(session, **kwargs)
             await session.commit()
-        except Exception:
+        except Exception as exc:
             await session.rollback()
-            # Logged and re-raised: arq's retry and dead-letter handling is the right owner
-            # of a failed job, and swallowing the exception here would make a permanently
-            # broken job look like a healthy one that does nothing.
+            # Logged, dead-lettered on the final attempt, and always re-raised. Re-raising is
+            # what lets arq retry; swallowing it would make a permanently broken job look like
+            # a healthy one that does nothing.
             logger.exception("job %s failed", name)
+            await _dead_letter(name, exc, ctx, kwargs)
             raise
     logger.info("job %s: %s", name, report)
     return {"job": name, **report.detail}
+
+
+async def _dead_letter(
+    name: str, error: BaseException, ctx: dict[Any, Any] | None, kwargs: dict[str, Any]
+) -> None:
+    """Record the failure once retries are exhausted.
+
+    Only on the last attempt: dead-lettering every attempt would turn one broken job into
+    `max_tries` rows and make "how many distinct failures were there" unanswerable — which is
+    the question the table exists to answer.
+
+    `job_try` is absent when a job is invoked directly rather than through the queue (a test,
+    or an operator). In that case there is no retry to wait for, so the failure is final and
+    recording it immediately is right.
+    """
+    # Absent is not 1. arq always sets `job_try`, so a missing one means the job was invoked
+    # directly — by a test or by an operator — and nobody is going to retry it. Treating that as
+    # attempt 1 would wait for a retry that never comes and lose the record entirely.
+    attempt = ctx.get("job_try") if ctx else None
+    if attempt is not None and int(attempt) < WorkerSettings.max_tries:
+        logger.info(
+            "job %s will be retried (attempt %s of %d)", name, attempt, WorkerSettings.max_tries
+        )
+        return
+    await deadletter.record(
+        _session_factory(),
+        job_name=name,
+        error=error,
+        attempts=int(attempt) if attempt is not None else 1,
+        job_id=str((ctx or {}).get("job_id") or "") or None,
+        context=kwargs,
+    )
 
 
 def _session_factory() -> async_sessionmaker[AsyncSession]:
@@ -65,34 +100,35 @@ def _session_factory() -> async_sessionmaker[AsyncSession]:
         return get_sessionmaker()
 
 
-async def online_eval(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:  # noqa: ARG001
-    return await _with_session("online_eval", jobs.run_online_eval)
+async def online_eval(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:
+    return await _with_session("online_eval", jobs.run_online_eval, ctx)
 
 
-async def release_leases(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:  # noqa: ARG001
-    return await _with_session("release_expired_leases", jobs.release_expired_leases)
+async def release_leases(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:
+    return await _with_session("release_expired_leases", jobs.release_expired_leases, ctx)
 
 
-async def rollup(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:  # noqa: ARG001
-    return await _with_session("rollup_online_metrics", jobs.rollup_online_metrics)
+async def rollup(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:
+    return await _with_session("rollup_online_metrics", jobs.rollup_online_metrics, ctx)
 
 
-async def partitions(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:  # noqa: ARG001
+async def partitions(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:
     """Create the partitions the coming months need. DDL, so it needs a privileged connection."""
     async with _session_factory()() as session:
         connection = await session.connection()
         try:
             report = await jobs.maintain_partitions(session, connection=connection)
             await session.commit()
-        except Exception:
+        except Exception as exc:
             await session.rollback()
             logger.exception("job maintain_partitions failed")
+            await _dead_letter("maintain_partitions", exc, ctx, {})
             raise
     logger.info("job maintain_partitions: %s", report)
     return {"job": "maintain_partitions", **report.detail}
 
 
-async def retention(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:  # noqa: ARG001
+async def retention(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:
     """Retention needs a raw connection as well as a session, for the DDL."""
     async with _session_factory()() as session:
         bind = session.get_bind()
@@ -100,9 +136,10 @@ async def retention(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]: 
         try:
             report = await jobs.sweep_retention(session, connection=connection)
             await session.commit()
-        except Exception:
+        except Exception as exc:
             await session.rollback()
             logger.exception("job retention failed")
+            await _dead_letter("retention", exc, ctx, {})
             raise
     logger.info("job retention: %s (bind %s)", report, bind.engine.url.database)
     return {"job": "retention", **report.detail}
@@ -132,6 +169,16 @@ class WorkerSettings:
     max_jobs = 1
     job_timeout = 600
     keep_result = 3600
+
+    # Retry, then dead-letter. Three attempts because the failures worth retrying here are
+    # transient — a connection reset during a redeploy, a lock timeout behind a long
+    # ingestion — and those clear in seconds. A genuine bug fails all three just as fast, and
+    # `_dead_letter` then records it exactly once.
+    #
+    # Every job is idempotent (see jobs.py), which is the precondition that makes retrying
+    # safe at all: retrying a non-idempotent job double-counts instead of recovering.
+    max_tries = 3
+    retry_jobs = True
 
     @staticmethod
     def redis_settings() -> RedisSettings:

@@ -6,18 +6,21 @@ idempotency is wrong, a network blip silently doubles every count in the product
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
 import pytest
-from evalforge_api.api.schemas.ingest import IngestBatch
+from evalforge_api.api.schemas.ingest import IngestBatch, IngestResult
+from evalforge_api.db.models.identity import Environment, Organization
 from evalforge_api.db.models.traces import PayloadObject, Span, SpanEvent, Trace
 from evalforge_api.services.ingest import IngestService
 from evalforge_api.services.storage import InMemoryObjectStore, load_payload
-from factories import Tenant
+from factories import Tenant, make_tenant
+from sqlalchemy import delete as sa_delete
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 pytestmark = pytest.mark.integration
 
@@ -380,3 +383,200 @@ class TestValidation:
             {"project_id": str(uuid.uuid4()), "traces": [], "spans": []}
         )
         assert not hasattr(parsed, "project_id")
+
+
+class BrokenObjectStore:
+    """An object store that always fails, standing in for an unreachable bucket."""
+
+    bucket = "broken"
+
+    def put(self, key: str, body: bytes, *, content_type: str, encoding: str) -> None:
+        msg = "connection refused"
+        raise OSError(msg)
+
+    def get(self, key: str) -> bytes:
+        msg = "connection refused"
+        raise OSError(msg)
+
+    def presign(self, key: str, *, expires_in: int) -> str:
+        msg = "connection refused"
+        raise OSError(msg)
+
+    def delete(self, key: str) -> None:
+        msg = "connection refused"
+        raise OSError(msg)
+
+
+class TestGracefulDegradation:
+    """Object storage failing must degrade ingestion, not close it.
+
+    A trace whose payloads are missing still answers what the agent did, in what order, how long
+    it took, and what it cost — which is what trajectory policies and every operational metric are
+    built on. A trace that was never accepted answers nothing, and the SDK's buffer is bounded, so
+    a rejected batch is data permanently gone.
+    """
+
+    async def test_a_batch_is_accepted_without_its_large_payloads(
+        self, session: AsyncSession, tenant_a: Tenant
+    ) -> None:
+        result = await ingest(
+            session,
+            tenant_a,
+            batch(
+                [span("s1", trace_id="degraded", output={"body": "x" * 60_000})],
+                traces=[
+                    {
+                        "trace_id": "degraded",
+                        "name": "run",
+                        "started_at": BASE.isoformat(),
+                    }
+                ],
+            ),
+            store=BrokenObjectStore(),
+        )
+        assert result.accepted_spans == 1
+        assert result.offloaded_payloads == 0
+
+    async def test_the_dropped_payload_is_reported_not_silent(
+        self, session: AsyncSession, tenant_a: Tenant
+    ) -> None:
+        # A payload that silently is not there is indistinguishable from a span that never had one,
+        # and someone will spend an afternoon on that difference.
+        result = await ingest(
+            session,
+            tenant_a,
+            batch([span("s1", output={"body": "y" * 60_000})]),
+            store=BrokenObjectStore(),
+        )
+        assert len(result.rejected) == 1
+        assert result.rejected[0].kind == "payload"
+        assert "object storage was unavailable" in result.rejected[0].reason
+
+    async def test_the_span_skeleton_survives(
+        self, session: AsyncSession, tenant_a: Tenant
+    ) -> None:
+        """The part that makes degrading worthwhile.
+
+        Timings, tokens, tool name, and parent links are all still there — so a trajectory policy
+        evaluates exactly as it would have, and only the payload viewer is poorer.
+        """
+        await ingest(
+            session,
+            tenant_a,
+            batch(
+                [
+                    span("root", span_type="agent"),
+                    span(
+                        "send",
+                        parent="root",
+                        name="gmail.send",
+                        tool_name="gmail.send",
+                        offset_ms=10,
+                        output={"body": "z" * 60_000},
+                        tokens={"prompt": 100, "completion": 20, "total": 120},
+                    ),
+                ]
+            ),
+            store=BrokenObjectStore(),
+        )
+
+        rows = (
+            (
+                await session.execute(
+                    select(Span)
+                    .where(Span.project_id == tenant_a.project.id, Span.trace_id == "t1")
+                    .order_by(Span.span_id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        by_id = {row.span_id: row for row in rows}
+        assert set(by_id) == {"root", "send"}
+        assert by_id["send"].parent_span_id == "root"
+        assert by_id["send"].tool_name == "gmail.send"
+        assert by_id["send"].total_tokens == 120
+        assert by_id["send"].duration_ms == 50
+        # The payload's absence is recorded in the row rather than looking like an empty output.
+        assert by_id["send"].output_inline == {"_dropped": "storage_unavailable"}
+
+    async def test_a_small_payload_is_unaffected(
+        self, session: AsyncSession, tenant_a: Tenant
+    ) -> None:
+        # Payloads under the inline limit never touch object storage, so a broken bucket must not
+        # affect them at all.
+        await ingest(
+            session,
+            tenant_a,
+            batch([span("s1", output={"intent": "unsubscribe"})]),
+            store=BrokenObjectStore(),
+        )
+        row = (
+            await session.execute(
+                select(Span).where(Span.project_id == tenant_a.project.id, Span.span_id == "s1")
+            )
+        ).scalar_one()
+        assert row.output_inline == {"intent": "unsubscribe"}
+
+
+class TestConcurrentFirstBatch:
+    """A newly deployed service's first burst must not lose batches.
+
+    Environment auto-creation used to be check-then-insert, which is a race with exactly one
+    window: the very first batches from a project that has never sent that environment name.
+    Under 8-way concurrency, 11 of 200 batches came back 500 with a unique-violation on
+    `uq_environments_project_id_name`. Every sequential test passed, because sequentially there
+    is only ever one first batch.
+
+    Committed on its own connections, because a race needs two real ones — the shared session
+    fixture rolls back and is invisible to anyone else.
+    """
+
+    async def test_simultaneous_first_batches_all_succeed(self, engine: Any) -> None:
+        maker = async_sessionmaker(engine, expire_on_commit=False)
+        slug = f"cold-start-{uuid.uuid4().hex[:8]}"
+        async with maker() as setup:
+            tenant = await make_tenant(setup, slug=slug)
+            await setup.commit()
+            org_id = tenant.org.id
+            project = tenant.project
+
+        async def send(index: int) -> IngestResult:
+            async with maker() as own:
+                service = IngestService(own, project=project, store=InMemoryObjectStore())
+                result = await service.ingest(
+                    batch(
+                        [span("s1", trace_id=f"cold{index}")],
+                        traces=[
+                            {
+                                "trace_id": f"cold{index}",
+                                "name": "run",
+                                "started_at": BASE.isoformat(),
+                            }
+                        ],
+                    )
+                )
+                await own.commit()
+                return result
+
+        try:
+            results = await asyncio.gather(*(send(i) for i in range(8)), return_exceptions=True)
+            failures = [r for r in results if isinstance(r, BaseException)]
+            assert not failures, f"a cold-start batch was lost: {failures[0]!r}"
+            assert all(r.accepted_spans == 1 for r in results)  # type: ignore[union-attr]
+
+            # And exactly one environment row, not eight. The upsert has to converge on a single
+            # row, or every later query that joins on environment sees duplicates.
+            async with maker() as reader:
+                count = (
+                    await reader.execute(
+                        select(func.count())
+                        .select_from(Environment)
+                        .where(Environment.project_id == project.id)
+                    )
+                ).scalar_one()
+            assert count == 1
+        finally:
+            async with maker() as teardown:
+                await teardown.execute(sa_delete(Organization).where(Organization.id == org_id))
+                await teardown.commit()

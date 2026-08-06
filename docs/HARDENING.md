@@ -133,21 +133,52 @@ The first test in the file asserts that the *default* development role bypasses 
 deliberate: nobody should be able to read a green RLS suite as evidence of isolation without also
 seeing that the default connection has none.
 
-## Not done in this phase
+## Done in this phase
+
+Each of these was listed as not done before, and the entry says what it now is — including what it
+still is not, because a half-finished item claimed as finished is worse than an open one.
+
+- **A cross-tenant sweep over every route.** `apps/api/tests/test_cross_tenant.py` parameterises 19
+  by-id routes and 5 collections, and asserts against the OpenAPI schema that every remaining
+  operation is explicitly excused with a reason. A new route cannot escape the sweep silently. Both
+  tenants hold every scope, so a 403 for a missing permission cannot masquerade as isolation.
+- **Graceful degradation when object storage fails.** Ingestion now accepts the batch without its
+  large payloads, records a per-payload `RejectedItem`, and writes `{"_dropped":
+  "storage_unavailable"}` in place of the payload. A trace without payloads still answers what the
+  agent did, in what order, and what it cost — which is what policies and every operational metric
+  are built on. A rejected batch answers nothing, and the SDK's buffer is bounded, so the data is
+  gone for good.
+- **DLQ handling and queue observability.** Jobs retry three times (`max_tries`), and the final
+  failure is recorded in `worker_dead_letters` — on its own session, because the failing job's is
+  being rolled back, and never raising, because it runs inside an exception handler. `GET
+  /v1/ops/queues` reports job-queue depth (ready vs scheduled), dead letters by job with the age of
+  the oldest unresolved one, and per-queue review depth. **No alerting.** Something still has to poll
+  this; the endpoint is what makes that possible, not a substitute for it.
+- **A fifteen-minute quickstart.** `docs/QUICKSTART.md`, verified end to end against a running
+  system. Still markdown in a repository rather than a docs site.
+- **One-command demo with seeded data.** `./scripts/demo.sh` — services, migrations, project, 60
+  seeded traces of which 9 violate a policy, an online rule that has already run, a populated review
+  queue, and the dashboard. It probes ports, and it says out loud that RLS is inert because the demo
+  role is a superuser.
+- **A load harness.** `tests/load/loadgen.py`, with committed results and an explicitly advisory
+  verdict. Its first run found a real concurrency bug: environment auto-creation was
+  check-then-insert, so a project's *first* burst lost 11 of 200 batches to a unique violation. Fixed
+  with an upsert and covered by `TestConcurrentFirstBatch`.
+
+## Not done
 
 Stated plainly rather than implied by absence:
 
-- **Load tests.** The targets in `TESTING_STRATEGY.md` §8 are sized to 4 vCPU / 8 GiB, and no run
-  has been performed on that hardware. Quoting numbers from a laptop against those targets would be
-  worse than having none. The harness is not written either.
-- **A docs site.** These markdown files are the documentation. There is no quickstart that a new
-  user can follow in fifteen minutes without reading source.
-- **One-command demo with seeded data.** `make dev && make bootstrap && make api` is four commands
-  and assumes a working toolchain.
-- **DLQ handling and queue observability.** arq retries and the jobs re-raise so it can, but there
-  is no dead-letter inspection, no queue-depth metric, and no alerting.
-- **The full security suite.** The cross-tenant tests cover the endpoints reached by the existing
-  integration tests, not a parameterized sweep over every registered route as
-  `SECURITY.md` §4 describes.
-- **Graceful degradation paths.** Object storage failing closes ingestion rather than degrading;
-  `bootstrap_dev.py` warns about it, and nothing else does.
+- **Load numbers on the reference hardware.** The targets in `TESTING_STRATEGY.md` §8 are sized to
+  4 vCPU / 8 GiB. The committed baseline was taken on a developer laptop with every service
+  co-resident, so it is a regression baseline and not a pass. Also missing: the 10 M-span dataset the
+  query targets are specified against, a 30-second sustained burst, worker throughput, experiment
+  scheduling latency, and dashboard TTI. `tests/load/README.md` lists these against the targets they
+  would answer.
+- **Alerting.** `GET /v1/ops/queues` and `/readyz` report; nothing pages. There is no Prometheus
+  endpoint and no alert rules.
+- **A docs site.** These markdown files are the documentation.
+- **Multi-region, backups, and restore drills.** Retention drops partitions correctly; nothing here
+  has ever been restored from a backup, and an untested restore is not a backup.
+- **Secrets management beyond environment variables.** No KMS, no envelope encryption for payloads at
+  rest beyond what the object store provides.

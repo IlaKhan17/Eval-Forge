@@ -17,6 +17,7 @@ Three properties this service must hold, in order of importance:
 
 from __future__ import annotations
 
+import logging
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -35,6 +36,7 @@ from evalforge_api.api.schemas.ingest import (
     SpanIn,
     TraceIn,
 )
+from evalforge_api.db.base import uuid7
 from evalforge_api.db.models.identity import Environment, Project
 from evalforge_api.db.models.traces import (
     INLINE_PAYLOAD_LIMIT,
@@ -46,6 +48,8 @@ from evalforge_api.db.models.traces import (
 from evalforge_api.services import redaction, storage
 from evalforge_api.services.storage import ObjectStore
 
+logger = logging.getLogger("evalforge.ingest")
+
 MAX_SPAN_PAYLOAD_BYTES = 1024 * 1024
 
 # Core Tables rather than ORM classes. The trace row has a column literally named
@@ -54,6 +58,7 @@ MAX_SPAN_PAYLOAD_BYTES = 1024 * 1024
 TRACES = cast("Table", Trace.__table__)
 SPANS = cast("Table", Span.__table__)
 SPAN_EVENTS = cast("Table", SpanEvent.__table__)
+ENVIRONMENTS = cast("Table", Environment.__table__)
 
 
 @dataclass(slots=True)
@@ -123,21 +128,43 @@ class IngestService:
         if not name:
             return None
 
+        name = name[:50]
         existing = await self.session.execute(
-            select(Environment).where(
+            select(Environment.id).where(
                 Environment.project_id == self.project.id, Environment.name == name
             )
         )
-        row = existing.scalar_one_or_none()
-        if row is not None:
-            return row.id
+        found = existing.scalar_one_or_none()
+        if found is not None:
+            return found
 
-        # Auto-create. Requiring an environment to be provisioned before its first
+        # Auto-create, upsert-style. Requiring an environment to be provisioned before its first
         # trace would mean silently dropping data from a newly deployed service.
-        created = Environment(project_id=self.project.id, name=name[:50])
-        self.session.add(created)
-        await self.session.flush()
-        return created.id
+        #
+        # `ON CONFLICT DO NOTHING` rather than an insert, because check-then-insert is a race and
+        # this is the exact moment it loses: a newly deployed service's *first* burst arrives on
+        # several connections at once, all of them find no environment, and all but one get a
+        # unique-violation 500. Found by tests/load/loadgen.py at 8-way concurrency — 11 batches
+        # lost on a cold project, and invisible in every sequential test.
+        inserted = await self.session.execute(
+            insert(ENVIRONMENTS)
+            .values(id=uuid7(), project_id=self.project.id, name=name)
+            .on_conflict_do_nothing(index_elements=["project_id", "name"])
+            .returning(ENVIRONMENTS.c.id)
+        )
+        created = inserted.scalar_one_or_none()
+        if created is not None:
+            return uuid.UUID(str(created))
+
+        # DO NOTHING returns no row when another connection won, so read theirs.
+        theirs = (
+            await self.session.execute(
+                select(Environment.id).where(
+                    Environment.project_id == self.project.id, Environment.name == name
+                )
+            )
+        ).scalar_one()
+        return uuid.UUID(str(theirs))
 
     # -------------------------------------------------------------------- spans
 
@@ -193,8 +220,31 @@ class IngestService:
                 payloads[f"{field_name}_ref"] = None
             elif len(raw) > INLINE_PAYLOAD_LIMIT:
                 stored = await self._offload(cleaned)
-                payloads[f"{field_name}_inline"] = None
-                payloads[f"{field_name}_ref"] = stored
+                if stored is None:
+                    # Object storage is unreachable. The span is kept without its payload rather
+                    # than the batch being rejected: the skeleton carries the timings, the tokens,
+                    # the tool names, and the parent links, which is everything a trajectory policy
+                    # and every operational metric need. Losing all of that because a bucket is down
+                    # turns a degraded dependency into an outage.
+                    #
+                    # Reported per span, not swallowed. A payload that silently is not there is
+                    # indistinguishable from a span that never had one, and someone will spend an
+                    # afternoon on that difference.
+                    self.result.rejected.append(
+                        RejectedItem(
+                            kind="payload",
+                            identifier=f"{span.trace_id}:{span.span_id}:{field_name}",
+                            reason=(
+                                "object storage was unavailable; the span was stored without this "
+                                "payload"
+                            ),
+                        )
+                    )
+                    payloads[f"{field_name}_inline"] = {"_dropped": "storage_unavailable"}
+                    payloads[f"{field_name}_ref"] = None
+                else:
+                    payloads[f"{field_name}_inline"] = None
+                    payloads[f"{field_name}_ref"] = stored
             else:
                 payloads[f"{field_name}_inline"] = cleaned
                 payloads[f"{field_name}_ref"] = None
@@ -238,9 +288,24 @@ class IngestService:
             **payloads,
         }
 
-    async def _offload(self, payload: Any) -> uuid.UUID:
-        """Store a large payload once, by content hash."""
-        stored = storage.store_payload(self.store, self.project.id, payload)
+    async def _offload(self, payload: Any) -> uuid.UUID | None:
+        """Store a large payload once, by content hash. `None` when storage is unreachable.
+
+        Degrading rather than failing is a deliberate choice about what ingestion is for. A trace
+        whose payloads are missing still answers "what did the agent do, in what order, how long
+        did it take, and what did it cost" — which is what trajectory policies and every operational
+        metric are built on. A trace that was never accepted answers nothing, and the SDK's
+        buffer is bounded, so a rejected batch is data permanently gone.
+        """
+        try:
+            stored = storage.store_payload(self.store, self.project.id, payload)
+        except Exception:
+            # Logged once per batch at most by the caller's rejection list; not re-raised.
+            logger.warning(
+                "object storage unavailable; storing spans without their large payloads",
+                extra={"project_id": str(self.project.id)},
+            )
+            return None
 
         existing = await self.session.execute(
             select(PayloadObject).where(

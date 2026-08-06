@@ -38,6 +38,7 @@ from evalforge_api.db.models.online import (
     ReviewAssignment,
     ReviewQueue,
 )
+from evalforge_api.db.models.ops import DeadLetterJob
 from evalforge_api.db.models.traces import PayloadObject, Span, SpanEvent, Trace
 
 __all__ = [
@@ -48,6 +49,7 @@ __all__ = [
     "Dataset",
     "DatasetExample",
     "DatasetVersion",
+    "DeadLetterJob",
     "Environment",
     "EvaluationResult",
     "Evaluator",

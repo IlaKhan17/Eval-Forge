@@ -1,0 +1,122 @@
+{
+  "run_id": "07133e72",
+  "started_at": "2026-08-06T14:18:36.549579+00:00",
+  "endpoint": "http://127.0.0.1:8020",
+  "machine": {
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "python": "3.12.11",
+    "cpu_count": 10,
+    "is_reference_hardware": false,
+    "reference": {
+      "vcpu": 4,
+      "memory_gib": 8
+    }
+  },
+  "config": {
+    "batches": 200,
+    "spans_per_batch": 40,
+    "concurrency": 8,
+    "reads": 200
+  },
+  "results": [
+    {
+      "scenario": "ingest",
+      "requests": 200,
+      "errors": 0,
+      "error_rate": 0.0,
+      "seconds": 2.76,
+      "accepted_spans": 8000,
+      "spans_per_second": 2894,
+      "requests_per_second": 72.3,
+      "p50_ms": 106.69,
+      "p95_ms": 147.18,
+      "p99_ms": 251.58,
+      "max_ms": 252.99,
+      "notes": []
+    },
+    {
+      "scenario": "burst",
+      "requests": 200,
+      "errors": 0,
+      "error_rate": 0.0,
+      "seconds": 2.84,
+      "accepted_spans": 8000,
+      "spans_per_second": 2816,
+      "requests_per_second": 70.4,
+      "p50_ms": 408.01,
+      "p95_ms": 662.78,
+      "p99_ms": 736.75,
+      "max_ms": 828.4,
+      "notes": [
+        "expected 8000 spans, accepted 8000"
+      ]
+    },
+    {
+      "scenario": "list",
+      "requests": 200,
+      "errors": 0,
+      "error_rate": 0.0,
+      "seconds": 0.41,
+      "accepted_spans": 0,
+      "spans_per_second": null,
+      "requests_per_second": 492.1,
+      "p50_ms": 14.56,
+      "p95_ms": 26.72,
+      "p99_ms": 41.88,
+      "max_ms": 43.4,
+      "notes": []
+    },
+    {
+      "scenario": "detail",
+      "requests": 200,
+      "errors": 0,
+      "error_rate": 0.0,
+      "seconds": 0.49,
+      "accepted_spans": 0,
+      "spans_per_second": null,
+      "requests_per_second": 410.9,
+      "p50_ms": 17.53,
+      "p95_ms": 27.99,
+      "p99_ms": 49.56,
+      "max_ms": 57.33,
+      "notes": []
+    }
+  ],
+  "verdict": {
+    "basis": "advisory \u2014 not measured on the reference hardware in docs/TESTING_STRATEGY.md \u00a78",
+    "comparisons": {
+      "ingest": {
+        "spans_per_second": {
+          "target": 2000,
+          "measured": 2894
+        },
+        "p95_ms": {
+          "target": 200,
+          "measured": 147.18
+        }
+      },
+      "burst": {
+        "spans_per_second": {
+          "target": 10000,
+          "measured": 2816
+        },
+        "error_rate": {
+          "target": 0.0,
+          "measured": 0.0
+        }
+      },
+      "list": {
+        "p95_ms": {
+          "target": 300,
+          "measured": 26.72
+        }
+      },
+      "detail": {
+        "p95_ms": {
+          "target": 500,
+          "measured": 27.99
+        }
+      }
+    }
+  }
+}

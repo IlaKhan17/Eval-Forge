@@ -105,6 +105,20 @@ jobs:
 
       - run: uv run pytest -m integration
 
+      # Named separately from the suite above, which already runs them, because these two are the
+      # ones whose *absence* would be invisible: a route that escapes the tenancy sweep, and a job
+      # failure that leaves no record. A named step means the log says which one broke.
+      - name: every route is covered by the cross-tenant sweep
+        run: uv run pytest apps/api/tests/test_cross_tenant.py -m integration -q
+
+      - name: a failed job leaves a dead letter, and it does not leak
+        run: uv run pytest apps/api/tests/test_dead_letters.py -m integration -q
+
+      - name: ingestion degrades rather than closing when object storage fails
+        run: |
+          uv run pytest apps/api/tests/test_ingest.py -m integration -q \
+            -k "GracefulDegradation or ConcurrentFirstBatch"
+
   # Stage 4 — the CLI as a user invokes it, including the exit-code contract.
   # A unit test can assert a verdict; only this asserts that CI would act on it.
   cli:
@@ -117,6 +131,19 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - run: uv sync --all-packages
+
+      - name: the load harness runs
+        # A single tiny scenario against nothing, purely to catch an import error or a broken
+        # argument in a script nobody runs on a PR. Real load runs are nightly and need hardware;
+        # see tests/load/README.md for why the committed numbers are advisory.
+        run: |
+          uv run python -c "
+          import tests.load.loadgen as gen
+          batch = gen._batch('ci', 0)
+          assert len(batch['spans']) == gen.SPANS_PER_BATCH
+          assert gen.TARGETS['ingest']['spans_per_second'] == 2000
+          print('load harness imports and builds batches')
+          "
 
       - name: suite validates
         run: uv run evalforge validate evals/suites/reply-intent.yaml

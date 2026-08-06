@@ -2,8 +2,9 @@
 
 **An open-source evaluation CI and trajectory-testing platform for production AI agents.**
 
-> ⚠️ **Status: pre-alpha, under active construction.** The planning documents in
-> [`docs/`](docs/) are complete; implementation is in progress. Nothing here is stable yet.
+> ⚠️ **Status: pre-alpha.** It runs end to end — `./scripts/demo.sh` gives you a working system in
+> one command — and nothing about the API or the schema is stable yet. See
+> [what is deliberately not done](docs/HARDENING.md#not-done).
 
 EvalForge answers the question that logging dashboards don't: **should this change be
 allowed to merge?**
@@ -55,7 +56,27 @@ rules:
 
 ## Quick start
 
-> Not yet runnable end to end. This is the target interface.
+One command to a running system with seeded data, a populated review queue, and the dashboard:
+
+```bash
+git clone https://github.com/IlaKhan17/EvalForge && cd EvalForge
+make setup && make web-install
+./scripts/demo.sh
+```
+
+Then break the agent on purpose and watch the gate catch it:
+
+```bash
+uv run evalforge eval evals/suites/davis-agent-policy.yaml                 # exit 0
+DAVIS_BREAK_POLICY=1 uv run evalforge eval evals/suites/davis-agent-policy.yaml   # exit 1
+```
+
+The email is byte-identical in both runs. The behaviour is not — that is the whole premise.
+
+**→ [Fifteen-minute quickstart](docs/QUICKSTART.md)**, from a clone to a failing CI gate,
+including instrumenting your own agent.
+
+### Instrumenting your agent
 
 ```bash
 uv add evalforge
@@ -74,7 +95,7 @@ async def send_email(to: str, subject: str, body: str) -> str: ...
 ```
 
 ```bash
-evalforge eval evals/suites/sdr-email.yaml --baseline main
+evalforge eval evals/suites/sdr-email.yaml
 # exit 0 → merge;  exit 1 → a protected metric regressed
 ```
 
@@ -123,6 +144,7 @@ same code path, and it is enforced in CI by [`.importlinter`](.importlinter).
 | [GitHub Actions](docs/GITHUB_ACTIONS.md) | CI setup, exit codes, fork-PR safety |
 | [Dashboard](docs/DASHBOARD.md) | Trace viewer, proxy security, waterfall semantics |
 | [Security](docs/SECURITY.md) | Threat model, redaction, tenant isolation |
+| [Quickstart](docs/QUICKSTART.md) | Clone to a failing CI gate in fifteen minutes |
 | [Hardening](docs/HARDENING.md) | Row-level security, the application role, what is not done |
 | [Testing strategy](docs/TESTING_STRATEGY.md) | Pyramid, targets, CI stages |
 | [Implementation plan](docs/IMPLEMENTATION_PLAN.md) | Phased milestones |

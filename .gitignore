@@ -33,7 +33,9 @@ credentials.json
 # EvalForge local state
 .evalforge/
 ~/.evalforge/
-evalforge-report.json
+# Reports a local run drops in the working tree. The name comes from the suite, so the pattern has
+# to cover all of them rather than the default filename only.
+evalforge-*.json
 *.evalforge.local.yaml
 
 # Editors / OS

@@ -92,6 +92,11 @@ UNPROTECTED_TABLES: dict[str, str] = {
     "memberships": "the join that decides scope; filtered by org at the repository layer",
     "refresh_tokens": "keyed by user, not project; rotation must work before a tenant is known",
     "alembic_version": "migration bookkeeping",
+    # Deployment-level operational records, not tenant data. These jobs sweep every project, so a
+    # failure belongs to the installation; giving the row a project_id would mean either inventing
+    # one or writing a row per project for a single failure. Nothing tenant-identifying is stored —
+    # see db/models/ops.py, which also explains why no traceback is kept.
+    "worker_dead_letters": "operational records for jobs that span every project, not tenant data",
 }
 
 POLICY_SUFFIX = "tenant_isolation"
