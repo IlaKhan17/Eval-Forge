@@ -36,6 +36,9 @@ credentials.json
 # Reports a local run drops in the working tree. The name comes from the suite, so the pattern has
 # to cover all of them rather than the default filename only.
 evalforge-*.json
+
+# The e2e stack's server log, written next to the repo so a CI failure can print it.
+.e2e-api.log
 *.evalforge.local.yaml
 
 # Editors / OS

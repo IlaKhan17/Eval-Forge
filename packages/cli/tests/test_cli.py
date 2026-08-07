@@ -19,6 +19,11 @@ RUNNER = CliRunner()
 ROOT = Path(__file__).resolve().parents[3]
 SUITE = ROOT / "evals" / "suites" / "reply-intent.yaml"
 
+#: Examples in the suite's fixture. Named rather than repeated as a literal, because the fixture
+#: grew — from six to forty, so that breaking the rare class is a *hidden* regression rather than
+#: one the aggregate also catches — and four separate tests asserted the old number.
+EXAMPLES = 40
+
 
 @pytest.fixture(autouse=True)
 def _plain_output(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -92,7 +97,7 @@ class TestDryRun:
 
     def test_it_reports_the_plan(self) -> None:
         result = RUNNER.invoke(app, ["eval", str(SUITE), "--dry-run"])
-        assert "6 examples" in result.output
+        assert f"{EXAMPLES} examples" in result.output
         assert "judge calls      0" in result.output
 
     def test_it_writes_no_report(self, tmp_path: Path) -> None:
@@ -124,7 +129,7 @@ class TestReport:
         RUNNER.invoke(app, ["eval", str(SUITE), "-o", str(target)])
         dataset = json.loads(target.read_text(encoding="utf-8"))["dataset"]
         assert len(dataset["content_hash"]) == 64
-        assert dataset["example_count"] == 6
+        assert dataset["example_count"] == EXAMPLES
 
     def test_error_counts_are_reported_separately_from_counts(self, tmp_path: Path) -> None:
         """An errored evaluation is not a score of zero, all the way to the report."""
@@ -273,10 +278,10 @@ class TestLimitAndJournal:
         RUNNER.invoke(
             app, ["eval", str(SUITE), "-o", str(tmp_path / "a.json"), "--journal", str(journal)]
         )
-        assert len(journal.read_text(encoding="utf-8").strip().splitlines()) == 6
+        assert len(journal.read_text(encoding="utf-8").strip().splitlines()) == EXAMPLES
 
         result = RUNNER.invoke(
             app, ["eval", str(SUITE), "-o", str(tmp_path / "b.json"), "--resume", str(journal)]
         )
         assert result.exit_code == 0
-        assert json.loads((tmp_path / "b.json").read_text())["totals"]["examples"] == 6
+        assert json.loads((tmp_path / "b.json").read_text())["totals"]["examples"] == EXAMPLES

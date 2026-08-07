@@ -169,6 +169,16 @@ still is not, because a half-finished item claimed as finished is worse than an 
 
 Stated plainly rather than implied by absence:
 
+- **The CLI does not publish its run to the server.** `evalforge eval` computes, gates, and reports
+  locally; `--local` defaults to true and remote execution is reserved. So a run does not appear
+  under `/v1/experiments`, and the dashboard cannot show CI history. The server-side path itself
+  works and is covered by `apps/api/tests/test_parity.py`; what is missing is the CLI sending
+  results to it. `tests/e2e/test_acceptance.py` asserts the absence explicitly, so implementing
+  publishing will surface as a failing assertion rather than an untested path.
+- **E2E scenarios beyond the acceptance loop.** Annotate → promote → appears in the next run,
+  offline spooling and replay, dataset immutability through the UI, and the calibration warning in
+  CI are all described in `TESTING_STRATEGY.md` §5 and none are written.
+
 - **Load numbers on the reference hardware.** The targets in `TESTING_STRATEGY.md` §8 are sized to
   4 vCPU / 8 GiB. The committed baseline was taken on a developer laptop with every service
   co-resident, so it is a regression baseline and not a pass. Also missing: the 10 M-span dataset the

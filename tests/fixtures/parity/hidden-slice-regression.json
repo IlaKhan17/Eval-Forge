@@ -1,0 +1,504 @@
+{
+  "name": "hidden-slice-regression",
+  "why": "The failure the product exists for: a small slice collapses while the macro average barely moves. If the API and the library disagree anywhere, it is on slices \u2014 the server stores a slice_key string alongside the slice dict, and a mismatch there silently drops the rule.",
+  "gate_set": {
+    "name": "protected",
+    "rules": [
+      {
+        "metric_key": "accuracy",
+        "minimum": 0.85,
+        "severity": "block"
+      },
+      {
+        "metric_key": "accuracy",
+        "slice": {
+          "intent": "unsubscribe"
+        },
+        "minimum": 0.8,
+        "severity": "block"
+      }
+    ]
+  },
+  "candidate": [
+    {
+      "example_id": "ok0",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok1",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok2",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok3",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok4",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok5",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok6",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok7",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok8",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok9",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok10",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok11",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok12",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok13",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok14",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok15",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok16",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok17",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok18",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok19",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok20",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok21",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok22",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok23",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok24",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok25",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok26",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok27",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok28",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok29",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok30",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok31",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok32",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok33",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok34",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok35",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok36",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "ok37",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0,
+          "slice": {
+            "intent": "meeting"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "bad0",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 0.0,
+          "slice": {
+            "intent": "unsubscribe"
+          }
+        }
+      ]
+    },
+    {
+      "example_id": "bad1",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 0.0,
+          "slice": {
+            "intent": "unsubscribe"
+          }
+        }
+      ]
+    }
+  ]
+}

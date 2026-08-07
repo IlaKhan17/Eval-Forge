@@ -175,14 +175,33 @@ class CompleteIn(BaseModel):
 
 
 class GateRuleIn(BaseModel):
+    """The wire form of a gate rule. Mirrors `GateRule` field for field, on purpose.
+
+    Every field the shared model has must be representable here, or the server stores a
+    *different* rule from the one the repository declared — and then the dashboard blocks a merge
+    the CLI passed, or worse, passes one the CLI blocked. `test_parity.py` found exactly that:
+    `severity` and `max_error_rate` had no wire representation, so a `warn` rule arrived as blocking
+    and a rule's error tolerance silently reverted to the default.
+    """
+
     metric_key: str
     minimum: float | None = None
     maximum: float | None = None
     max_absolute_regression: float | None = None
     max_relative_regression: float | None = None
+    severity: Severity | None = None
+    #: Legacy boolean form, kept because it is already in the wire protocol. `severity` wins when
+    #: both are sent; a bool cannot express a third severity, which is why it is not the primary.
     blocking: bool = True
     slice: dict[str, str] | None = None
     require_baseline: bool = False
+    max_error_rate: float = Field(default=0.05, ge=0, le=1)
+
+    @property
+    def resolved_severity(self) -> Severity:
+        if self.severity is not None:
+            return self.severity
+        return Severity.BLOCK if self.blocking else Severity.WARN
 
 
 class GateSetIn(BaseModel):
@@ -521,6 +540,35 @@ async def create_evaluator_version(
 
 
 # ------------------------------------------------------------------ experiments
+
+
+@router.get("/experiments", response_model=list[ExperimentOut])
+async def list_experiments(
+    session: SessionDep,
+    principal: Reader,
+    suite_name: Annotated[str | None, Query(max_length=200)] = None,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> list[ExperimentOut]:
+    """Experiments in this project, newest first.
+
+    Added because the acceptance test could not answer "did that run reach the server?" without it:
+    experiments could be created and fetched by id, but not enumerated, so the only way to see one
+    was to already know its id. Every other resource here lists; this was an omission rather than a
+    decision.
+
+    Newest first and bounded, like the trace list. Filtering by `suite_name` is the query that
+    matters — "show me this suite's history" — and doing it here rather than client-side keeps the
+    caller from paging through every other suite to find it.
+    """
+    query = select(Experiment).where(Experiment.project_id == principal.project_id)
+    if suite_name is not None:
+        query = query.where(Experiment.suite_name == suite_name)
+    rows = (
+        (await session.execute(query.order_by(Experiment.created_at.desc()).limit(limit)))
+        .scalars()
+        .all()
+    )
+    return [_experiment_out(row) for row in rows]
 
 
 @router.post("/experiments", response_model=ExperimentOut, status_code=status.HTTP_201_CREATED)
@@ -890,9 +938,10 @@ async def create_gate_set(
             maximum=rule.maximum,
             max_absolute_regression=rule.max_absolute_regression,
             max_relative_regression=rule.max_relative_regression,
-            severity=Severity.BLOCK if rule.blocking else Severity.WARN,
+            severity=rule.resolved_severity,
             slice=rule.slice,
             require_baseline=rule.require_baseline,
+            max_error_rate=rule.max_error_rate,
         )
         session.add(
             QualityGateRule(

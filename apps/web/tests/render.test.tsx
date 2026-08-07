@@ -1,7 +1,7 @@
 import { TraceDetailView } from "@/components/TraceDetail"
 import type { Span, TraceDetail } from "@/lib/spans"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { render, screen, waitFor } from "@testing-library/react"
+import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -127,6 +127,11 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  // Explicit, because Testing Library only auto-cleans when vitest runs with `globals: true`, and
+  // this project does not. Without it every render accumulates in the same document and a query for
+  // anything two traces share — the name, a status badge — matches several elements and throws. The
+  // existing tests happened to query only unique strings, so the leak was invisible.
+  cleanup()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
@@ -205,5 +210,81 @@ describe("TraceDetailView", () => {
     render(<TraceDetailView traceId="abc123" />, { wrapper })
 
     await waitFor(() => expect(screen.getByText(/has no spans/)).toBeDefined())
+  })
+})
+
+describe("policy verdicts", () => {
+  it("shows nothing when no rule evaluated the trace", async () => {
+    // A permanent empty panel would train people to ignore the area where the failures appear.
+    stubFetch({ body: trace() })
+    render(<TraceDetailView traceId="abc123" />, { wrapper })
+    await waitFor(() => expect(screen.getByRole("heading", { name: "reply-drafter" })).toBeTruthy())
+    expect(screen.queryByText(/evaluation\(s\)/)).toBeNull()
+  })
+
+  it("names the failing rule and links to its span", async () => {
+    // The link is the point. A policy failure without a span is a claim the reader has to verify
+    // by hand, which is step-level attribution degrading back into "something here was wrong".
+    stubFetch({
+      body: trace({
+        evaluations: [
+          {
+            rule_slug: "outbound-policy",
+            rule_kind: "trajectory",
+            verdict: "fail",
+            score: 0,
+            decision_reason: "deterministic",
+            error: null,
+            detail: {
+              failures: [
+                {
+                  rule_id: "no-send-before-approval",
+                  span_id: "child",
+                  message: "An email was sent before human approval was received.",
+                  severity: "block",
+                },
+              ],
+            },
+            created_at: new Date(BASE).toISOString(),
+          },
+        ],
+      }),
+    })
+    render(<TraceDetailView traceId="abc123" />, { wrapper })
+
+    await waitFor(() => expect(screen.getByText(/no-send-before-approval/)).toBeTruthy())
+    expect(screen.getByText("fail")).toBeTruthy()
+    expect(screen.getByText(/An email was sent before human approval/)).toBeTruthy()
+    expect(screen.getByRole("button", { name: "child" })).toBeTruthy()
+  })
+
+  it("does not present an inconclusive verdict as a failure", async () => {
+    // A trace that lost spans cannot answer a question about what did not happen. Colouring that
+    // as a violation is how a review queue fills with innocent runs until people stop reading it.
+    stubFetch({
+      body: trace({
+        evaluations: [
+          {
+            rule_slug: "outbound-policy",
+            rule_kind: "trajectory",
+            verdict: "inconclusive",
+            score: null,
+            decision_reason: "deterministic",
+            error: null,
+            detail: {
+              failures: [],
+              inconclusive_rules: ["scan-required"],
+              incomplete: true,
+            },
+            created_at: new Date(BASE).toISOString(),
+          },
+        ],
+      }),
+    })
+    render(<TraceDetailView traceId="abc123" />, { wrapper })
+
+    await waitFor(() => expect(screen.getByText("inconclusive")).toBeTruthy())
+    expect(screen.getByText(/scan-required/)).toBeTruthy()
+    expect(screen.getByText(/not a violation/)).toBeTruthy()
   })
 })

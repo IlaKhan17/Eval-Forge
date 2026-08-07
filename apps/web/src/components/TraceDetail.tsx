@@ -5,6 +5,7 @@ import { SpanInspector } from "@/components/SpanInspector"
 import { Waterfall } from "@/components/Waterfall"
 import { getTrace } from "@/lib/api"
 import { formatCost, formatDuration, formatTimestamp, formatTokens } from "@/lib/format"
+import type { TraceEvaluation } from "@/lib/spans"
 import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { useState } from "react"
@@ -66,6 +67,8 @@ export function TraceDetailView({ traceId }: { traceId: string }) {
         </Notice>
       ) : null}
 
+      <PolicyVerdicts evaluations={trace.evaluations ?? []} onSelectSpan={setSelectedSpanId} />
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Panel title={`Waterfall · ${trace.spans.length} spans`}>
           {trace.spans.length === 0 ? (
@@ -93,6 +96,103 @@ export function TraceDetailView({ traceId }: { traceId: string }) {
         </Panel>
       </div>
     </div>
+  )
+}
+
+/**
+ * What the online rules concluded about this trace.
+ *
+ * Rendered above the waterfall rather than beside it, because it answers the first question a
+ * reader has — "is anything wrong with this run?" — and a verdict below the fold is a verdict
+ * nobody reads.
+ *
+ * Each failure names its offending span and links to it. That link is the point: a policy failure
+ * without a span is a claim the reader has to go and verify by hand, which is how step-level
+ * attribution degrades back into "something in this trace was wrong".
+ */
+function PolicyVerdicts({
+  evaluations,
+  onSelectSpan,
+}: {
+  evaluations: TraceEvaluation[]
+  onSelectSpan: (spanId: string) => void
+}) {
+  // Nothing at all rather than an empty panel saying "no evaluations". A trace with no rules
+  // configured is the normal case, and a permanent empty box trains people to ignore the area.
+  if (evaluations.length === 0) return null
+
+  return (
+    <Panel title={`Policy · ${evaluations.length} evaluation(s)`}>
+      <ul className="divide-y divide-slate-800">
+        {evaluations.map((evaluation) => (
+          <li key={`${evaluation.rule_slug}-${evaluation.created_at}`} className="px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <VerdictBadge verdict={evaluation.verdict} />
+              <span className="font-mono text-slate-300">{evaluation.rule_slug}</span>
+              <span className="text-slate-500">{evaluation.rule_kind}</span>
+              {/*
+                Why the trace was evaluated at all. Without it, "passed" and "not sampled" look
+                the same on screen, and those are coverage and a coverage gap.
+              */}
+              <span className="text-slate-500">· {evaluation.decision_reason}</span>
+            </div>
+
+            {evaluation.error ? (
+              <p className="mt-2 text-xs text-amber-200">{evaluation.error}</p>
+            ) : null}
+
+            {evaluation.detail.note ? (
+              <p className="mt-2 text-xs text-slate-400">{evaluation.detail.note}</p>
+            ) : null}
+
+            {(evaluation.detail.failures ?? []).length > 0 ? (
+              <ul className="mt-2 space-y-1">
+                {(evaluation.detail.failures ?? []).map((failure) => (
+                  <li key={`${failure.rule_id}-${failure.span_id ?? "none"}`} className="text-xs">
+                    <span
+                      className={failure.severity === "warn" ? "text-amber-300" : "text-red-300"}
+                    >
+                      {failure.severity === "warn" ? "!" : "✗"} {failure.rule_id}
+                    </span>{" "}
+                    <span className="text-slate-300">{failure.message}</span>
+                    {failure.span_id ? (
+                      <button
+                        type="button"
+                        onClick={() => onSelectSpan(failure.span_id as string)}
+                        className="ml-1 font-mono text-slate-500 underline hover:text-slate-300"
+                      >
+                        {failure.span_id}
+                      </button>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {(evaluation.detail.inconclusive_rules ?? []).length > 0 ? (
+              <p className="mt-2 text-xs text-slate-400">
+                Undecided: {(evaluation.detail.inconclusive_rules ?? []).join(", ")} — the trace was
+                incomplete, which is not a violation.
+              </p>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  )
+}
+
+function VerdictBadge({ verdict }: { verdict: string }) {
+  // `inconclusive` is deliberately not styled as a failure. A trace that lost spans cannot answer
+  // a question about what did not happen, and colouring that red fills a queue with innocent runs.
+  const tone =
+    verdict === "fail"
+      ? "border-red-900/60 bg-red-950/30 text-red-200"
+      : verdict === "pass"
+        ? "border-emerald-900/60 bg-emerald-950/30 text-emerald-200"
+        : "border-slate-700 bg-slate-900 text-slate-300"
+  return (
+    <span className={`rounded border px-1.5 py-0.5 font-medium uppercase ${tone}`}>{verdict}</span>
   )
 }
 

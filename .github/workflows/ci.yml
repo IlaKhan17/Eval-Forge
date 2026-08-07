@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  # The acceptance test runs here rather than on every PR: it boots a real server and takes minutes.
+  # A merge queue is the right place for "does the loop still work" — the last check before code
+  # lands, on the exact combination that will land.
+  merge_group:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -114,10 +118,62 @@ jobs:
       - name: a failed job leaves a dead letter, and it does not leak
         run: uv run pytest apps/api/tests/test_dead_letters.py -m integration -q
 
+      # The claim the product rests on. Named because a silent divergence between the CLI's exit
+      # code and the dashboard's verdict is the one bug that discredits everything else.
+      - name: the library and the API reach the same verdict
+        run: uv run pytest apps/api/tests/test_parity.py -m integration -q
+
       - name: ingestion degrades rather than closing when object storage fails
         run: |
           uv run pytest apps/api/tests/test_ingest.py -m integration -q \
             -k "GracefulDegradation or ConcurrentFirstBatch"
+
+  # Stage 6 — E2E-1, the MVP acceptance test. Merge queue and main only: it starts a real server in
+  # a subprocess and drives the CLI against it, which is minutes rather than seconds. TESTING_STRATEGY
+  # §5 calls this the definition of done, so it gates the merge rather than the pull request.
+  acceptance:
+    name: e2e · the whole loop
+    if: github.event_name == 'merge_group' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: evalforge
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: evalforge
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U evalforge"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      POSTGRES_USER: evalforge
+      POSTGRES_PASSWORD: ci-only-password
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: evalforge
+      JWT_SECRET: ci-secret-value-that-is-long-enough-32
+      ENV: development
+      # No object storage in this job. Payloads under the inline limit never reach a bucket, and the
+      # graceful-degradation tests already cover the case where one is unreachable — so the
+      # acceptance test exercises the loop rather than MinIO.
+      S3_ENDPOINT: http://127.0.0.1:9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages
+
+      - name: the loop closes — trace, evaluate, exit 0, regress, exit 1, comment
+        run: uv run pytest tests/e2e -m e2e -q
+
+      - name: the API log, when it does not
+        if: failure()
+        run: tail -200 .e2e-api.log || true
 
   # Stage 4 — the CLI as a user invokes it, including the exit-code contract.
   # A unit test can assert a verdict; only this asserts that CI would act on it.

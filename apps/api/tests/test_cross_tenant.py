@@ -239,6 +239,7 @@ BY_ID: tuple[tuple[str, str, str, dict[str, Any] | None], ...] = (
 
 COLLECTIONS: tuple[tuple[str, str], ...] = (
     ("GET", "/v1/datasets"),
+    ("GET", "/v1/experiments"),
     ("GET", "/v1/online-rules"),
     ("GET", "/v1/review-queues"),
     ("GET", "/v1/traces"),

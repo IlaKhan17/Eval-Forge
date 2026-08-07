@@ -4,3 +4,37 @@
 {"id": "r-004", "input": {"body": "Tell me more about pricing."}, "expected": {"intent": "needs_information"}, "metadata": {"intent": "needs_information"}}
 {"id": "r-005", "input": {"body": "I am out of office until Monday."}, "expected": {"intent": "out_of_office"}, "metadata": {"intent": "out_of_office"}}
 {"id": "r-006", "input": {"body": "Stop emailing me."}, "expected": {"intent": "unsubscribe"}, "metadata": {"intent": "unsubscribe"}}
+{"id": "r-007", "input": {"body": "Happy to meet \u2014 what does your week look like?"}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-008", "input": {"body": "Can we get something on the calendar for next week?"}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-009", "input": {"body": "Tuesday works on my end."}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-010", "input": {"body": "Let's meet with my colleague from procurement too."}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-011", "input": {"body": "Could we meet after the quarter closes?"}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-012", "input": {"body": "Send me a calendar invite and I'll forward it internally."}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-013", "input": {"body": "Yes to a meet \u2014 mornings are better for me."}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-014", "input": {"body": "Put a hold on my calendar for Thursday and I'll confirm."}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-015", "input": {"body": "I'd like to meet before we renew with our current vendor."}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-016", "input": {"body": "Can we meet for twenty minutes rather than an hour?"}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-017", "input": {"body": "Adding my calendar link so you can pick a slot."}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-018", "input": {"body": "Tuesday or Wednesday, either is fine."}, "expected": {"intent": "meeting_requested"}, "metadata": {"intent": "meeting_requested"}}
+{"id": "r-019", "input": {"body": "Tell me more about how the trajectory checks work."}, "expected": {"intent": "needs_information"}, "metadata": {"intent": "needs_information"}}
+{"id": "r-020", "input": {"body": "What is your pricing for a team of forty?"}, "expected": {"intent": "needs_information"}, "metadata": {"intent": "needs_information"}}
+{"id": "r-021", "input": {"body": "Can you tell me more about your security posture?"}, "expected": {"intent": "needs_information"}, "metadata": {"intent": "needs_information"}}
+{"id": "r-022", "input": {"body": "Do you have pricing that scales with usage?"}, "expected": {"intent": "needs_information"}, "metadata": {"intent": "needs_information"}}
+{"id": "r-023", "input": {"body": "Tell me more \u2014 specifically about self-hosting."}, "expected": {"intent": "needs_information"}, "metadata": {"intent": "needs_information"}}
+{"id": "r-024", "input": {"body": "Send over pricing and I'll take it to my manager."}, "expected": {"intent": "needs_information"}, "metadata": {"intent": "needs_information"}}
+{"id": "r-025", "input": {"body": "I'd like to know more about the data-retention story."}, "expected": {"intent": "needs_information"}, "metadata": {"intent": "needs_information"}}
+{"id": "r-026", "input": {"body": "Curious to know more about how this compares to what we run today."}, "expected": {"intent": "needs_information"}, "metadata": {"intent": "needs_information"}}
+{"id": "r-027", "input": {"body": "Is there pricing for an academic licence?"}, "expected": {"intent": "needs_information"}, "metadata": {"intent": "needs_information"}}
+{"id": "r-028", "input": {"body": "Not interested at the moment."}, "expected": {"intent": "not_interested"}, "metadata": {"intent": "not_interested"}}
+{"id": "r-029", "input": {"body": "No thanks, we built this ourselves."}, "expected": {"intent": "not_interested"}, "metadata": {"intent": "not_interested"}}
+{"id": "r-030", "input": {"body": "Not interested \u2014 we just signed with someone else."}, "expected": {"intent": "not_interested"}, "metadata": {"intent": "not_interested"}}
+{"id": "r-031", "input": {"body": "No thanks."}, "expected": {"intent": "not_interested"}, "metadata": {"intent": "not_interested"}}
+{"id": "r-032", "input": {"body": "Not interested, but keep us on your radar for next year."}, "expected": {"intent": "not_interested"}, "metadata": {"intent": "not_interested"}}
+{"id": "r-033", "input": {"body": "No thanks, budget is frozen."}, "expected": {"intent": "not_interested"}, "metadata": {"intent": "not_interested"}}
+{"id": "r-034", "input": {"body": "I am out of office until the 14th."}, "expected": {"intent": "out_of_office"}, "metadata": {"intent": "out_of_office"}}
+{"id": "r-035", "input": {"body": "On leave this week, back Monday."}, "expected": {"intent": "out_of_office"}, "metadata": {"intent": "out_of_office"}}
+{"id": "r-036", "input": {"body": "Out of office \u2014 please contact my colleague."}, "expected": {"intent": "out_of_office"}, "metadata": {"intent": "out_of_office"}}
+{"id": "r-037", "input": {"body": "I'm on leave, will reply when I'm back."}, "expected": {"intent": "out_of_office"}, "metadata": {"intent": "out_of_office"}}
+{"id": "r-038", "input": {"body": "Out of office with limited access to email."}, "expected": {"intent": "out_of_office"}, "metadata": {"intent": "out_of_office"}}
+{"id": "r-039", "input": {"body": "On leave through the end of the month."}, "expected": {"intent": "out_of_office"}, "metadata": {"intent": "out_of_office"}}
+{"id": "r-040", "input": {"body": "Please unsubscribe this address."}, "expected": {"intent": "unsubscribe"}, "metadata": {"intent": "unsubscribe"}}

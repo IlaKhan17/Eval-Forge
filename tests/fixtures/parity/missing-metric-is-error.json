@@ -1,0 +1,25 @@
+{
+  "name": "missing-metric-is-error",
+  "why": "A gate on a metric the run never produced must be ERROR, never PASS. Passing would mean deleting an evaluator silently disables its gate \u2014 the most dangerous default in the system, because the gate keeps reporting green.",
+  "gate_set": {
+    "name": "strict",
+    "rules": [
+      {
+        "metric_key": "groundedness",
+        "minimum": 0.8,
+        "severity": "block"
+      }
+    ]
+  },
+  "candidate": [
+    {
+      "example_id": "e1",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0
+        }
+      ]
+    }
+  ]
+}

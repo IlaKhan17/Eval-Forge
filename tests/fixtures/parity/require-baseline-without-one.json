@@ -1,0 +1,26 @@
+{
+  "name": "require-baseline-without-one",
+  "why": "A regression rule with no baseline is not a satisfied rule. `require_baseline` turns the skip into a failure, and the first run on a new branch is exactly when the two sides are most likely to differ about whether a baseline exists.",
+  "gate_set": {
+    "name": "no-regression",
+    "rules": [
+      {
+        "metric_key": "accuracy",
+        "max_absolute_regression": 0.02,
+        "require_baseline": true,
+        "severity": "block"
+      }
+    ]
+  },
+  "candidate": [
+    {
+      "example_id": "e1",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0
+        }
+      ]
+    }
+  ]
+}

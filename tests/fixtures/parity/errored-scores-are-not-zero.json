@@ -1,0 +1,109 @@
+{
+  "name": "errored-scores-are-not-zero",
+  "why": "Aggregation must exclude errored evaluations from the mean and count them separately. This is the single rule most likely to be reimplemented in SQL for speed, and the moment it is, a judge outage reads as a quality collapse.",
+  "gate_set": {
+    "name": "quality",
+    "rules": [
+      {
+        "metric_key": "helpfulness",
+        "minimum": 0.7,
+        "max_error_rate": 0.5,
+        "severity": "block"
+      }
+    ]
+  },
+  "candidate": [
+    {
+      "example_id": "ok0",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": 0.9
+        }
+      ]
+    },
+    {
+      "example_id": "ok1",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": 0.9
+        }
+      ]
+    },
+    {
+      "example_id": "ok2",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": 0.9
+        }
+      ]
+    },
+    {
+      "example_id": "ok3",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": 0.9
+        }
+      ]
+    },
+    {
+      "example_id": "ok4",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": 0.9
+        }
+      ]
+    },
+    {
+      "example_id": "ok5",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": 0.9
+        }
+      ]
+    },
+    {
+      "example_id": "ok6",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": 0.9
+        }
+      ]
+    },
+    {
+      "example_id": "ok7",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": 0.9
+        }
+      ]
+    },
+    {
+      "example_id": "err0",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": null,
+          "error": "provider timeout"
+        }
+      ]
+    },
+    {
+      "example_id": "err1",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": null,
+          "error": "provider timeout"
+        }
+      ]
+    }
+  ]
+}

@@ -67,6 +67,40 @@ export interface TraceDetail {
   state: Record<string, unknown>
   spans: Span[]
   orphan_span_ids: string[]
+  /**
+   * Online policy and judge verdicts for this trace. Optional because an older server does not
+   * send it, and a dashboard that throws on a missing field turns a version skew into an outage.
+   */
+  evaluations?: TraceEvaluation[]
+}
+
+/** One online rule's conclusion about a trace. */
+export interface TraceEvaluation {
+  rule_slug: string
+  rule_kind: string
+  verdict: string
+  score: number | null
+  decision_reason: string
+  error: string | null
+  detail: {
+    policy?: string
+    failures?: PolicyFailure[]
+    inconclusive_rules?: string[]
+    warnings?: string[]
+    incomplete?: boolean
+    note?: string
+  }
+  created_at: string
+}
+
+export interface PolicyFailure {
+  rule_id: string
+  kind?: string
+  message?: string
+  span_id?: string | null
+  offending_action?: string | null
+  severity?: string
+  policy_line?: number | null
 }
 
 /** A span placed in the tree, with the geometry needed to draw one row. */

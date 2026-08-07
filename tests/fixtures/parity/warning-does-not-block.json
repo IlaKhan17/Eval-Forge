@@ -1,0 +1,31 @@
+{
+  "name": "warning-does-not-block",
+  "why": "Severity precedence: a failing warn rule reports WARN and still exits 0. Getting this wrong in one place either blocks merges nobody agreed to block, or hides a real block.",
+  "gate_set": {
+    "name": "mixed",
+    "rules": [
+      {
+        "metric_key": "accuracy",
+        "minimum": 0.5,
+        "severity": "block"
+      },
+      {
+        "metric_key": "cost_per_example",
+        "maximum": 0.001,
+        "severity": "warn"
+      }
+    ]
+  },
+  "candidate": [
+    {
+      "example_id": "e1",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0
+        }
+      ],
+      "cost": "0.05"
+    }
+  ]
+}

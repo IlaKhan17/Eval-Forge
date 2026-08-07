@@ -1,0 +1,115 @@
+{
+  "name": "error-rate-above-limit-is-error",
+  "why": "A metric measured mostly by failed evaluations is not a passing metric. Both sides must reach ERROR rather than computing a flattering mean over the two that worked.",
+  "gate_set": {
+    "name": "quality",
+    "rules": [
+      {
+        "metric_key": "helpfulness",
+        "minimum": 0.5,
+        "max_error_rate": 0.2,
+        "severity": "block"
+      }
+    ]
+  },
+  "candidate": [
+    {
+      "example_id": "ok0",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": 1.0
+        }
+      ]
+    },
+    {
+      "example_id": "ok1",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": 1.0
+        }
+      ]
+    },
+    {
+      "example_id": "err0",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": null,
+          "error": "timeout"
+        }
+      ]
+    },
+    {
+      "example_id": "err1",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": null,
+          "error": "timeout"
+        }
+      ]
+    },
+    {
+      "example_id": "err2",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": null,
+          "error": "timeout"
+        }
+      ]
+    },
+    {
+      "example_id": "err3",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": null,
+          "error": "timeout"
+        }
+      ]
+    },
+    {
+      "example_id": "err4",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": null,
+          "error": "timeout"
+        }
+      ]
+    },
+    {
+      "example_id": "err5",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": null,
+          "error": "timeout"
+        }
+      ]
+    },
+    {
+      "example_id": "err6",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": null,
+          "error": "timeout"
+        }
+      ]
+    },
+    {
+      "example_id": "err7",
+      "scores": [
+        {
+          "metric": "helpfulness",
+          "value": null,
+          "error": "timeout"
+        }
+      ]
+    }
+  ]
+}

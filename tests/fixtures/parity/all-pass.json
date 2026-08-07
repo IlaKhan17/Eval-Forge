@@ -1,0 +1,61 @@
+{
+  "name": "all-pass",
+  "why": "The control case. If this one disagrees the harness itself is wrong, and it distinguishes 'the suite found a divergence' from 'the suite cannot compare anything'.",
+  "gate_set": {
+    "name": "default",
+    "rules": [
+      {
+        "metric_key": "accuracy",
+        "minimum": 0.9,
+        "severity": "block"
+      }
+    ]
+  },
+  "candidate": [
+    {
+      "example_id": "e0",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0
+        }
+      ]
+    },
+    {
+      "example_id": "e1",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0
+        }
+      ]
+    },
+    {
+      "example_id": "e2",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0
+        }
+      ]
+    },
+    {
+      "example_id": "e3",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0
+        }
+      ]
+    },
+    {
+      "example_id": "e4",
+      "scores": [
+        {
+          "metric": "accuracy",
+          "value": 1.0
+        }
+      ]
+    }
+  ]
+}

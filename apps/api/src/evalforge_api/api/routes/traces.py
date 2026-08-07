@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Select, and_, or_, select
 
 from evalforge_api.api.dependencies import SessionDep, SettingsDep, get_principal
+from evalforge_api.db.models.online import OnlineEvalRule, OnlineEvaluation
 from evalforge_api.db.models.traces import PayloadObject, Span, SpanEvent, Trace
 from evalforge_api.errors import BadRequestError, ForbiddenError, NotFoundError
 from evalforge_api.security import cursors
@@ -76,10 +77,36 @@ class SpanOut(BaseModel):
     events: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class EvaluationOut(BaseModel):
+    """What an online rule concluded about this trace."""
+
+    rule_slug: str
+    rule_kind: str
+    verdict: str
+    score: float | None
+    #: Why this trace was evaluated at all — sampled, escalated, forced, or deterministic. Without
+    #: it a reader cannot tell "checked and passed" from "not selected", which is the difference
+    #: between coverage and a coverage gap.
+    decision_reason: str
+    error: str | None
+    #: The failures, inconclusive rules, and warnings the evaluator produced. Exposed rather than
+    #: summarised into the verdict: "which rule, in which span" is the whole value of a trajectory
+    #: failure, and a verdict alone sends the reader back to guessing.
+    detail: dict[str, Any]
+    created_at: datetime
+
+
 class TraceDetail(TraceSummary):
     state: dict[str, Any]
     spans: list[SpanOut]
     orphan_span_ids: list[str] = Field(default_factory=list)
+    #: Online evaluations of this trace, newest first.
+    #:
+    #: On the trace rather than only in a review queue, because a queue holds the failures somebody
+    #: escalated. A rule can run on every trace and escalate none of them — that is the normal
+    #: configuration for a free deterministic policy — and without this the verdict exists in the
+    #: database and nowhere a reader can see it.
+    evaluations: list[EvaluationOut] = Field(default_factory=list)
 
 
 async def require_read(
@@ -263,7 +290,42 @@ async def get_trace(
     # Reported rather than hidden: an orphan usually means spans were dropped, and
     # the trajectory engine treats an incomplete trace differently for good reason.
     detail["orphan_span_ids"] = orphans
+    detail["evaluations"] = await _load_evaluations(session, trace_id, principal.project_id)
     return TraceDetail.model_validate(detail)
+
+
+async def _load_evaluations(
+    session: SessionDep, trace_id: str, project_id: uuid.UUID | None
+) -> list[dict[str, Any]]:
+    """Online evaluations for one trace, joined to the rule that produced them.
+
+    Joined rather than returning a rule id: an id sends the reader on a second request to learn what
+    checked their trace, and the slug is what the rule is called everywhere else.
+    """
+    rows = (
+        await session.execute(
+            select(OnlineEvaluation, OnlineEvalRule)
+            .join(OnlineEvalRule, OnlineEvalRule.id == OnlineEvaluation.rule_id)
+            .where(
+                OnlineEvaluation.project_id == project_id,
+                OnlineEvaluation.trace_id == trace_id,
+            )
+            .order_by(OnlineEvaluation.created_at.desc())
+        )
+    ).all()
+    return [
+        {
+            "rule_slug": rule.slug,
+            "rule_kind": rule.kind,
+            "verdict": evaluation.verdict,
+            "score": evaluation.score,
+            "decision_reason": evaluation.decision_reason,
+            "error": evaluation.error,
+            "detail": evaluation.detail or {},
+            "created_at": evaluation.created_at,
+        }
+        for evaluation, rule in rows
+    ]
 
 
 async def _load_refs(
