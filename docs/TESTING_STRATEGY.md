@@ -70,11 +70,10 @@ The seams where drift is silent and expensive.
 Playwright (UI) + a Python driver (API/CLI) against a full `docker compose` stack.
 
 > **Status.** E2E-1 exists as `tests/e2e/test_acceptance.py`, runs against a live server in a
-> subprocess, and gates the merge queue. What it does **not** cover, because the capability does not
-> exist yet: the CLI publishing its run to the server (`eval` is local-only — see `--local`). The
-> test asserts that absence explicitly rather than skipping it, so whoever implements publishing sees
-> a failing assertion instead of an untested path. The server-side experiment path is covered by
-> `apps/api/tests/test_parity.py`, which also asserts it reaches the same verdict as the library.
+> subprocess, and gates the merge queue. It now covers publishing too: both runs reach the server,
+> each records the dataset content hash it ran against, and the corpus metric the gate failed on
+> survives the trip — which is the assertion that would have caught the server reading ERROR on a
+> run the CLI passed.
 >
 > The other scenarios listed below — annotate → promote, offline spooling, dataset immutability
 > through the UI, the calibration warning in CI — are not written yet.

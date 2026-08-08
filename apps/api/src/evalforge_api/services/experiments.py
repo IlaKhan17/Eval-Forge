@@ -246,6 +246,71 @@ class ExperimentService:
             )
         await self.session.flush()
 
+    async def submit_metrics(
+        self, run_id: uuid.UUID, metrics: list[Metric]
+    ) -> tuple[int, list[str]]:
+        """Store metrics the server cannot compute for itself, and refuse the ones it can.
+
+        The boundary, and why it is drawn exactly here: metrics derived from per-example scores —
+        accuracy, a judge's mean rating — are recomputed server-side from the stored scores, and
+        that recomputation is what makes the server's verdict *verified* rather than merely
+        reported. Accepting a client's number for one of those would hollow it out: a run could
+        claim any accuracy it liked and the dashboard would agree.
+
+        Corpus and operational metrics are different in kind. NDCG over a whole run, a confusion
+        matrix, p95 latency — none can be reconstructed from individual scores, because they are
+        properties of the set rather than sums over it. Only the process that ran the suite has
+        them, so either the client submits them or every gate on them evaluates as "metric
+        missing" — which is exactly what happened the first time a suite with a protected-class
+        gate was published: the server read ERROR on a run the CLI had passed.
+
+        So: submitted metrics are stored only for keys the server did not compute. Collisions are
+        returned rather than silently dropped, because a client that thinks it is setting a number
+        and is not deserves to hear about it.
+        """
+        run = await self.get_run(run_id)
+        computed = {
+            (row.metric_key, row.slice_key)
+            for row in (
+                await self.session.execute(
+                    select(AggregateMetric).where(AggregateMetric.run_id == run.id)
+                )
+            )
+            .scalars()
+            .all()
+        }
+
+        stored = 0
+        rejected: list[str] = []
+        for metric in metrics:
+            key = (metric.key, slice_key(metric.slice))
+            if key in computed:
+                rejected.append(metric.full_key)
+                continue
+            self.session.add(
+                AggregateMetric(
+                    project_id=self.project_id,
+                    run_id=run.id,
+                    metric_key=metric.key,
+                    slice_key=key[1],
+                    slice=metric.slice,
+                    value=metric.value,
+                    count=metric.count,
+                    error_count=metric.error_count,
+                    stddev=metric.stddev,
+                    ci_low=metric.ci_low,
+                    ci_high=metric.ci_high,
+                    unit=metric.unit,
+                )
+            )
+            # Added to the set as we go, so a duplicate key inside one submission is rejected too
+            # rather than producing two rows the reader cannot tell apart.
+            computed.add(key)
+            stored += 1
+
+        await self.session.flush()
+        return stored, rejected
+
     async def load_results(self, run_id: uuid.UUID) -> list[ExampleResult]:
         """Rehydrate stored rows into the core's own result type.
 

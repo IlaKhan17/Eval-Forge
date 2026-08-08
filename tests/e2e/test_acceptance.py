@@ -165,21 +165,29 @@ def test_the_whole_loop(stack: dict[str, Any], api: httpx.Client, tmp_path: Path
     # GitHub rejects comments over 65 536 characters, and a rejected comment means a silent CI.
     assert len(comment) < 65_536, len(comment)
 
-    # ------------------------------------------- 7. the boundary of what the loop covers today
+    # ------------------------------------------- 7. both runs are on the server, not just on disk
     #
-    # The CLI is local-only: `eval` computes, gates, and reports without contacting a server (see
-    # `--local`, which defaults to true). So a run does *not* appear under /v1/experiments, and this
-    # asserts that rather than skipping it — a known gap that is checked is a gap somebody notices,
-    # and whoever implements publishing will see this assertion fail and update it.
-    #
-    # The server-side experiment path itself is not untested: apps/api/tests/test_parity.py drives
-    # it end to end and asserts it reaches the same verdict as the library. What is missing is the
-    # CLI *sending* its run there.
-    published = api.get("/v1/experiments", params={"suite_name": "reply-intent"}).json()
-    assert published == [], (
-        "an experiment reached the server from the CLI — publishing is implemented now, so this "
-        "step should assert the run's metrics rather than its absence"
+    # This is what makes the loop a loop rather than a one-way trip: the verdict CI acted on is now
+    # a record with the dataset, the scores, and the commit attached.
+    experiments = api.get("/v1/experiments", params={"suite_name": "reply-intent"}).json()
+    assert len(experiments) >= 2, f"both runs should have published: {experiments}"
+    assert all(experiment["dataset_content_hash"] for experiment in experiments), (
+        "a published experiment must record which data it ran against, or it proves nothing"
     )
+
+    # The corpus metric the gate actually failed on has to survive the trip. It cannot be derived
+    # from per-example scores, so if the CLI did not send it the server would read this run as ERROR
+    # ("metric missing") on a run the CLI called a failure — a difference in kind, not degree.
+    baseline = api.get(
+        "/v1/experiments/baseline", params={"suite_name": "reply-intent", "branch": "main"}
+    ).json()
+    assert baseline["run_id"], baseline
+    keys = {metric["key"] for metric in baseline["metrics"]}
+    assert {"intent_accuracy", "classes_recall"} <= keys, sorted(keys)
+
+    # ------------------------------------------------- 8. the report points at the record
+    assert broken["experiment_url"], "the report must link the run it published"
+    assert clean["experiment_url"] != broken["experiment_url"]
 
 
 def _metric(data: dict[str, Any], key: str) -> float | None:

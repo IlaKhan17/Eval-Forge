@@ -274,6 +274,24 @@ evalforge eval evals/suites/sdr-email.yaml \
 
 Sequence: load+validate config → resolve dataset version → resolve baseline → register evaluator/policy versions → open experiment+run → execute (journaled) → aggregate → compare → gates → report → exit.
 
+### Publishing
+
+**Implemented.** `eval` records the run on the server whenever `EVALFORGE_ENDPOINT` and `EVALFORGE_API_KEY` are both set. `--local` opts out; there is no flag to opt *in*, because a run that needs a flag to be recorded is a run nobody records.
+
+What it does, in order — before the run: resolve the baseline for this suite on the baseline branch and load its metrics, so regression gates fire in the same process that produces the exit code. After the run: ensure the dataset and a **content-addressed** version (`sha-<12 hex>` of the examples, so identical data reuses a version and changed data cannot reuse a label), mirror the suite's gates, open an experiment and run, upload results in batches, complete the run, submit the corpus metrics the server cannot derive, and compare.
+
+Four rules it is built on, each of which is a decision rather than an implementation detail:
+
+1. **Publishing never changes the verdict.** The exit code is the local evaluation's. A slow, unreachable, or misconfigured server must not be able to turn a failing run into a passing one, or the gate would depend on infrastructure rather than on the code being merged. `--require-publish` can make a *passing* run fail when the record could not be written; nothing can make a failing run pass.
+2. **A failed publish is reported, never swallowed** — on stderr, with the endpoint and the reason. The failure mode being designed against is someone believing a record exists.
+3. **Dataset versions are content-addressed**, which is what makes `dataset_match` mean something. If the server's hash of the same examples ever disagrees with the local one, publishing stops rather than recording a comparison across different data.
+4. **The server's verdict is checked against the local one** and any difference is printed loudly. They are computed by the same code from the same numbers, so a disagreement is a bug in this system — the one bug that discredits every other number it reports. The exception is a server that resolved a baseline this run did not have; that is reported as context rather than as a disagreement.
+
+Two server capabilities exist for this and are worth knowing about directly:
+
+- `POST /v1/experiment-runs/{id}/metrics` accepts metrics the server **cannot** compute — corpus and operational ones like a confusion matrix, per-class recall, or p95 latency, which are properties of the whole run rather than sums over per-example scores. Anything derived from scores is recomputed server-side and a submission for it is refused, so a client cannot overwrite a number the server verified. Without this, a suite gating on a protected class's recall publishes and then reads as ERROR because the metric is missing.
+- `GET /v1/experiments/baseline?suite_name=&branch=` resolves the run a candidate will be compared against, with its metrics, and answers `run_id: null` rather than 404 when there is none — the first run of a suite is the normal case, not an error.
+
 `--dry-run` validates everything, resolves the baseline, and prints the plan with an estimated cost — without a single model call. Given that a full suite can cost real money, being able to check the wiring for free is a requirement, not a nicety.
 
 Terminal report:

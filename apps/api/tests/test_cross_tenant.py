@@ -61,6 +61,9 @@ EXCUSED: dict[tuple[str, str], str] = {
     ("POST", "/v1/trajectory-policies/validate"): "pure validation; touches no stored row",
     ("POST", "/v1/online-rules/run"): "operates on the caller's tenant only; no id in the request",
     ("GET", "/v1/review-queues/health"): "aggregates the caller's own queues",
+    # Resolves within the caller's tenant from a suite name, which is not an id — a foreign suite
+    # name simply has no runs. test_publishing.py asserts that directly.
+    ("GET", "/v1/experiments/baseline"): "resolves by suite name within the caller's tenant",
     ("GET", "/v1/dataset-versions/resolve"): "resolves by slug within the caller's tenant",
     ("POST", "/v1/experiments/compare"): "run ids are validated against the caller's tenant",
     (
@@ -227,6 +230,7 @@ BY_ID: tuple[tuple[str, str, str, dict[str, Any] | None], ...] = (
     ("POST", "/v1/experiment-runs/{run_id}/complete", "run", {}),
     ("GET", "/v1/experiment-runs/{run_id}/metrics", "run", None),
     ("POST", "/v1/experiment-runs/{run_id}/results", "run", {"results": []}),
+    ("POST", "/v1/experiment-runs/{run_id}/metrics", "run", {"metrics": []}),
     ("POST", "/v1/experiments/{experiment_id}/promote-baseline", "experiment", {}),
     ("POST", "/v1/experiments/{experiment_id}/runs", "experiment", {}),
     ("GET", "/v1/online-rules/{rule_id}/coverage", "rule", None),

@@ -217,6 +217,16 @@ baseline:
   branch: main
 ```
 
+Set `EVALFORGE_ENDPOINT` and `EVALFORGE_API_KEY` in the job and each run is **recorded on the
+server**: the dataset it ran against, every score, the gate verdict, and the commit. The baseline is
+pulled from there before the run, so "did my branch make it worse than main?" is answered by the
+same process that produces the exit code.
+
+Publishing never changes that exit code — a server outage cannot turn a failing run into a passing
+one — and a failed publish prints to stderr rather than passing silently. `--local` opts out
+entirely; `--require-publish` makes a missing record a failure for teams whose process depends on
+it.
+
 Introducing it to an existing repository? `fail-on-gate: "false"` makes the run advisory — you get
 the report and the comment without blocking anyone until the numbers are trusted.
 
@@ -255,3 +265,7 @@ browser (`apps/web/src/lib/proxy-policy.ts`).
 
 **`evalforge eval` refuses to start** — a suite with judges needs `--model-client`. It refuses up
 front rather than failing halfway through a paid run.
+
+**"not published · EVALFORGE_ENDPOINT and EVALFORGE_API_KEY are not both set"** — expected on a
+laptop with no server. Runs still gate on their absolute floors; only the record and the baseline
+comparison are skipped.

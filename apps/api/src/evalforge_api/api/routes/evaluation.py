@@ -39,6 +39,7 @@ from evalforge_types import (
     Example,
     ExampleResult,
     GateRule,
+    Metric,
     Severity,
 )
 
@@ -172,6 +173,28 @@ class ResultsOut(BaseModel):
 class CompleteIn(BaseModel):
     status: str = "succeeded"
     error: str | None = None
+
+
+class BaselineOut(BaseModel):
+    """The baseline a candidate resolves to, or an explicit absence."""
+
+    run_id: uuid.UUID | None
+    experiment_id: uuid.UUID | None = None
+    git_commit: str | None = None
+    git_branch: str | None = None
+    #: Lets a caller refuse to compare across different data before it has run anything.
+    dataset_content_hash: str | None = None
+    metrics: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class MetricsIn(BaseModel):
+    metrics: list[Metric] = Field(max_length=2_000)
+
+
+class SubmitMetricsOut(BaseModel):
+    stored: int
+    #: Metrics the server computed itself and therefore refused to take from the client.
+    rejected: list[str] = Field(default_factory=list)
 
 
 class GateRuleIn(BaseModel):
@@ -644,6 +667,22 @@ async def cancel_run(run_id: uuid.UUID, session: SessionDep, principal: Runner) 
     return _run_out(await service.cancel_run(run_id))
 
 
+@router.post("/experiment-runs/{run_id}/metrics", response_model=SubmitMetricsOut)
+async def submit_metrics(
+    run_id: uuid.UUID, body: MetricsIn, session: SessionDep, principal: Runner
+) -> SubmitMetricsOut:
+    """Record metrics the server cannot compute for itself.
+
+    Corpus and operational metrics only — NDCG, a confusion matrix, p95 latency. Anything derived
+    from per-example scores is recomputed server-side and a submission for it is refused rather than
+    applied, so a client cannot overwrite a number the server verified. `rejected` names those, so a
+    caller that believed it was setting a value finds out.
+    """
+    service = ExperimentService(session, project_id=principal.project)
+    stored, rejected = await service.submit_metrics(run_id, body.metrics)
+    return SubmitMetricsOut(stored=stored, rejected=rejected)
+
+
 @router.get("/experiment-runs/{run_id}/metrics", response_model=list[dict[str, Any]])
 async def run_metrics(
     run_id: uuid.UUID, session: SessionDep, principal: Reader
@@ -662,6 +701,42 @@ async def run_metrics(
         }
         for m in await service.load_metrics(run_id)
     ]
+
+
+@router.get("/experiments/baseline", response_model=BaselineOut)
+async def resolve_baseline_run(
+    session: SessionDep,
+    principal: Reader,
+    suite_name: Annotated[str, Query(max_length=200)],
+    branch: Annotated[str, Query(max_length=200)] = "main",
+) -> BaselineOut:
+    """The run a candidate would be compared against, with its metrics.
+
+    Exists so the CLI can apply regression gates *locally*, before it has published anything.
+    Without it a run is only comparable after the fact: the server resolves a baseline during
+    `compare` and applies rules the local evaluation had to skip, so the two verdicts differ for a
+    reason that is not a bug and cannot be told apart from one that is.
+
+    Returns `run_id: null` rather than 404 when there is no baseline yet. The first run on a new
+    suite is the normal case, not an error, and making the client special-case a status code for it
+    invites treating a missing baseline as a failure.
+    """
+    service = ExperimentService(session, project_id=principal.project)
+    run = await service.resolve_baseline(suite_name=suite_name, branch=branch)
+    if run is None:
+        return BaselineOut(run_id=None, metrics=[])
+
+    experiment = await service.get_experiment(run.experiment_id)
+    return BaselineOut(
+        run_id=run.id,
+        experiment_id=run.experiment_id,
+        git_commit=experiment.git_commit,
+        git_branch=experiment.git_branch,
+        dataset_content_hash=(
+            experiment.dataset_content_hash.hex() if experiment.dataset_content_hash else None
+        ),
+        metrics=[m.model_dump(mode="json") for m in await service.load_metrics(run.id)],
+    )
 
 
 @router.post("/experiments/compare", response_model=CompareOut)

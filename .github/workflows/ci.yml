@@ -123,6 +123,11 @@ jobs:
       - name: the library and the API reach the same verdict
         run: uv run pytest apps/api/tests/test_parity.py -m integration -q
 
+      # The boundary that keeps a published run trustworthy: a client may supply the metrics the
+      # server cannot compute, and may not overwrite the ones it can.
+      - name: a run can be published without the client overwriting verified numbers
+        run: uv run pytest apps/api/tests/test_publishing.py -m integration -q
+
       - name: ingestion degrades rather than closing when object storage fails
         run: |
           uv run pytest apps/api/tests/test_ingest.py -m integration -q \
@@ -200,6 +205,14 @@ jobs:
           assert gen.TARGETS['ingest']['spans_per_second'] == 2000
           print('load harness imports and builds batches')
           "
+
+      - name: publishing degrades to a warning with no server
+        # The CLI must gate normally on a machine with no endpoint configured — which is every
+        # fork PR, and every developer laptop.
+        run: |
+          uv run evalforge eval evals/suites/reply-intent.yaml -o /tmp/nopublish.json 2>&1 \
+            | tee /tmp/nopublish.log
+          grep -q "not published" /tmp/nopublish.log
 
       - name: suite validates
         run: uv run evalforge validate evals/suites/reply-intent.yaml

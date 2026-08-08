@@ -26,6 +26,7 @@ from typing import Annotated, Any
 import typer
 
 from evalforge_cli import calibration, runner
+from evalforge_cli import publish as publish_module
 from evalforge_cli.render import calibration as calibration_render
 from evalforge_cli.render import markdown as markdown_module
 from evalforge_cli.render import report as report_module
@@ -63,9 +64,20 @@ def _parse_overrides(values: list[str] | None) -> dict[str, str]:
 @app.command()
 def eval(  # noqa: PLR0917 — Typer maps CLI options onto arguments
     suite_path: Annotated[Path, typer.Argument(help="Path to the suite YAML")],
-    local: Annotated[  # noqa: ARG001 — reserved for remote execution
-        bool, typer.Option("--local", help="Run offline; never contact a server")
-    ] = True,
+    local: Annotated[
+        bool,
+        typer.Option(
+            "--local/--publish",
+            help="Run offline, or record the run on the server (default: publish when configured)",
+        ),
+    ] = False,
+    require_publish: Annotated[
+        bool,
+        typer.Option(
+            "--require-publish",
+            help="Fail the command when the run could not be recorded on the server",
+        ),
+    ] = False,
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Validate and plan without any model calls")
     ] = False,
@@ -118,9 +130,18 @@ def eval(  # noqa: PLR0917 — Typer maps CLI options onto arguments
             _fail(str(exc), runner.exit_code_for_setup_error())
             return
 
+    baseline = _fetch_baseline(loaded, local=local)
+
     try:
         outcome = asyncio.run(
-            runner.execute(loaded, models=models, journal=journal, resume=resume, limit=limit)
+            runner.execute(
+                loaded,
+                models=models,
+                baseline_metrics=baseline.metrics or None,
+                journal=journal,
+                resume=resume,
+                limit=limit,
+            )
         )
     except runner.RunError as exc:
         _fail(str(exc), runner.exit_code_for_setup_error())
@@ -129,12 +150,19 @@ def eval(  # noqa: PLR0917 — Typer maps CLI options onto arguments
         _fail("cancelled", 130)
         return
 
+    if baseline.label:
+        outcome.baseline_label = baseline.label
+    published = _publish(loaded, outcome, local=local)
+
     report_path = str(output or loaded.suite.report.output)
+    git = runner.git_context()
     payload = report_module.build_report(
         outcome.result,
         comparison=outcome.comparison,
-        git_commit=runner.git_context()[0],
-        git_branch=runner.git_context()[1],
+        git_commit=git[0],
+        git_branch=git[1],
+        baseline_run_id=published.baseline_run_id,
+        experiment_url=published.experiment_url,
         hints=loaded.hints,
     )
     if "json" in loaded.suite.report.formats:
@@ -152,7 +180,115 @@ def eval(  # noqa: PLR0917 — Typer maps CLI options onto arguments
             )
         )
 
-    raise typer.Exit(outcome.exit_code)
+    _report_publish(published)
+
+    # The exit code is the local verdict's, always. A server that is slow, unreachable, or
+    # misconfigured must not be able to turn a failing run into a passing one — the gate would then
+    # depend on infrastructure rather than on the code being merged. `--require-publish` is the
+    # opt-in for teams whose process needs the record to exist, and even it can only make a passing
+    # run fail, never the reverse.
+    exit_code = outcome.exit_code
+    if require_publish and not published.published and not published.skipped_reason:
+        exit_code = max(exit_code, runner.exit_code_for_setup_error())
+    elif require_publish and published.skipped_reason:
+        _fail(
+            f"--require-publish was given but publishing was skipped: {published.skipped_reason}",
+            runner.exit_code_for_setup_error(),
+        )
+    raise typer.Exit(exit_code)
+
+
+def _fetch_baseline(loaded: Any, *, local: bool) -> publish_module.Baseline:
+    """Pull the baseline's metrics before running, when a server is configured.
+
+    Doing this *before* the run rather than comparing afterwards is what lets regression gates fire
+    in the same process that produces the exit code — and it keeps the local and server verdicts
+    computed against the same baseline, so a difference between them means a bug rather than a
+    difference in what each side knew.
+    """
+    endpoint = os.environ.get("EVALFORGE_ENDPOINT")
+    api_key = os.environ.get("EVALFORGE_API_KEY")
+    if local or not endpoint or not api_key:
+        return publish_module.Baseline()
+
+    baseline = publish_module.fetch_baseline(loaded, endpoint=endpoint, api_key=api_key)
+    if baseline.error:
+        # A warning, not a failure. Absolute floors still gate correctly with no baseline; only
+        # regression rules are skipped, and `require_baseline` on a rule is how a suite declares
+        # that skipping is unacceptable for it.
+        style = terminal.Style(colour=terminal.use_colour(), unicode_=terminal.use_unicode())
+        typer.echo(
+            style.paint(
+                f"{style.warn} no baseline · {baseline.error}",
+                terminal.YELLOW,
+            ),
+            err=True,
+        )
+    return baseline
+
+
+def _publish(loaded: Any, outcome: runner.Outcome, *, local: bool) -> publish_module.PublishOutcome:
+    """Record the run, unless the caller asked not to or the environment cannot.
+
+    Publishing is *opt-out but conditional*: it happens when a server is configured and is skipped
+    quietly when one is not, so `evalforge eval` on a laptop with no account behaves exactly as it
+    always has. Requiring a flag to get the record would mean most CI jobs never produce one.
+    """
+    if local:
+        return publish_module.PublishOutcome(skipped_reason="--local was given")
+
+    endpoint = os.environ.get("EVALFORGE_ENDPOINT")
+    api_key = os.environ.get("EVALFORGE_API_KEY")
+    if not endpoint or not api_key:
+        return publish_module.PublishOutcome(
+            skipped_reason="EVALFORGE_ENDPOINT and EVALFORGE_API_KEY are not both set"
+        )
+
+    try:
+        dataset = runner.load_dataset(loaded)
+    except (runner.RunError, SuiteError) as exc:
+        return publish_module.PublishOutcome(
+            error=f"could not reload the dataset to publish: {exc}"
+        )
+
+    return publish_module.publish(
+        loaded,
+        outcome.result,
+        dataset,
+        endpoint=endpoint,
+        api_key=api_key,
+        git=runner.git_context(),
+    )
+
+
+def _report_publish(published: publish_module.PublishOutcome) -> None:
+    """Say what happened, in one line — including when nothing did.
+
+    A silent skip is the failure mode worth designing against: someone believes the record exists,
+    and nobody goes looking for a thing they are sure is there.
+    """
+    style = terminal.Style(colour=terminal.use_colour(), unicode_=terminal.use_unicode())
+
+    if published.skipped_reason:
+        typer.echo(style.paint(f"not published · {published.skipped_reason}", terminal.DIM))
+        return
+
+    if published.error:
+        typer.echo(
+            style.paint(f"{style.warn} not published · {published.error}", terminal.YELLOW),
+            err=True,
+        )
+        return
+
+    typer.echo(style.paint(f"published · {published.experiment_url}", terminal.DIM))
+
+    for divergence in published.divergences:
+        # Loud, and on stderr. The two verdicts are computed by the same code from the same
+        # numbers, so a difference is a bug in this system rather than a fact about the run — and
+        # it means the exit code CI just acted on and the dashboard's verdict disagree.
+        typer.echo(
+            style.paint(f"{style.warn} server disagreed · {divergence}", terminal.YELLOW), err=True
+        )
 
 
 def _print_plan(loaded: Any) -> None:
