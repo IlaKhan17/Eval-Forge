@@ -128,6 +128,26 @@ jobs:
       - name: a run can be published without the client overwriting verified numbers
         run: uv run pytest apps/api/tests/test_publishing.py -m integration -q
 
+      # Deployment posture: secret files, the production refusals, heartbeats, and the metrics an
+      # alert reads. Each guards something invisible in normal operation.
+      - name: deployment posture holds
+        run: uv run pytest apps/api/tests/test_operations.py -m integration -q
+
+      - name: the preflight gate runs
+        # Exit 1 is expected here — CI runs as a superuser with no separate migration role, which is
+        # exactly what the check exists to refuse. What is being tested is that it *runs* and reports
+        # rather than crashing, since a deploy gate that errors gets removed from the pipeline.
+        run: |
+          uv run python scripts/preflight.py --json > /tmp/preflight.json || true
+          python -c "
+          import json
+          report = json.load(open('/tmp/preflight.json'))
+          names = {c['name'] for c in report['checks']}
+          assert 'row-level security applies to this role' in names, names
+          assert 'partitions cover the current month' in names, names
+          print(f\"preflight reported {len(report['checks'])} checks\")
+          "
+
       - name: ingestion degrades rather than closing when object storage fails
         run: |
           uv run pytest apps/api/tests/test_ingest.py -m integration -q \

@@ -23,7 +23,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, Index, Integer, String, Text
+from sqlalchemy import DateTime, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -65,4 +65,30 @@ class DeadLetterJob(IdentifiedBase, TimestampMixin):
     resolution: Mapped[str | None] = mapped_column(Text, default=None)
 
 
-__all__ = ["MAX_MESSAGE_CHARS", "DeadLetterJob"]
+class WorkerHeartbeat(IdentifiedBase, TimestampMixin):
+    """The last time a worker was known to be alive.
+
+    A row rather than a Redis key with a TTL, for one reason: when Redis is the thing that broke,
+    a TTL-based liveness signal disappears at exactly the moment it is needed, and "the worker is
+    down" becomes indistinguishable from "I cannot tell". A row in the database the worker was
+    already writing to survives that.
+
+    Written on every job and on a dedicated one-minute cron, so a worker that is up but wedged on a
+    single long job still reports — the cron and the job queue share a process, so a heartbeat that
+    stops means the process stopped, which is the thing being detected.
+    """
+
+    __tablename__ = "worker_heartbeats"
+    __table_args__ = (
+        # One row per worker name, updated in place. History would grow without bound to answer a
+        # question nobody asks: what matters is the age of the newest beat, not the sequence.
+        UniqueConstraint("worker_name", name="uq_worker_heartbeats_worker_name"),
+    )
+
+    worker_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    #: What it last did, for the operator reading this during an incident.
+    detail: Mapped[dict[str, Any]] = mapped_column(JSONB, default=jsonb_default, nullable=False)
+
+
+__all__ = ["MAX_MESSAGE_CHARS", "DeadLetterJob", "WorkerHeartbeat"]

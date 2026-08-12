@@ -39,6 +39,10 @@ evalforge-*.json
 
 # The e2e stack's server log, written next to the repo so a CI failure can print it.
 .e2e-api.log
+
+# Database dumps. Never committed: they contain every tenant's data, and a backup in a git history
+# is a backup with no access control and no retention.
+backups/
 *.evalforge.local.yaml
 
 # Editors / OS

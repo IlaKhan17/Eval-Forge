@@ -2,7 +2,8 @@
 SHELL := /bin/bash
 
 .PHONY: help setup test test-unit test-integration lint fmt typecheck arch check dev down clean \
-	bootstrap web web-install web-check api calibrate worker online-eval otlp-example partitions app-role
+	bootstrap web web-install web-check api calibrate worker online-eval otlp-example partitions app-role \
+	preflight backup keys
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -124,6 +125,15 @@ async def main():
 
 asyncio.run(main())
 endef
+
+preflight: ## Check a deployment before it takes traffic
+	uv run python scripts/preflight.py
+
+backup: ## Take a verifiable database backup into ./backups
+	./scripts/backup.sh
+
+keys: ## Manage API keys (list/create/rotate/revoke) — see docs/OPERATIONS.md
+	uv run python scripts/manage_keys.py --help
 
 app-role: ## Create the unprivileged role the application should connect as
 	@test -n "$$APP_ROLE_PASSWORD" || (echo "set APP_ROLE_PASSWORD (e.g. \$$(openssl rand -hex 24))" && exit 1)

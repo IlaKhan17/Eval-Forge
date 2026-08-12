@@ -20,13 +20,18 @@ import logging
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
-from evalforge_api.db.models.ops import MAX_MESSAGE_CHARS, DeadLetterJob
-from sqlalchemy import func, select, update
+from evalforge_api.db.base import uuid7
+from evalforge_api.db.models.ops import MAX_MESSAGE_CHARS, DeadLetterJob, WorkerHeartbeat
+from sqlalchemy import Table, func, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 logger = logging.getLogger("evalforge.worker.deadletter")
+
+# Core Table rather than the ORM class, so the upsert can name the conflict target directly.
+HEARTBEATS = cast("Table", WorkerHeartbeat.__table__)
 
 #: Keys allowed into the stored `context`. An allow-list rather than "everything except
 #: secrets": these jobs take ids, limits, and windows, so enumerating what is kept is both
@@ -113,6 +118,51 @@ async def record(
             error,
         )
         return None
+
+
+async def beat(
+    session_factory: async_sessionmaker[AsyncSession],
+    *,
+    worker_name: str = "default",
+    detail: dict[str, Any] | None = None,
+) -> None:
+    """Record that this worker is alive.
+
+    Upserted on the worker name, so the table holds one row per worker rather than a growing log of
+    minutes. Failures are swallowed and logged for the same reason as `record`: a heartbeat that can
+    take down a worker turns a monitoring feature into an outage.
+    """
+    try:
+        async with session_factory() as session:
+            await session.execute(
+                pg_insert(HEARTBEATS)
+                .values(
+                    id=uuid7(),
+                    worker_name=worker_name,
+                    last_seen_at=datetime.now(UTC),
+                    detail=detail or {},
+                )
+                .on_conflict_do_update(
+                    index_elements=["worker_name"],
+                    set_={"last_seen_at": datetime.now(UTC), "detail": detail or {}},
+                )
+            )
+            await session.commit()
+    except Exception:
+        logger.exception("could not record a heartbeat for worker %s", worker_name)
+
+
+async def heartbeats(session: AsyncSession) -> list[WorkerHeartbeat]:
+    """Every worker's last beat, oldest first — the order an operator wants to read."""
+    return list(
+        (
+            await session.execute(
+                select(WorkerHeartbeat).order_by(WorkerHeartbeat.last_seen_at.asc())
+            )
+        )
+        .scalars()
+        .all()
+    )
 
 
 async def unresolved(
@@ -216,6 +266,8 @@ async def queue_snapshot(redis_url: str, *, queue_name: str = "arq:queue") -> Qu
 __all__ = [
     "SAFE_CONTEXT_KEYS",
     "QueueSnapshot",
+    "beat",
+    "heartbeats",
     "queue_snapshot",
     "record",
     "resolve",

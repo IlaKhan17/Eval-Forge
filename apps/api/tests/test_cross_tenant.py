@@ -75,6 +75,9 @@ EXCUSED: dict[tuple[str, str], str] = {
     # exception type, and arguments filtered to an allow-list of ids and limits; the reasoning is in
     # routes/ops.py and db/models/ops.py, and test_dead_letters.py asserts the filtering.
     ("GET", "/v1/ops/queues"): "deployment-wide; the review-queue section is the caller's own",
+    # Counts and ages with no tenant identifiers, for a scraper. The review-queue samples are the
+    # caller's own queues, like /v1/ops/queues.
+    ("GET", "/metrics"): "aggregate counts for a scraper; no tenant identifiers",
     ("GET", "/v1/ops/dead-letters"): "deployment-wide operational records, not tenant data",
     (
         "POST",

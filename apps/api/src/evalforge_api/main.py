@@ -7,6 +7,7 @@ import secrets
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
@@ -14,7 +15,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from evalforge_api.api.routes import evaluation, health, ingest, online, ops, otlp, traces
+from evalforge_api.api.routes import (
+    evaluation,
+    health,
+    ingest,
+    metrics,
+    online,
+    ops,
+    otlp,
+    traces,
+)
 from evalforge_api.db.partitions import missing_partitions
 from evalforge_api.db.session import dispose_engine, get_sessionmaker, init_engine
 from evalforge_api.errors import (
@@ -51,6 +61,60 @@ SECURITY_HEADERS = {
 }
 
 
+async def _check_tenant_isolation(connection: Any, config: Settings) -> None:
+    """In production, refuse to serve as a role that row-level security does not apply to.
+
+    Reported as a warning outside production and *fatal* inside it, because this is the failure that
+    looks exactly like success. Every query still returns the right rows — the repository predicate
+    is layer one and does the actual filtering — so nothing is visibly wrong, and the database-layer
+    backstop that the threat model counts on is simply absent. It stays absent for months.
+
+    A superuser or a role with BYPASSRLS is exempt from every policy regardless of FORCE, so this
+    checks the role rather than the policies: policies being present proves nothing about whether
+    they apply to *this* connection.
+
+    `allow_rls_bypass` exists for the deployment that genuinely has no alternative, and warns on
+    every boot so it cannot be set once and forgotten.
+    """
+    from evalforge_api.db.rls import role_bypasses_rls  # noqa: PLC0415 — avoids a cycle
+
+    try:
+        role, bypasses, reason = await role_bypasses_rls(connection)
+    except Exception:  # an unreadable catalogue must not stop a boot
+        logger.warning("could not determine whether row-level security applies to this role")
+        return
+
+    if not bypasses:
+        logger.info("row-level security applies to role %r", role)
+        return
+
+    if not config.is_production:
+        logger.warning(
+            "role %r bypasses row-level security (%s). Fine for development; see "
+            "docs/HARDENING.md before deploying.",
+            role,
+            reason,
+        )
+        return
+
+    if config.allow_rls_bypass:
+        logger.warning(
+            "role %r bypasses row-level security (%s) and ALLOW_RLS_BYPASS is set. Tenant "
+            "isolation is enforced by the application layer only.",
+            role,
+            reason,
+        )
+        return
+
+    msg = (
+        f"refusing to start: the application connects as {role!r}, which bypasses row-level "
+        f"security ({reason}). Tenant isolation would rest on the application layer alone. Run "
+        "scripts/create_app_role.sql and connect as that role, or set ALLOW_RLS_BYPASS=1 to "
+        "accept the risk deliberately."
+    )
+    raise RuntimeError(msg)
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     config = settings or get_settings()
 
@@ -70,6 +134,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         # loudly, because ingestion into a missing range fails outright.
         async with engine.connect() as connection:
             missing = await missing_partitions(connection)
+            await _check_tenant_isolation(connection, config)
         if missing:
             logger.error(
                 "no partition covers the current month for: %s. Ingestion will fail. Run "
@@ -99,6 +164,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(online.router)
     app.include_router(otlp.router)
     app.include_router(ops.router)
+    app.include_router(metrics.router)
     return app
 
 

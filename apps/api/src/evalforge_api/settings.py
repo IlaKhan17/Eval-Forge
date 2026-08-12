@@ -8,7 +8,8 @@ when someone forges a token has failed in the worst possible way.
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Literal
+from pathlib import Path
+from typing import Any, Literal
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -17,6 +18,23 @@ Environment = Literal["development", "test", "staging", "production"]
 
 DEV_SECRET_MARKERS = ("dev", "change", "insecure", "secret", "test", "example")
 MIN_SECRET_LENGTH = 32
+
+#: Settings that may be supplied as `<NAME>_FILE` pointing at a file containing the value.
+#:
+#: This is the convention Docker secrets, Kubernetes secret volumes, and most secret managers
+#: already speak, and it is worth supporting for one specific reason: an environment variable is
+#: readable from `/proc/<pid>/environ`, leaks into `docker inspect`, and lands in crash reports and
+#: process listings. A file has an owner and a mode.
+#:
+#: Only these five. An allow-list rather than "any setting", because reading arbitrary paths from
+#: the environment is a wider capability than this needs.
+FILE_BACKED = (
+    "jwt_secret",
+    "postgres_password",
+    "s3_secret_key",
+    "database_url",
+    "migration_database_url",
+)
 
 
 class Settings(BaseSettings):
@@ -32,6 +50,24 @@ class Settings(BaseSettings):
     postgres_host: str = "127.0.0.1"
     postgres_port: int = 5432
     database_url: str | None = None
+
+    #: Credentials for migrations and other DDL, when they differ from the application's.
+    #:
+    #: They should. The application role must not own the tables it reads: a non-owner is subject to
+    #: RLS even without FORCE, cannot create a table that has no policy, and cannot detach a
+    #: partition. Running both as one role collapses that separation and is the single most common
+    #: way a deployment ends up with RLS enabled and doing nothing.
+    #:
+    #: Falls back to the application's URL, so a single-role development install keeps working.
+    migration_database_url: str | None = None
+
+    #: Escape hatch for running in production as a role that bypasses row-level security.
+    #:
+    #: Exists because there are legitimate cases — a managed Postgres that only offers a superuser,
+    #: a migration window — and because a check with no escape hatch gets disabled wholesale rather
+    #: than for the one case that needed it. Off by default, refused at startup, and logged as a
+    #: warning on every boot when it is on, so it cannot be turned on and forgotten.
+    allow_rls_bypass: bool = False
 
     redis_url: str = "redis://127.0.0.1:6379/0"
 
@@ -65,6 +101,31 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = Field(default_factory=list)
 
+    @model_validator(mode="before")
+    @classmethod
+    def _read_secret_files(cls, values: Any) -> Any:
+        """Load `<NAME>_FILE` settings from disk before validation.
+
+        A present-but-empty file is treated as absent rather than as an empty secret: an empty
+        `jwt_secret` would fail the production check with a confusing message, while "the file the
+        orchestrator mounted has not been populated" is the actual problem.
+        """
+        if not isinstance(values, dict):
+            return values
+        for name in FILE_BACKED:
+            for key in (f"{name}_file", f"{name}_FILE".upper()):
+                path = values.get(key)
+                if not path:
+                    continue
+                try:
+                    content = Path(str(path)).read_text(encoding="utf-8").strip()
+                except OSError as exc:
+                    msg = f"could not read {key}={path!r}: {exc}"
+                    raise ValueError(msg) from exc
+                if content:
+                    values[name] = content
+        return values
+
     @property
     def sqlalchemy_url(self) -> str:
         if self.database_url:
@@ -73,6 +134,11 @@ class Settings(BaseSettings):
             f"postgresql+psycopg://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
         )
+
+    @property
+    def migration_url(self) -> str:
+        """Where DDL runs from. The application URL when no separate role is configured."""
+        return self.migration_database_url or self.sqlalchemy_url
 
     @property
     def is_production(self) -> bool:
@@ -102,6 +168,15 @@ class Settings(BaseSettings):
             problems.append("debug must be off in production")
         if "*" in self.cors_origins:
             problems.append("cors_origins must not contain '*' in production")
+        if self.migration_database_url is None:
+            # A warning would be ignored. Running migrations as the application role means the
+            # application owns its tables, and a table owner is exempt from its own policies unless
+            # FORCE is set on every one of them — which is a property of the schema that a future
+            # migration can silently drop.
+            problems.append(
+                "migration_database_url is not set, so migrations would run as the application "
+                "role. See docs/HARDENING.md: the application must not own its tables."
+            )
 
         if problems:
             joined = "\n  - ".join(problems)

@@ -97,6 +97,10 @@ UNPROTECTED_TABLES: dict[str, str] = {
     # one or writing a row per project for a single failure. Nothing tenant-identifying is stored —
     # see db/models/ops.py, which also explains why no traceback is kept.
     "worker_dead_letters": "operational records for jobs that span every project, not tenant data",
+    # Liveness for the worker process, which serves every project. One row per worker, holding a
+    # name and a timestamp — nothing tenant-identifying, and a tenant policy would hide a worker's
+    # heartbeat from the very endpoint that exists to report it is missing.
+    "worker_heartbeats": "process liveness for a worker that serves every project",
 }
 
 POLICY_SUFFIX = "tenant_isolation"

@@ -25,8 +25,13 @@ if config.config_file_name is not None:
 
 # A caller may set the URL explicitly (the test suite does, to target its own
 # database). Only fall back to application settings when they have not.
+#
+# `migration_url`, not `sqlalchemy_url`: DDL runs as a role that owns the schema, and the
+# application deliberately connects as one that does not — a non-owner is subject to RLS even
+# without FORCE, and cannot create a table that has no policy. Where no separate migration role is
+# configured the two are the same string, so a single-role development install is unaffected.
 if not config.get_main_option("sqlalchemy.url", None):
-    config.set_main_option("sqlalchemy.url", get_settings().sqlalchemy_url)
+    config.set_main_option("sqlalchemy.url", get_settings().migration_url)
 target_metadata = Base.metadata
 
 

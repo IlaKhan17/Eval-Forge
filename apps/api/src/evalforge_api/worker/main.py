@@ -25,7 +25,7 @@ from arq.cron import CronJob, cron
 from evalforge_api.db.session import get_sessionmaker, init_engine
 from evalforge_api.settings import Settings, get_settings
 from evalforge_api.worker import deadletter, jobs
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 logger = logging.getLogger("evalforge.worker")
 
@@ -52,6 +52,10 @@ async def _with_session(
             await _dead_letter(name, exc, ctx, kwargs)
             raise
     logger.info("job %s: %s", name, report)
+    # Beat after every job, not only on the cron. A worker wedged inside one long job still has a
+    # live process, and the cron beat covers that; this one makes the signal fresher when work is
+    # flowing, so "no beat for five minutes" means something specific.
+    await deadletter.beat(_session_factory(), detail={"last_job": name})
     return {"job": name, **report.detail}
 
 
@@ -87,6 +91,32 @@ async def _dead_letter(
     )
 
 
+_privileged: async_sessionmaker[AsyncSession] | None = None
+
+
+def _privileged_session_factory() -> async_sessionmaker[AsyncSession]:
+    """A session for the two jobs that need DDL: partition maintenance and retention.
+
+    The application role deliberately cannot reshape the schema — that is the property that makes
+    row-level security worth having, since a role that can create a table can create one with no
+    policy. But partition maintenance *is* DDL, and it was assigned to the worker precisely because
+    the API must not do it at startup. Both statements are right; together they left the job unable
+    to run, and running the worker as the app role failed on every sweep with a permission error.
+    Nothing caught it, because every test calls these functions with a superuser connection.
+
+    So DDL jobs connect with the migration credentials, and everything else keeps using the
+    application's. Where no separate migration role is configured the two URLs are identical, so a
+    single-role install behaves exactly as before.
+    """
+    global _privileged  # noqa: PLW0603 — one engine per process, created on first use
+    if _privileged is None:
+        settings = get_settings()
+        _privileged = async_sessionmaker(
+            create_async_engine(settings.migration_url), expire_on_commit=False
+        )
+    return _privileged
+
+
 def _session_factory() -> async_sessionmaker[AsyncSession]:
     """The process-wide session factory, initialising the engine on first use.
 
@@ -114,7 +144,7 @@ async def rollup(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:
 
 async def partitions(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:
     """Create the partitions the coming months need. DDL, so it needs a privileged connection."""
-    async with _session_factory()() as session:
+    async with _privileged_session_factory()() as session:
         connection = await session.connection()
         try:
             report = await jobs.maintain_partitions(session, connection=connection)
@@ -128,9 +158,23 @@ async def partitions(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:
     return {"job": "maintain_partitions", **report.detail}
 
 
+async def heartbeat(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:  # noqa: ARG001
+    """Record that this worker is alive.
+
+    A job of its own rather than a side effect of the others, because the others are scheduled
+    minutes or hours apart: without this, a quiet night is indistinguishable from a dead worker, and
+    the alert would have to be tuned so loose it never fires.
+    """
+    await deadletter.beat(_session_factory(), detail={"source": "cron"})
+    return {"job": "heartbeat"}
+
+
 async def retention(ctx: dict[Any, Any], *_: Any, **__: Any) -> dict[str, Any]:
     """Retention needs a raw connection as well as a session, for the DDL."""
-    async with _session_factory()() as session:
+    # Privileged: dropping an expired partition is DDL, and the payload sweep in the same job is
+    # ordinary DML that a privileged role can also do. One connection is simpler than splitting the
+    # job in half to save a privilege it already needs.
+    async with _privileged_session_factory()() as session:
         bind = session.get_bind()
         connection = await session.connection()
         try:
@@ -152,9 +196,19 @@ def redis_settings(settings: Settings | None = None) -> RedisSettings:
 class WorkerSettings:
     """arq's configuration object, discovered by `arq evalforge_api.worker.main.WorkerSettings`."""
 
-    functions: ClassVar[list[Any]] = [online_eval, release_leases, rollup, retention, partitions]
+    functions: ClassVar[list[Any]] = [
+        online_eval,
+        release_leases,
+        rollup,
+        retention,
+        partitions,
+        heartbeat,
+    ]
     cron_jobs: ClassVar[list[CronJob]] = [
         cron(online_eval, second=0, run_at_startup=True),
+        # Every minute, offset from the online-eval run so the two do not queue together. The alert
+        # threshold is minutes, so a beat per minute leaves room for a missed one without paging.
+        cron(heartbeat, second=30, run_at_startup=True),
         cron(release_leases, minute={0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55}, second=30),
         cron(rollup, minute={0, 15, 30, 45}, second=10),
         # 03:17 rather than 03:00: a job scheduled on the hour competes with every other
@@ -180,13 +234,20 @@ class WorkerSettings:
     max_tries = 3
     retry_jobs = True
 
-    @staticmethod
-    def redis_settings() -> RedisSettings:
-        return redis_settings()
+    # An attribute, not a method. arq reads `redis_settings` off the settings class with `getattr`
+    # and uses the result directly — a `@staticmethod` hands it the descriptor object, and the
+    # worker dies on boot with `'staticmethod' object has no attribute 'host'`. It did exactly that,
+    # undetected, because every test calls the job functions directly and never starts a worker.
+    #
+    # Evaluated at import, which is correct for a module whose only purpose is to be the worker's
+    # entry point: the process cannot run without this, so failing here is failing at the right
+    # moment. `redis_settings()` stays as a function for tests that want it without the class.
+    redis_settings: ClassVar[RedisSettings] = redis_settings()
 
 
 __all__ = [
     "WorkerSettings",
+    "heartbeat",
     "online_eval",
     "partitions",
     "redis_settings",

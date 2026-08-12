@@ -170,6 +170,42 @@ still is not, because a half-finished item claimed as finished is worse than an 
   check-then-insert, so a project's *first* burst lost 11 of 200 batches to a unique violation. Fixed
   with an upsert and covered by `TestConcurrentFirstBatch`.
 
+## Production readiness (items 1–4)
+
+Each was a blocking gap; each has been executed against a running system rather than only written.
+`docs/OPERATIONS.md` is the procedure.
+
+- **The application runs as an unprivileged role.** `MIGRATION_DATABASE_URL` separates DDL from the
+  application's connection, Alembic and the worker's two DDL jobs use it, and **the API refuses to
+  start in production** when its role bypasses RLS (`ALLOW_RLS_BYPASS=1` is the deliberate, loudly
+  logged escape hatch). Verified: the whole stack — ingest, online eval, review queues, publishing,
+  and the worker — runs as `evalforge_app` with 26/26 tables enforced.
+- **Secrets and key management.** Every sensitive setting accepts a `<NAME>_FILE` variant, so a
+  secret never has to live in an environment variable. `scripts/manage_keys.py` creates, lists,
+  rotates, and revokes keys in production; rotation is an overlap with a grace window rather than a
+  replacement, because a rotation that breaks every running job is one nobody performs. Verified:
+  create → 200, rotate → both valid during grace, revoke → 401 after the cache TTL.
+- **Backups with a verified restore.** `scripts/backup.sh` writes a dump plus a manifest (sha256,
+  schema version, policy count, row counts); `scripts/restore.sh` verifies against it and refuses to
+  report success on a mismatch. Verified: a full drill, all ten tables and all 41 policies matching.
+  PITR is *not* configured — that is WAL archiving, and OPERATIONS.md says what to set.
+- **Metrics and alert rules.** `GET /metrics` (authenticated) exposes worker heartbeat age, dead
+  letters, queue depth and reachability, review-queue age, and whether RLS applies.
+  `infra/alerts/evalforge.rules.yml` has nine rules, each for a failure that is otherwise silent.
+  Verified: scraped live; heartbeats appear within a minute of the worker starting. **No alert has
+  fired into a pager** — routing and escalation are the operator's.
+
+Two real defects surfaced while verifying these, both invisible to the existing tests because no
+test ever started a worker process:
+
+- `WorkerSettings.redis_settings` was a `@staticmethod`, but arq reads it as an attribute — so
+  `arq ...WorkerSettings` died on boot with `'staticmethod' object has no attribute 'host'`. The
+  worker had never actually started this way.
+- The worker's DDL jobs (partition maintenance, retention) failed as the unprivileged role, because
+  partition creation was moved to the worker *because* the API role has no DDL rights. Both
+  statements were right and together left the job unable to run. Those jobs now use the migration
+  credentials.
+
 ## Not done
 
 Stated plainly rather than implied by absence:
@@ -184,10 +220,12 @@ Stated plainly rather than implied by absence:
   query targets are specified against, a 30-second sustained burst, worker throughput, experiment
   scheduling latency, and dashboard TTI. `tests/load/README.md` lists these against the targets they
   would answer.
-- **Alerting.** `GET /v1/ops/queues` and `/readyz` report; nothing pages. There is no Prometheus
-  endpoint and no alert rules.
+- **Alert delivery.** The rules exist and the metrics are exported, but nothing has ever paged
+  anyone: routing, inhibition, and on-call escalation are unconfigured and unexercised.
 - **A docs site.** These markdown files are the documentation.
-- **Multi-region, backups, and restore drills.** Retention drops partitions correctly; nothing here
-  has ever been restored from a backup, and an untested restore is not a backup.
-- **Secrets management beyond environment variables.** No KMS, no envelope encryption for payloads at
-  rest beyond what the object store provides.
+- **Point-in-time recovery and multi-region.** Backups are logical snapshots with a verified
+  restore; everything written between two runs is lost if the primary is. WAL archiving is not
+  configured, and no restore has been rehearsed at production scale.
+- **A KMS.** Secrets can come from files, which is what orchestrators mount, but there is no
+  envelope encryption for payloads at rest beyond what the object store provides.
+- **TLS in front of the API.** Terminate at your ingress; nothing here has run behind a real proxy.
