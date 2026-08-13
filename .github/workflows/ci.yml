@@ -130,7 +130,7 @@ jobs:
 
       # Deployment posture: secret files, the production refusals, heartbeats, and the metrics an
       # alert reads. Each guards something invisible in normal operation.
-      - name: deployment posture holds
+      - name: deployment posture and rate limits hold
         run: uv run pytest apps/api/tests/test_operations.py -m integration -q
 
       - name: the preflight gate runs

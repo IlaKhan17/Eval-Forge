@@ -21,10 +21,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from evalforge_api.db import rls
 from evalforge_api.db.models.identity import ApiKey, Membership, Project, User
 from evalforge_api.db.session import get_sessionmaker
-from evalforge_api.errors import ForbiddenError, NotFoundError, UnauthorizedError
+from evalforge_api.errors import (
+    ForbiddenError,
+    NotFoundError,
+    RateLimitedError,
+    UnauthorizedError,
+)
 from evalforge_api.repositories.base import TenantContext
 from evalforge_api.security import keys as key_utils
-from evalforge_api.security import tokens
+from evalforge_api.security import ratelimit, tokens
 from evalforge_api.security.permissions import (
     Permission,
     Principal,
@@ -70,10 +75,30 @@ async def get_principal(request: Request, session: SessionDep, settings: Setting
     """
     token = _bearer(request)
 
-    if key_utils.parse_prefix(token) is not None:
-        principal = await _principal_from_api_key(token, session)
-    else:
-        principal = await _principal_from_jwt(token, session, settings)
+    try:
+        if key_utils.parse_prefix(token) is not None:
+            principal = await _principal_from_api_key(token, session)
+        else:
+            principal = await _principal_from_jwt(token, session, settings)
+    except UnauthorizedError:
+        # Failed credentials are counted against the caller's address, not against the credential
+        # they claimed. Otherwise anyone could exhaust another tenant's budget by sending its key
+        # prefix with a wrong secret — a denial of service handed out for free. This is also what
+        # makes guessing a key expensive.
+        await _enforce_limit(
+            request, settings, bucket=f"ip:{_client_ip(request)}", klass=ratelimit.AUTH
+        )
+        raise
+
+    # After authentication, on the validated credential. Before any work is done for it, so a
+    # refused request costs one Redis round trip rather than a database query it was never going to
+    # be allowed to make.
+    await _enforce_limit(
+        request,
+        settings,
+        bucket=f"{principal.kind}:{principal.id}",
+        klass=ratelimit.classify(request.method, request.url.path),
+    )
 
     # Layer 3. Every query in this transaction from here on is filtered by the database as well as
     # by the repository predicate, so a missing `project_id` in a hand-written query returns nothing
@@ -82,6 +107,32 @@ async def get_principal(request: Request, session: SessionDep, settings: Setting
 
     request.state.principal = principal
     return principal
+
+
+def _client_ip(request: Request) -> str:
+    """The caller's address, as far as it can be trusted.
+
+    `X-Forwarded-For` is read only when uvicorn was told to trust the proxy (`--proxy-headers`
+    with `--forwarded-allow-ips`), which rewrites `request.client` for us. Reading the header here
+    would let any caller pick their own bucket by setting it.
+    """
+    return request.client.host if request.client else "unknown"
+
+
+async def _enforce_limit(request: Request, settings: Settings, *, bucket: str, klass: str) -> None:
+    limiter = getattr(request.app.state, "rate_limiter", None)
+    if limiter is None or ratelimit.is_exempt(request.url.path):
+        return
+
+    decision = await limiter.check(bucket, klass, ratelimit.limit_for(settings, klass))
+    # Carried on the request so the middleware can attach them to *every* response, including the
+    # 429 — a client told to back off with no reset time has to guess.
+    request.state.rate_limit = decision
+    if not decision.allowed:
+        raise RateLimitedError(
+            f"Rate limit of {decision.limit} {klass} requests per minute exceeded.",
+            retry_after=decision.reset_in,
+        )
 
 
 async def _principal_from_api_key(token: str, session: AsyncSession) -> Principal:

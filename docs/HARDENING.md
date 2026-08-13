@@ -220,6 +220,10 @@ Stated plainly rather than implied by absence:
   query targets are specified against, a 30-second sustained burst, worker throughput, experiment
   scheduling latency, and dashboard TTI. `tests/load/README.md` lists these against the targets they
   would answer.
+- **Rate limiting is per replica's view of one Redis, not per cluster-wide quota.** Two API
+  replicas share the same counters (the window key is in Redis), so the limit holds — but a
+  deployment running without Redis is not limited at all, and says so in `/metrics` rather than
+  pretending otherwise.
 - **Alert delivery.** The rules exist and the metrics are exported, but nothing has ever paged
   anyone: routing, inhibition, and on-call escalation are unconfigured and unexercised.
 - **A docs site.** These markdown files are the documentation.

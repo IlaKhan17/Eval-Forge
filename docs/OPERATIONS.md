@@ -175,6 +175,41 @@ routing, inhibition, and on-call escalation are yours.
 
 ---
 
+## 5. Rate limits
+
+Enforced per **validated** credential, in a one-minute fixed window backed by Redis:
+
+```bash
+RATE_LIMIT_INGEST_PER_MIN=600   # /v1/ingest, /v1/otlp
+RATE_LIMIT_READ_PER_MIN=300     # GET
+RATE_LIMIT_WRITE_PER_MIN=60     # everything else
+RATE_LIMIT_AUTH_PER_MIN=10      # failed authentication, per client address
+```
+
+Set any to `0` to disable that class. Every response carries `X-RateLimit-Limit`, `-Remaining`, and
+`-Reset`; a 429 adds `Retry-After`. Ingestion has its own budget so a busy exporter cannot starve
+the reads a dashboard needs.
+
+Three behaviours worth knowing before an incident:
+
+- **Failed authentication is counted against the caller's address**, not the credential it claimed.
+  Otherwise anyone could exhaust another tenant's budget by sending its key prefix with a wrong
+  secret. This is also what makes guessing a key expensive.
+- **It fails open.** When Redis is unreachable, requests are allowed and
+  `evalforge_rate_limiter_available` goes to 0. A limiter that takes the API down when its own
+  dependency blips causes a worse outage than the abuse it prevents — but "not limiting" must not
+  look like "no traffic", hence the gauge.
+- **`/metrics`, `/healthz`, and `/readyz` are exempt.** Throttling your own observability during a
+  load spike is exactly backwards.
+
+Behind a proxy, run uvicorn with `--proxy-headers --forwarded-allow-ips=<proxy>` or every client
+shares one address bucket.
+
+**Verified.** Live against Redis: the sixth request over a limit of five returns 429 with
+`Retry-After`, and `/metrics` still scrapes while a tenant is throttled.
+
+---
+
 ## Deploy sequence
 
 ```bash

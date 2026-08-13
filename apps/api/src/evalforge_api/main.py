@@ -61,6 +61,29 @@ SECURITY_HEADERS = {
 }
 
 
+async def _build_rate_limiter(config: Settings) -> Any:
+    """A limiter backed by Redis, or one that lets everything through and says so.
+
+    Constructed here rather than per request so the connection pool is shared. A Redis that is
+    absent at startup does not stop the API: ingestion and reads work without it, and refusing to
+    boot over a rate limiter would make an optional dependency a required one. The state is visible
+    in `/metrics` as `evalforge_rate_limiter_available`.
+    """
+    from redis.asyncio import from_url  # noqa: PLC0415 — optional at import time
+
+    from evalforge_api.security.ratelimit import RateLimiter  # noqa: PLC0415
+
+    try:
+        client = from_url(config.redis_url, decode_responses=True)  # type: ignore[no-untyped-call]
+        await client.ping()
+    except Exception:  # an unreachable Redis is a degraded limiter, not a failed boot
+        logger.warning(
+            "redis is unreachable at startup; rate limits are configured but not enforced"
+        )
+        return RateLimiter(None)
+    return RateLimiter(client)
+
+
 async def _check_tenant_isolation(connection: Any, config: Settings) -> None:
     """In production, refuse to serve as a role that row-level security does not apply to.
 
@@ -132,6 +155,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         # Ownership moved to the migration (which creates the first months) and the worker's
         # `maintain_partitions` job (which stays ahead of the calendar). Startup only reports a gap,
         # loudly, because ingestion into a missing range fails outright.
+        limiter = await _build_rate_limiter(config)
+        _app.state.rate_limiter = limiter
+        _app.state.rate_limit_backend = limiter.backend()
+
         async with engine.connect() as connection:
             missing = await missing_partitions(connection)
             await _check_tenant_isolation(connection, config)
@@ -144,6 +171,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             yield
         finally:
+            counter = getattr(_app.state, "rate_limit_backend", None)
+            if counter is not None:
+                await counter.aclose()
             await dispose_engine()
 
     app = FastAPI(
@@ -154,6 +184,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
     )
     app.state.settings = config
+
+    # An app built with explicit settings must *use* them at request time. Without this the factory
+    # takes a Settings object, stores it, and then every dependency reads the process-wide cached
+    # one instead — so `create_app(Settings(rate_limit_read_per_min=2))` quietly serves the
+    # environment's limit. It made no difference in production, where both come from the same
+    # environment, and made the factory's argument a lie everywhere else.
+    if settings is not None:
+        app.dependency_overrides[get_settings] = lambda: config
 
     _install_middleware(app, config)
     _install_error_handlers(app)
@@ -206,6 +244,15 @@ def _install_middleware(app: FastAPI, config: Settings) -> None:
         response.headers["X-Request-Id"] = request_id
         for header, value in SECURITY_HEADERS.items():
             response.headers.setdefault(header, value)
+
+        # On every response, not only the 429. A client that can watch its budget shrink can slow
+        # down before it is refused; one that only hears "no" has to guess.
+        decision = getattr(request.state, "rate_limit", None)
+        if decision is not None:
+            from evalforge_api.security.ratelimit import headers as rate_headers  # noqa: PLC0415
+
+            for header, value in rate_headers(decision).items():
+                response.headers.setdefault(header, value)
         return response
 
 

@@ -34,7 +34,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Request, Response
 
 from evalforge_api.api.dependencies import SessionDep, SettingsDep
 from evalforge_api.api.routes.online import Reader
@@ -83,6 +83,7 @@ def _age_seconds(moment: datetime | str | None) -> float | None:
 # the schema is a route that escapes the sweep — a tidier /docs is not worth that.
 @router.get("/metrics", summary="Prometheus metrics")
 async def metrics(
+    request: Request,
     session: SessionDep,
     settings: SettingsDep,
     principal: Reader,
@@ -162,6 +163,18 @@ async def metrics(
             _age_seconds(stats.get("oldest_pending")),
             {"queue": slug},
         )
+
+    limiter = getattr(request.app.state, "rate_limiter", None)
+    lines += [
+        "# HELP evalforge_rate_limiter_available 1 when rate limits are actually being enforced.",
+        "# TYPE evalforge_rate_limiter_available gauge",
+        # Exported because the limiter fails *open*: when its backend is unreachable every request
+        # is allowed, which is the right behaviour and is indistinguishable from a quiet period
+        # unless something says so.
+        *_line(
+            "evalforge_rate_limiter_available", None if limiter is None else int(limiter.available)
+        ),
+    ]
 
     lines += [
         "# HELP evalforge_rls_enforced 1 when row-level security applies to the connected role.",

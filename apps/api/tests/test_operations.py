@@ -8,6 +8,7 @@ which is exactly why they need tests of their own.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -19,6 +20,7 @@ from evalforge_api.api.dependencies import get_session
 from evalforge_api.api.routes import metrics as metrics_module
 from evalforge_api.db.models.ops import WorkerHeartbeat
 from evalforge_api.main import create_app
+from evalforge_api.security import ratelimit
 from evalforge_api.settings import Settings
 from evalforge_api.worker import deadletter
 from factories import Tenant
@@ -237,3 +239,173 @@ def _factory(session: AsyncSession) -> Any:
             return _Ctx()
 
     return _Factory()
+
+
+class TestRateLimiting:
+    """Limits that were configurable and unenforced until now.
+
+    The properties worth pinning are the ones a plausible implementation gets wrong in a way that is
+    invisible until it matters: bucketing on an unvalidated header (a free denial of service),
+    refusing traffic when the limiter's own backend is down, and telling a throttled caller nothing
+    about when to come back.
+    """
+
+    def test_a_request_over_the_limit_is_refused(self) -> None:
+        limiter = ratelimit.RateLimiter(_Counting())
+        decisions = [asyncio.run(limiter.check("key:1", ratelimit.WRITE, 3)) for _ in range(4)]
+        assert [d.allowed for d in decisions] == [True, True, True, False]
+        assert [d.remaining for d in decisions] == [2, 1, 0, 0]
+
+    def test_buckets_are_independent(self) -> None:
+        # Two tenants must not share a budget, and neither must two classes: an exporter saturating
+        # its ingest allowance cannot be allowed to lock a human out of the dashboard.
+        limiter = ratelimit.RateLimiter(_Counting())
+        assert asyncio.run(limiter.check("key:1", ratelimit.WRITE, 1)).allowed
+        assert not asyncio.run(limiter.check("key:1", ratelimit.WRITE, 1)).allowed
+        assert asyncio.run(limiter.check("key:2", ratelimit.WRITE, 1)).allowed
+        assert asyncio.run(limiter.check("key:1", ratelimit.READ, 1)).allowed
+
+    def test_it_fails_open_and_says_so(self) -> None:
+        """A limiter whose backend is down must not take the API down with it.
+
+        The request is allowed, and `available` goes false so `/metrics` can report that limits are
+        configured but not in effect — otherwise "not limiting" looks exactly like "no traffic".
+        """
+        limiter = ratelimit.RateLimiter(_Broken())
+        decision = asyncio.run(limiter.check("key:1", ratelimit.WRITE, 1))
+        assert decision.allowed
+        assert decision.available is False
+        assert limiter.available is False
+
+    def test_a_zero_limit_disables_the_class(self) -> None:
+        # A self-hosted deployment with one trusted client has no use for limits, and answering
+        # that here is cheaper than making every caller special-case it.
+        limiter = ratelimit.RateLimiter(_Broken())
+        assert asyncio.run(limiter.check("key:1", ratelimit.INGEST, 0)).allowed
+
+    def test_the_window_expires_once_not_on_every_request(self) -> None:
+        # Re-expiring on each hit would extend the window under sustained load, turning a fixed
+        # window into a rolling ban that never lets a caller recover.
+        counter = _Counting()
+        limiter = ratelimit.RateLimiter(counter)
+        for _ in range(5):
+            asyncio.run(limiter.check("key:1", ratelimit.WRITE, 10))
+        assert counter.expires == 1
+
+    def test_ingestion_has_its_own_budget(self) -> None:
+        assert ratelimit.classify("POST", "/v1/ingest/traces") == ratelimit.INGEST
+        assert ratelimit.classify("POST", "/v1/otlp/v1/traces") == ratelimit.INGEST
+        assert ratelimit.classify("GET", "/v1/traces") == ratelimit.READ
+        assert ratelimit.classify("POST", "/v1/datasets") == ratelimit.WRITE
+
+    async def test_a_throttled_caller_is_told_when_to_retry(
+        self, session: AsyncSession, tenant_a: Tenant
+    ) -> None:
+        """End to end, through the app: 429 with the headers a client needs to back off.
+
+        A limit that refuses a request without saying for how long leaves the caller to guess, and
+        the usual guess is an immediate retry.
+        """
+        app = create_app(
+            Settings(
+                env="test",
+                jwt_secret="test-secret-value-that-is-long-enough-32",
+                rate_limit_read_per_min=2,
+            )
+        )
+
+        async def override() -> AsyncIterator[AsyncSession]:
+            yield session
+
+        app.dependency_overrides[get_session] = override
+        app.state.rate_limiter = ratelimit.RateLimiter(_Counting())
+
+        head = {"authorization": f"Bearer {tenant_a.token}"}
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as http:
+            first = await http.get("/v1/traces", headers=head)
+            await http.get("/v1/traces", headers=head)
+            third = await http.get("/v1/traces", headers=head)
+
+        assert first.status_code == 200
+        # Budget on every response, not only the refusal — that is what lets a client slow down
+        # before it is refused.
+        assert first.headers["X-RateLimit-Limit"] == "2"
+        assert first.headers["X-RateLimit-Remaining"] == "1"
+
+        assert third.status_code == 429
+        assert third.json()["type"].endswith("rate_limited")
+        assert int(third.headers["X-RateLimit-Reset"]) > 0
+
+    async def test_a_bad_credential_is_counted_against_the_address(
+        self, session: AsyncSession
+    ) -> None:
+        """The bucket for failed authentication is the caller, not the key they claimed.
+
+        Otherwise anyone could exhaust another tenant's budget by sending its prefix with a wrong
+        secret — a denial of service handed out for free. This also makes guessing a key expensive.
+        """
+        app = create_app(
+            Settings(
+                env="test",
+                jwt_secret="test-secret-value-that-is-long-enough-32",
+                rate_limit_auth_per_min=1,
+            )
+        )
+
+        async def override() -> AsyncIterator[AsyncSession]:
+            yield session
+
+        app.dependency_overrides[get_session] = override
+        counter = _Counting()
+        app.state.rate_limiter = ratelimit.RateLimiter(counter)
+
+        head = {"authorization": "Bearer ef_dev_deadbeef_nope"}
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as http:
+            first = await http.get("/v1/traces", headers=head)
+            second = await http.get("/v1/traces", headers=head)
+
+        assert first.status_code == 401
+        assert second.status_code == 429
+        # An address bucket, never one derived from the rejected credential.
+        assert all(":ip:" in key for key in counter.keys), counter.keys
+
+
+class _Counting:
+    """An in-memory stand-in for Redis' INCR/EXPIRE."""
+
+    def __init__(self) -> None:
+        self.counts: dict[str, int] = {}
+        self.expires = 0
+        self.keys: list[str] = []
+
+    async def incr(self, key: str) -> int:
+        self.keys.append(key)
+        self.counts[key] = self.counts.get(key, 0) + 1
+        return self.counts[key]
+
+    async def expire(self, key: str, seconds: int) -> None:
+        self.expires += 1
+
+
+class _Broken:
+    async def incr(self, key: str) -> int:
+        msg = "redis is down"
+        raise ConnectionError(msg)
+
+    async def expire(self, key: str, seconds: int) -> None:
+        msg = "redis is down"
+        raise ConnectionError(msg)
+
+
+class TestLimiterExemptions:
+    def test_observability_endpoints_are_never_limited(self) -> None:
+        """Throttling your own monitoring during an incident is backwards.
+
+        Found by watching `/metrics` return 429 while testing the limiter: a tenant hitting its read
+        budget would have taken its own metrics scrape down with it, so a monitoring blackout would
+        coincide with every load spike — the one moment the numbers matter.
+        """
+        assert ratelimit.is_exempt("/metrics")
+        assert ratelimit.is_exempt("/healthz")
+        assert ratelimit.is_exempt("/readyz")
+        assert not ratelimit.is_exempt("/v1/traces")
