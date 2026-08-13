@@ -75,6 +75,10 @@ EXCUSED: dict[tuple[str, str], str] = {
     # exception type, and arguments filtered to an allow-list of ids and limits; the reasoning is in
     # routes/ops.py and db/models/ops.py, and test_dead_letters.py asserts the filtering.
     ("GET", "/v1/ops/queues"): "deployment-wide; the review-queue section is the caller's own",
+    # Both read and write the caller's own project, resolved from the credential — there is no id
+    # in either request to point at someone else's. test_budget.py asserts the tenancy directly.
+    ("GET", "/v1/ops/budget"): "reads the caller's own project; no id in the request",
+    ("PUT", "/v1/ops/budget"): "writes the caller's own project; no id in the request",
     # Counts and ages with no tenant identifiers, for a scraper. The review-queue samples are the
     # caller's own queues, like /v1/ops/queues.
     ("GET", "/metrics"): "aggregate counts for a scraper; no tenant identifiers",

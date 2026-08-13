@@ -51,7 +51,19 @@ RULE_KINDS = ("trajectory", "llm_judge", "deterministic")
 #: spans cannot answer a question about what did not happen, and calling that a violation
 #: would fill a review queue with innocent traces until people stopped reading it.
 EVALUATION_VERDICTS = ("pass", "fail", "inconclusive", "error", "skipped")
-DECISION_REASONS = ("deterministic", "sampled", "escalated", "forced", "not_sampled", "capped")
+#: `budget` is distinct from `capped` on purpose. `capped` means this batch's escalation allowance
+#: ran out and the next batch picks the trace up; `budget` means the project's monthly ceiling is
+#: reached and nothing paid runs until the month turns or the limit rises. Collapsing them would
+#: make "why was this not judged?" unanswerable at the moment someone is asking.
+DECISION_REASONS = (
+    "deterministic",
+    "sampled",
+    "escalated",
+    "forced",
+    "not_sampled",
+    "capped",
+    "budget",
+)
 TARGET_TYPES = ("trace", "span", "experiment_result", "dataset_example")
 ASSIGNMENT_STATUSES = ("pending", "in_review", "done", "skipped")
 PREFERENCES = ("a", "b", "tie")

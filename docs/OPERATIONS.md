@@ -210,6 +210,32 @@ shares one address bucket.
 
 ---
 
+## 6. Spend ceiling
+
+A suite's `max_cost` stops one run. This stops the month:
+
+```bash
+curl -XPUT $API/v1/ops/budget -H "authorization: Bearer $KEY" \
+     -d '{"monthly_limit": 250}'          # null clears it; 0 means "free rules only"
+curl $API/v1/ops/budget -H "authorization: Bearer $KEY"
+```
+
+**It covers server-initiated spend only** — the online-evaluation loop. A judge the CLI calls runs
+in your own process against your own provider account; the server records what it is told and cannot
+refuse it. That scope is stated in the response body too, because a limit whose coverage is assumed
+is worse than one whose coverage is written down.
+
+When the ceiling is reached, **paid rules stop and free ones keep running**. A deterministic
+trajectory policy costs nothing per trace, and switching off the safety checks because the judge
+allowance ran out would trade a bill for an incident. Every skipped evaluation is recorded with
+`decision_reason = 'budget'`, so a coverage gap is a queryable reason rather than an absence.
+
+Watch `evalforge_project_spend_ratio` and `evalforge_project_budget_exhausted`; two alert rules
+cover the 80% mark and exhaustion. Setting the ceiling needs a configuration scope, not read —
+raising it is how a bill gets bigger.
+
+---
+
 ## Deploy sequence
 
 ```bash

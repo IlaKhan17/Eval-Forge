@@ -38,6 +38,7 @@ from fastapi import APIRouter, Request, Response
 
 from evalforge_api.api.dependencies import SessionDep, SettingsDep
 from evalforge_api.api.routes.online import Reader
+from evalforge_api.services import budget
 from evalforge_api.worker import deadletter, jobs
 
 router = APIRouter(tags=["operations"])
@@ -163,6 +164,21 @@ async def metrics(
             _age_seconds(stats.get("oldest_pending")),
             {"queue": slug},
         )
+
+    spend = await budget.status(session, project_id=principal.project)
+    lines += [
+        "# HELP evalforge_project_spend_usd Server-initiated spend this calendar month.",
+        "# TYPE evalforge_project_spend_usd gauge",
+        *_line("evalforge_project_spend_usd", float(spend.spent)),
+        "# HELP evalforge_project_spend_ratio Share of the monthly ceiling used.",
+        "# TYPE evalforge_project_spend_ratio gauge",
+        # Absent when unlimited. A 0 here would look like a project spending nothing, which is a
+        # different fact from a project that cannot be over budget.
+        *_line("evalforge_project_spend_ratio", spend.ratio),
+        "# HELP evalforge_project_budget_exhausted 1 when paid rules are being skipped.",
+        "# TYPE evalforge_project_budget_exhausted gauge",
+        *_line("evalforge_project_budget_exhausted", int(spend.exhausted)),
+    ]
 
     limiter = getattr(request.app.state, "rate_limiter", None)
     lines += [

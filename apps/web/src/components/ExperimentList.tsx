@@ -8,7 +8,7 @@
  * log line it replaced. This is the view that closes that loop.
  *
  * Grouped by suite rather than listed flat, because a suite is the unit people think in ("how is
- * `davis-email` doing?") while an experiment is one invocation of it.
+ * `checkout-agent` doing?") while an experiment is one invocation of it.
  */
 
 import { EmptyState, ErrorState, Panel, Skeleton } from "@/components/Primitives"

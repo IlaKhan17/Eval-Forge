@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import (
@@ -21,6 +22,7 @@ from sqlalchemy import (
     Index,
     Integer,
     LargeBinary,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -100,6 +102,13 @@ class Project(IdentifiedBase, TimestampMixin, UpdatedAtMixin, SoftDeleteMixin):
     retention_days_traces: Mapped[int] = mapped_column(Integer, default=30)
     retention_days_payloads: Mapped[int] = mapped_column(Integer, default=14)
     online_eval_sample_rate: Mapped[float] = mapped_column(default=0.01)
+    #: Ceiling on what the *server* spends on this project per calendar month, in USD. NULL means
+    #: unlimited, which is distinct from 0 — 0 is a real setting for a project that should run only
+    #: its free deterministic rules. Enforced in `services/budget.py`, which explains what the
+    #: ceiling can and cannot stop.
+    monthly_cost_limit: Mapped[Decimal | None] = mapped_column(
+        Numeric(12, 4), default=None, nullable=True
+    )
 
     organization: Mapped[Organization] = relationship(back_populates="projects")
 

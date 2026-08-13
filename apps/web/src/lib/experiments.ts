@@ -151,7 +151,7 @@ export function errorRate(run: Run): number | null {
 /**
  * Group experiments by the suite that produced them.
  *
- * A suite is the unit people think in — "how is `davis-email` doing" — while an experiment is one
+ * A suite is the unit people think in — "how is `checkout-agent` doing" — while an experiment is one
  * invocation of it. Sorted by suite name, and each group keeps the API's newest-first order.
  */
 export function bySuite(experiments: readonly Experiment[]): Map<string, Experiment[]> {

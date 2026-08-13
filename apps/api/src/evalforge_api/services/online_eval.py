@@ -20,6 +20,7 @@ because an online metric that drifts upward on every replay is worse than no met
 
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -39,9 +40,12 @@ from evalforge_api.db.models.online import (
 )
 from evalforge_api.db.models.traces import Span as SpanRow
 from evalforge_api.db.models.traces import Trace as TraceRow
+from evalforge_api.services import budget as budget_service
 from evalforge_core.sampling import EscalationBudget, SamplingDecision, SamplingRule, decide
 from evalforge_trajectory import PolicyError, evaluate_policy, load_policy
 from evalforge_types import Span, SpanType, Status, TokenUsage, Trace
+
+logger = logging.getLogger("evalforge.online_eval")
 
 #: How many traces one batch will consider. Bounded so a backlog is drained in steady
 #: increments rather than in one transaction that holds locks for minutes.
@@ -60,6 +64,9 @@ class BatchOutcome:
     queued_for_review: int = 0
     cost: Decimal = Decimal(0)
     reasons: dict[str, int] = field(default_factory=dict)
+    #: True when the project's monthly ceiling stopped paid rules in this batch. Surfaced so the
+    #: worker's log line and the API's run report say *why* a quiet batch was quiet.
+    budget_exhausted: bool = False
 
     def record(self, reason: str) -> None:
         self.reasons[reason] = self.reasons.get(reason, 0) + 1
@@ -115,6 +122,16 @@ class OnlineEvalService:
 
     # ------------------------------------------------------------------- running
 
+    @staticmethod
+    def _costs_money(rule: OnlineEvalRule) -> bool:
+        """Whether running this rule can produce a provider bill.
+
+        Kind, not configuration: a trajectory policy is deterministic code over a stored trace and
+        costs nothing however it is set up, while a judge rule bills per call. That distinction is
+        what lets a budget stop the expensive controls without stopping the cheap ones.
+        """
+        return rule.kind in ("llm_judge",)
+
     async def run_batch(
         self,
         *,
@@ -127,6 +144,27 @@ class OnlineEvalService:
         moment = now or datetime.now(UTC)
         window_start = since or (moment - timedelta(days=1))
         outcome = BatchOutcome()
+
+        # Once per batch, not once per trace. The query is a bounded sum and the answer cannot
+        # change materially inside one batch — checking per trace would multiply the cost of the
+        # check by exactly the volume the check exists to bound.
+        spend = await budget_service.status(self.session, project_id=self.project_id, now=moment)
+        outcome.budget_exhausted = spend.exhausted
+        if spend.exhausted:
+            logger.warning(
+                "project %s has reached its monthly limit of %s (spent %s); paid rules are "
+                "skipped until the month turns or the limit rises",
+                self.project_id,
+                spend.limit,
+                spend.spent,
+            )
+        elif spend.warning:
+            logger.warning(
+                "project %s has used %.0f%% of its monthly limit of %s",
+                self.project_id,
+                (spend.ratio or 0) * 100,
+                spend.limit,
+            )
 
         for rule in rules if rules is not None else await self.active_rules():
             traces = list(
@@ -143,8 +181,20 @@ class OnlineEvalService:
             # starve a quiet one; unbounded it would let an error spike spend without limit.
             budget = EscalationBudget(limit=rule.max_escalations_per_batch)
 
+            # A budget stops what is billable and nothing else. Switching off a free deterministic
+            # policy because the judge allowance ran out would trade a bill for an incident — the
+            # cheap safety controls have to keep running exactly when the expensive ones stop.
+            paid_and_broke = spend.exhausted and self._costs_money(rule)
+
             for trace in traces:
-                await self._apply(rule, trace, budget=budget, outcome=outcome, now=moment)
+                await self._apply(
+                    rule,
+                    trace,
+                    budget=budget,
+                    outcome=outcome,
+                    now=moment,
+                    over_budget=paid_and_broke,
+                )
 
         return outcome
 
@@ -157,7 +207,24 @@ class OnlineEvalService:
         outcome: BatchOutcome,
         now: datetime,
         forced: bool = False,
+        over_budget: bool = False,
     ) -> None:
+        if over_budget:
+            # Recorded, not dropped. A month where nothing was judged and nothing says why is
+            # indistinguishable from a month where nothing needed judging, and the second is the
+            # story people tell themselves.
+            await self._write(
+                rule,
+                trace,
+                verdict="skipped",
+                decision=SamplingDecision(evaluate=False, reason="budget"),
+                detail={"note": "the project's monthly spend limit is reached"},
+                now=now,
+            )
+            outcome.record("budget")
+            outcome.skipped += 1
+            return
+
         decision = decide(
             trace_id=trace.trace_id,
             rule=_sampling_rule(rule),

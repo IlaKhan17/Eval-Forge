@@ -220,6 +220,9 @@ Stated plainly rather than implied by absence:
   query targets are specified against, a 30-second sustained burst, worker throughput, experiment
   scheduling latency, and dashboard TTI. `tests/load/README.md` lists these against the targets they
   would answer.
+- **The spend ceiling covers server-initiated spend only.** Online evaluation is capped per project
+  per calendar month; a judge the CLI calls runs in the user's own process and is recorded, not
+  refused. There is also no org-wide ceiling across projects — the limit is per project.
 - **Rate limiting is per replica's view of one Redis, not per cluster-wide quota.** Two API
   replicas share the same counters (the window key is in Redis), so the limit holds — but a
   deployment running without Redis is not limited at all, and says so in `/metrics` rather than

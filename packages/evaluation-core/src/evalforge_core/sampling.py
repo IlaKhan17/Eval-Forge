@@ -33,7 +33,13 @@ from typing import Literal
 #: about 2e-10, far finer than any sample rate anyone will configure.
 _BUCKETS = 2**32
 
-Reason = Literal["deterministic", "sampled", "escalated", "forced", "not_sampled", "capped"]
+#: `capped` and `budget` are both "a limit stopped this" and are deliberately separate: `capped`
+#: means this batch's escalation allowance ran out and the next batch picks the trace up, while
+#: `budget` means a monthly spend ceiling is reached and nothing paid runs until it changes. One is
+#: a delay, the other is a stop, and a reader chasing a coverage gap needs to know which.
+Reason = Literal[
+    "deterministic", "sampled", "escalated", "forced", "not_sampled", "capped", "budget"
+]
 
 
 @dataclass(frozen=True, slots=True)

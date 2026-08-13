@@ -133,6 +133,11 @@ jobs:
       - name: deployment posture and rate limits hold
         run: uv run pytest apps/api/tests/test_operations.py -m integration -q
 
+      # The spend ceiling stops paid rules and *only* paid rules — the asymmetry is the design, and
+      # a change that quietly switched off free safety checks would be invisible without this.
+      - name: the spend ceiling stops the bill, not the safety checks
+        run: uv run pytest apps/api/tests/test_budget.py -m integration -q
+
       - name: the preflight gate runs
         # Exit 1 is expected here — CI runs as a superuser with no separate migration role, which is
         # exactly what the check exists to refuse. What is being tested is that it *runs* and reports

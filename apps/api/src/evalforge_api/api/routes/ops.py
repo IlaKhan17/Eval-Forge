@@ -28,6 +28,7 @@ handled.
 from __future__ import annotations
 
 import uuid
+from decimal import Decimal
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Query
@@ -35,7 +36,9 @@ from pydantic import BaseModel, Field
 
 from evalforge_api.api.dependencies import SessionDep, SettingsDep
 from evalforge_api.api.routes.online import Configurer, Reader
+from evalforge_api.db.models.identity import Project
 from evalforge_api.errors import NotFoundError
+from evalforge_api.services import budget
 from evalforge_api.worker import deadletter, jobs
 
 router = APIRouter(prefix="/v1/ops", tags=["operations"])
@@ -57,6 +60,60 @@ class ResolveIn(BaseModel):
     #: Required, not optional. "Resolved" with no note is indistinguishable from "dismissed
     #: because it was noisy", and the difference matters the third time it happens.
     note: str = Field(min_length=1, max_length=2_000)
+
+
+class BudgetOut(BaseModel):
+    """Where this project stands against its monthly ceiling."""
+
+    #: Null means unlimited — deliberately distinct from 0, which is a real setting for a project
+    #: that should run only its free deterministic rules.
+    monthly_limit: float | None
+    spent: float
+    remaining: float | None
+    #: Null when unlimited. A ratio of 0 would read as "spending nothing", which is a different
+    #: fact from "cannot be over budget".
+    ratio: float | None
+    exhausted: bool
+    month_start: str
+    #: Stated in the response because a limit whose scope is assumed is worse than one whose scope
+    #: is written down.
+    covers: str = "server-initiated spend (online evaluation) only"
+
+
+class BudgetIn(BaseModel):
+    #: Null clears the ceiling. Explicit rather than omitted-means-unchanged, because "unlimited" is
+    #: a decision someone makes and should look like one in the request.
+    monthly_limit: float | None = Field(default=None, ge=0)
+
+
+@router.get("/budget", response_model=BudgetOut, summary="Monthly spend against the ceiling")
+async def read_budget(session: SessionDep, principal: Reader) -> BudgetOut:
+    status = await budget.status(session, project_id=principal.project)
+    return BudgetOut(
+        monthly_limit=float(status.limit) if status.limit is not None else None,
+        spent=float(status.spent),
+        remaining=float(status.remaining) if status.remaining is not None else None,
+        ratio=status.ratio,
+        exhausted=status.exhausted,
+        month_start=status.month_start.isoformat(),
+    )
+
+
+@router.put("/budget", response_model=BudgetOut, summary="Set the monthly ceiling")
+async def set_budget(body: BudgetIn, session: SessionDep, principal: Configurer) -> BudgetOut:
+    """Set or clear this project's monthly spend ceiling.
+
+    A configuration scope, not read: raising a ceiling is how a bill gets bigger, and a credential
+    that can only read traces should not be able to authorise that.
+    """
+    project = await session.get(Project, principal.project)
+    if project is None:
+        raise NotFoundError("No such project.")
+    project.monthly_cost_limit = (
+        None if body.monthly_limit is None else Decimal(str(body.monthly_limit))
+    )
+    await session.flush()
+    return await read_budget(session, principal)
 
 
 @router.get("/queues", summary="Job queue depth, dead letters, and review-queue health")

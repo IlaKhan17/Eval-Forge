@@ -114,6 +114,30 @@ groups:
             Items are being escalated and not reviewed. A queue nobody reads stops being a control
             while still looking like one on a dashboard.
 
+      # ------------------------------------------------------------------- budget
+
+      - alert: EvalForgeBudgetExhausted
+        # Not an error — the ceiling did its job. It pages because the *consequence* is silent: paid
+        # rules stop, the free ones carry on, and the dashboard keeps filling with traces that
+        # simply are not being judged any more.
+        expr: evalforge_project_budget_exhausted == 1
+        for: 15m
+        labels: {severity: warning}
+        annotations:
+          summary: "The monthly spend ceiling is reached; paid rules are being skipped"
+          description: >
+            Deterministic rules keep running. Judged coverage stops until the month turns or the
+            limit rises — see GET /v1/ops/budget, and the `budget` decision reason on skipped
+            evaluations.
+
+      - alert: EvalForgeBudgetNearlySpent
+        expr: evalforge_project_spend_ratio > 0.8
+        for: 30m
+        labels: {severity: info}
+        annotations:
+          summary: "{{ $value | humanizePercentage }} of the monthly ceiling is used"
+          description: "Raise the limit or turn a sampled judge rule down before coverage stops."
+
       # ------------------------------------------------------------------ tenancy
 
       - alert: EvalForgeTenantIsolationNotEnforced
