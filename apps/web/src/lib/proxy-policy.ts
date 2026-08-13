@@ -22,6 +22,13 @@ const ALLOWED_GET_PATTERNS: readonly RegExp[] = [
   // what would turn one endpoint into all of them.
   /^\/v1\/traces\/[A-Za-z0-9._:-]{1,256}$/,
   /^\/v1\/datasets$/,
+  // Experiment history. Every one is a read: the list, one experiment's runs, and a run's metrics.
+  // Notably *not* here: POST /v1/experiments/{id}/promote-baseline, which changes what future gates
+  // compare against — a quiet, high-impact write that has no business being reachable from a
+  // read-only viewer. The method check above already refuses it; keeping it out of this list too is
+  // the belt to that braces.
+  /^\/v1\/experiments$/,
+  /^\/v1\/experiments\/[0-9a-f-]{36}\/runs$/,
   /^\/v1\/experiment-runs\/[0-9a-f-]{36}\/metrics$/,
 ]
 
@@ -74,6 +81,9 @@ const ALLOWED_QUERY_KEYS: ReadonlySet<string> = new Set([
   "has_errors",
   "limit",
   "cursor",
+  // Experiment history filters by suite, which is how a reader asks "show me this suite's runs"
+  // without paging through every other suite's.
+  "suite_name",
 ])
 
 export function filterQuery(params: URLSearchParams): URLSearchParams {

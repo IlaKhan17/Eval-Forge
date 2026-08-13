@@ -157,8 +157,8 @@ still is not, because a half-finished item claimed as finished is worse than an 
 - **CLI publishing.** `eval` records the run on the server whenever an endpoint and key are set,
   and pulls the baseline first so regression gates fire locally. The verdict stays local — a server
   outage cannot change an exit code — and a failed publish is reported on stderr rather than
-  swallowed. `docs/SDK_AND_CLI.md §7` has the four rules it is built on. Still missing: a dashboard
-  view for experiment history, so the record is currently readable through the API only.
+  swallowed. `docs/SDK_AND_CLI.md §7` has the four rules it is built on, and `/experiments` in the
+  dashboard is the read side of it.
 - **A fifteen-minute quickstart.** `docs/QUICKSTART.md`, verified end to end against a running
   system. Still markdown in a repository rather than a docs site.
 - **One-command demo with seeded data.** `./scripts/demo.sh` — services, migrations, project, 60

@@ -27,6 +27,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <Link href="/traces" className="hover:text-slate-100">
                     Traces
                   </Link>
+                  <Link href="/experiments" className="hover:text-slate-100">
+                    Experiments
+                  </Link>
                 </nav>
               </div>
             </header>

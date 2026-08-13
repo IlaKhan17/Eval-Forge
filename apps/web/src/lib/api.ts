@@ -19,6 +19,7 @@
  * client code here does not change when they do, which is part of the point.
  */
 
+import type { Experiment, Metric, Run } from "./experiments"
 import { type TraceFilters, serializeFilters } from "./filters"
 import type { TraceDetail } from "./spans"
 
@@ -158,4 +159,17 @@ export function getTrace(traceId: string, signal?: AbortSignal): Promise<TraceDe
  * whether its process exists. */
 export function getReadiness(signal?: AbortSignal): Promise<Record<string, unknown>> {
   return request<Record<string, unknown>>("/readyz", { signal })
+}
+
+export function listExperiments(suiteName?: string, signal?: AbortSignal): Promise<Experiment[]> {
+  const query = suiteName ? `?suite_name=${encodeURIComponent(suiteName)}` : ""
+  return request<Experiment[]>(`/v1/experiments${query}`, { signal })
+}
+
+export function listRuns(experimentId: string, signal?: AbortSignal): Promise<Run[]> {
+  return request<Run[]>(`/v1/experiments/${encodeURIComponent(experimentId)}/runs`, { signal })
+}
+
+export function getRunMetrics(runId: string, signal?: AbortSignal): Promise<Metric[]> {
+  return request<Metric[]>(`/v1/experiment-runs/${encodeURIComponent(runId)}/metrics`, { signal })
 }

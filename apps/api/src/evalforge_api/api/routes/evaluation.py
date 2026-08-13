@@ -23,6 +23,7 @@ from evalforge_api.db.models.evaluation import (
     EvaluatorCalibration,
     EvaluatorVersion,
     Experiment,
+    ExperimentRun,
     QualityGateRule,
     QualityGateSet,
     TrajectoryPolicy,
@@ -159,6 +160,10 @@ class RunOut(BaseModel):
     completed_examples: int
     failed_examples: int
     total_cost: float
+    #: Timings, so a history view can show when a run happened and how long it took. A list of runs
+    #: with no dates is a list nobody can read.
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
 
 
 class ResultsIn(BaseModel):
@@ -644,6 +649,39 @@ async def open_run(
     return _run_out(await service.open_run(experiment_id, trigger=trigger))
 
 
+@router.get("/experiments/{experiment_id}/runs", response_model=list[RunOut])
+async def list_runs(
+    experiment_id: uuid.UUID,
+    session: SessionDep,
+    principal: Reader,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> list[RunOut]:
+    """Runs of one experiment, newest first.
+
+    The read side of publishing. A run could be created and its metrics fetched by id, but the runs
+    of an experiment could not be enumerated — so CI history existed in the database and nowhere a
+    person could reach it without already knowing what to ask for.
+    """
+    service = ExperimentService(session, project_id=principal.project)
+    # Resolved first, so a foreign or unknown experiment is 404 rather than an empty list. An empty
+    # list would say "this experiment has no runs", which is a different and misleading claim.
+    await service.get_experiment(experiment_id)
+
+    rows = (
+        (
+            await session.execute(
+                select(ExperimentRun)
+                .where(ExperimentRun.experiment_id == experiment_id)
+                .order_by(ExperimentRun.started_at.desc())
+                .limit(limit)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return [_run_out(row) for row in rows]
+
+
 @router.post("/experiment-runs/{run_id}/results", response_model=ResultsOut)
 async def append_results(
     run_id: uuid.UUID, body: ResultsIn, session: SessionDep, principal: Runner
@@ -867,6 +905,8 @@ def _run_out(row: Any) -> RunOut:
         completed_examples=row.completed_examples,
         failed_examples=row.failed_examples,
         total_cost=float(row.total_cost),
+        started_at=row.started_at,
+        ended_at=row.ended_at,
     )
 
 

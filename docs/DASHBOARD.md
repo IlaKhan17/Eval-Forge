@@ -116,3 +116,37 @@ Named here so their absence is a decision rather than an oversight:
 - **Server-side rendering of trace data.** Pages render a skeleton and fetch on the
   client, so the initial HTML carries no trace content.
 - **Light theme.** Committing to dark beats a toggle that flashes on navigation.
+
+
+## Experiment history
+
+`/experiments` lists every published run, grouped by suite; `/experiments/{id}` shows that
+experiment's runs and how each metric moved against the run before it.
+
+This is the read side of CLI publishing. Before it, a gated run existed as an exit code in a CI log
+and a row in a database nobody could reach without already knowing the id — the record was durable
+and invisible, which is barely better than the log line it replaced.
+
+Three choices worth stating:
+
+- **"vs previous run", not "delta".** The comparison here is against the previous run *of this
+  experiment*, which is not what a gate compared against — a gate uses the latest run on the
+  baseline branch, possibly from a different experiment. Labelling it precisely is the difference
+  between a number someone can act on and one they read as a gate verdict.
+- **A missing number renders as an em dash, never 0.** A first run has no previous value; an
+  evaluator that errored on every example produces a count and no mean. Showing either as 0 is how
+  someone concludes a metric collapsed when it was never measured.
+- **Errored evaluations sit beside the sample size, not inside it** (`40 +32 err`). A metric measured
+  over 8 of 40 examples is a different claim from one measured over 40, and the mean cannot tell you
+  which you are looking at.
+
+The dataset content hash is shown on every experiment, because two runs are only comparable if they
+measured the same data — it is the same value the gate engine refuses to compare across.
+
+Delta colouring is by **direction only**, never by "good" or "bad": up is better for accuracy and
+worse for cost, and this table does not know which metric it is looking at.
+
+The proxy allow-list gained three read paths (`/v1/experiments`, one experiment's runs, a run's
+metrics) and the `suite_name` query key. `POST /v1/experiments/{id}/promote-baseline` remains
+unreachable through the dashboard — it changes what future gates compare against, which is a quiet,
+high-impact write with no business being reachable from a read-only viewer.
