@@ -30,6 +30,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <Link href="/experiments" className="hover:text-slate-100">
                     Experiments
                   </Link>
+                  <Link href="/settings/keys" className="hover:text-slate-100">
+                    Settings
+                  </Link>
                 </nav>
               </div>
             </header>

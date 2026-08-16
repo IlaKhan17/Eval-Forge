@@ -9,7 +9,14 @@
 
 export interface ServerConfig {
   apiUrl: string
-  apiKey: string
+  /**
+   * Legacy single-key mode, and no longer how the dashboard authenticates.
+   *
+   * The proxy carries the signed-in user's session instead. This is kept only so an existing
+   * `.env.local` does not fail to boot, and nothing reads it — a dashboard that fell back to a
+   * shared key when nobody was signed in would hand an anonymous visitor whatever that key can do.
+   */
+  apiKey?: string
 }
 
 export class ConfigError extends Error {}
@@ -34,14 +41,6 @@ export function serverConfig(): ServerConfig {
       "EVALFORGE_API_URL is not set. Point it at the API, e.g. http://localhost:8000",
     )
   }
-  if (!apiKey) {
-    throw new ConfigError(
-      "EVALFORGE_API_KEY is not set. Create a project-scoped key with the 'read' scope " +
-        "and set it in apps/web/.env.local. Do not use a NEXT_PUBLIC_ variable for this — " +
-        "it would ship the key to every browser.",
-    )
-  }
-
   let parsed: URL
   try {
     parsed = new URL(apiUrl)

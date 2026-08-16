@@ -80,6 +80,25 @@ def verify(token: str, expected_hash: bytes) -> bool:
     return hmac.compare_digest(hash_key(token), expected_hash)
 
 
+#: Short forms for the environment names almost everyone uses.
+#:
+#: Without these, truncating to eight characters produces `ef_producti_…`, which looks like a typo
+#: on the one string a user copies, pastes, and shows to colleagues. A key is a piece of product
+#: surface, not just a credential.
+_ENVIRONMENT_ALIASES = {
+    "production": "prod",
+    "prod": "prod",
+    "staging": "stg",
+    "stage": "stg",
+    "development": "dev",
+    "dev": "dev",
+    "test": "test",
+    "local": "local",
+}
+
+
 def _normalize_environment(environment: str) -> str:
-    cleaned = "".join(ch for ch in environment.lower() if ch.isalnum())[:8]
-    return cleaned or "dev"
+    cleaned = "".join(ch for ch in environment.lower() if ch.isalnum())
+    # A known name maps to its short form; anything else is truncated, because an environment called
+    # `customer-acceptance-2` still has to produce a prefix that fits in a column.
+    return _ENVIRONMENT_ALIASES.get(cleaned, cleaned[:8]) or "dev"

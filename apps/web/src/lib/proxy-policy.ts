@@ -1,17 +1,20 @@
 /**
  * What the proxy is allowed to forward.
  *
- * The proxy holds a credential the browser does not have, which makes it a confused
- * deputy waiting to happen: anything it forwards, it forwards *with authority*. So the
- * rule is an allow-list of read-only endpoints, not "pass through whatever arrives".
+ * The proxy now carries the *caller's own session* rather than a shared server-side key, which
+ * changes what this list is for. It is no longer preventing a confused deputy — a user acting as
+ * themselves is not one — it is keeping the dashboard's reachable surface deliberately small.
  *
- * Concretely, without this a page on the dashboard's origin — or any site that can get
- * a request to it — could reach `POST /v1/experiments/{id}/promote-baseline` and change
- * which run future gates compare against. That is a quiet, high-impact write, and it
- * has no business being reachable from a read-only trace viewer.
+ * That still matters. An allow-list means a new API endpoint is not reachable from a browser until
+ * somebody decides it should be, and the endpoints with the widest blast radius stay off it:
+ * `POST /v1/experiments/{id}/promote-baseline` changes what every future gate compares against, and
+ * nothing in the UI needs it yet.
  *
- * Pure and separately tested, because a mistake here is a security bug and route
- * handlers are awkward to test.
+ * Writes are a separate list from reads, so "the dashboard can read X" never silently implies "the
+ * dashboard can write X".
+ *
+ * Pure and separately tested, because a mistake here is a security bug and route handlers are
+ * awkward to test.
  */
 
 const ALLOWED_GET_PATTERNS: readonly RegExp[] = [
@@ -30,6 +33,15 @@ const ALLOWED_GET_PATTERNS: readonly RegExp[] = [
   /^\/v1\/experiments$/,
   /^\/v1\/experiments\/[0-9a-f-]{36}\/runs$/,
   /^\/v1\/experiment-runs\/[0-9a-f-]{36}\/metrics$/,
+  // The account surface: who am I, which workspaces, who else is here, which keys exist.
+  /^\/v1\/auth\/me$/,
+  /^\/v1\/orgs$/,
+  /^\/v1\/orgs\/[0-9a-f-]{36}\/members$/,
+  /^\/v1\/orgs\/[0-9a-f-]{36}\/invites$/,
+  /^\/v1\/orgs\/[0-9a-f-]{36}\/projects$/,
+  /^\/v1\/projects\/[0-9a-f-]{36}\/api-keys$/,
+  /^\/v1\/ops\/queues$/,
+  /^\/v1\/ops\/budget$/,
 ]
 
 export interface PolicyDecision {
@@ -38,14 +50,27 @@ export interface PolicyDecision {
   reason?: string
 }
 
-export function checkProxyRequest(method: string, path: string): PolicyDecision {
-  if (method !== "GET" && method !== "HEAD") {
-    return {
-      allowed: false,
-      reason: `The dashboard proxy forwards read requests only; ${method} is not allowed. Writes go through the CLI or the API directly, with their own credential.`,
-    }
-  }
+/**
+ * Writes the dashboard may make, as `METHOD /path` patterns.
+ *
+ * Every one is an account action a person performs about their own workspace: invite a colleague,
+ * change a role, mint or revoke a key, set the spend ceiling. Nothing here touches evaluation data —
+ * datasets, gates, and baselines are versioned artefacts that belong in a repository and a review,
+ * not behind a button.
+ */
+const ALLOWED_WRITE_PATTERNS: readonly { method: string; pattern: RegExp }[] = [
+  { method: "POST", pattern: /^\/v1\/orgs$/ },
+  { method: "POST", pattern: /^\/v1\/orgs\/[0-9a-f-]{36}\/projects$/ },
+  { method: "POST", pattern: /^\/v1\/orgs\/[0-9a-f-]{36}\/invites$/ },
+  { method: "POST", pattern: /^\/v1\/invites\/accept$/ },
+  { method: "PATCH", pattern: /^\/v1\/orgs\/[0-9a-f-]{36}\/members\/[0-9a-f-]{36}$/ },
+  { method: "DELETE", pattern: /^\/v1\/orgs\/[0-9a-f-]{36}\/members\/[0-9a-f-]{36}$/ },
+  { method: "POST", pattern: /^\/v1\/projects\/[0-9a-f-]{36}\/api-keys$/ },
+  { method: "DELETE", pattern: /^\/v1\/projects\/[0-9a-f-]{36}\/api-keys\/[0-9a-f-]{36}$/ },
+  { method: "PUT", pattern: /^\/v1\/ops\/budget$/ },
+]
 
+export function checkProxyRequest(method: string, path: string): PolicyDecision {
   if (!path.startsWith("/")) {
     return { allowed: false, reason: "Path must be absolute." }
   }
@@ -56,10 +81,22 @@ export function checkProxyRequest(method: string, path: string): PolicyDecision 
     return { allowed: false, reason: "Path is not in a normalized form." }
   }
 
-  if (!ALLOWED_GET_PATTERNS.some((pattern) => pattern.test(path))) {
-    return { allowed: false, reason: `The dashboard proxy does not expose ${path}.` }
+  if (method === "GET" || method === "HEAD") {
+    if (!ALLOWED_GET_PATTERNS.some((pattern) => pattern.test(path))) {
+      return { allowed: false, reason: `The dashboard proxy does not expose ${path}.` }
+    }
+    return { allowed: true }
   }
 
+  const writable = ALLOWED_WRITE_PATTERNS.some(
+    (entry) => entry.method === method && entry.pattern.test(path),
+  )
+  if (!writable) {
+    return {
+      allowed: false,
+      reason: `The dashboard proxy does not allow ${method} ${path}. Evaluation artefacts — datasets, gates, baselines — are changed through the CLI so the change lands in a repository and a review.`,
+    }
+  }
   return { allowed: true }
 }
 

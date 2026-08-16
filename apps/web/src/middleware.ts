@@ -16,8 +16,29 @@ import { type NextRequest, NextResponse } from "next/server"
  * framework emits inline style tags and a nonce-based style policy does not survive
  * streaming. Scripts are the half that matters for injection, and those are locked.
  */
+/** Pages reachable without a session. Everything else redirects to the sign-in screen. */
+const PUBLIC_PATHS = new Set(["/login", "/signup"])
+
 export function middleware(request: NextRequest): NextResponse {
   const nonce = crypto.randomUUID().replaceAll("-", "")
+
+  // A cheap presence check, not an authorisation decision. The API is the only thing that decides
+  // whether a session is valid — this exists so an unauthenticated visitor lands on the sign-in
+  // screen instead of a dashboard full of empty panels and 401s. Trusting the cookie's *presence*
+  // for anything more would be a real hole; it is never read as proof of anything.
+  const path = request.nextUrl.pathname
+  const isApi = path.startsWith("/api/")
+  const signedIn = Boolean(request.cookies.get("ef_access")?.value)
+
+  if (!signedIn && !isApi && !PUBLIC_PATHS.has(path)) {
+    const login = new URL("/login", request.url)
+    // Where they were going, so the session lands them there rather than at a generic home.
+    if (path !== "/") login.searchParams.set("next", path)
+    return NextResponse.redirect(login)
+  }
+  if (signedIn && PUBLIC_PATHS.has(path)) {
+    return NextResponse.redirect(new URL("/traces", request.url))
+  }
 
   // The dev server compiles with eval, so a policy without `'unsafe-eval'` breaks
   // hot reload. Scoped to development explicitly rather than left permissive

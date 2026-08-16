@@ -173,3 +173,120 @@ export function listRuns(experimentId: string, signal?: AbortSignal): Promise<Ru
 export function getRunMetrics(runId: string, signal?: AbortSignal): Promise<Metric[]> {
   return request<Metric[]>(`/v1/experiment-runs/${encodeURIComponent(runId)}/metrics`, { signal })
 }
+
+/**
+ * A same-origin write.
+ *
+ * The header is what distinguishes this from a cross-site request: a page on another origin cannot
+ * set it without a CORS preflight the API refuses. `SameSite=Lax` on the session cookie already
+ * stops the common case; this covers the rest. See `lib/session.ts`.
+ */
+const SAME_ORIGIN = { "x-evalforge-request": "1", "content-type": "application/json" }
+
+function write<T>(path: string, method: string, body?: unknown): Promise<T> {
+  return request<T>(path, {
+    method,
+    headers: SAME_ORIGIN,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+}
+
+export interface Me {
+  id: string
+  email: string
+  name: string | null
+  organizations: { org_id: string; org_name: string; org_slug: string; role: string }[]
+}
+
+export interface Member {
+  user_id: string
+  email: string
+  name: string | null
+  role: string
+  joined_at: string
+}
+
+export interface ApiKeySummary {
+  id: string
+  name: string
+  prefix: string
+  scopes: string[]
+  created_at: string
+  last_used_at: string | null
+  expires_at: string | null
+  revoked_at: string | null
+  /** Present only in the response that created it. */
+  token?: string | null
+}
+
+export interface ProjectSummary {
+  id: string
+  org_id: string
+  name: string
+  slug: string
+}
+
+export function getMe(signal?: AbortSignal): Promise<Me> {
+  return request<Me>("/v1/auth/me", { signal })
+}
+
+export function listProjects(orgId: string, signal?: AbortSignal): Promise<ProjectSummary[]> {
+  return request<ProjectSummary[]>(`/v1/orgs/${orgId}/projects`, { signal })
+}
+
+export function createProject(orgId: string, name: string): Promise<ProjectSummary> {
+  return write<ProjectSummary>(`/v1/orgs/${orgId}/projects`, "POST", { name })
+}
+
+export function listMembers(orgId: string, signal?: AbortSignal): Promise<Member[]> {
+  return request<Member[]>(`/v1/orgs/${orgId}/members`, { signal })
+}
+
+export function inviteMember(
+  orgId: string,
+  email: string,
+  role: string,
+): Promise<{ id: string; email: string; role: string; token: string | null }> {
+  return write(`/v1/orgs/${orgId}/invites`, "POST", { email, role })
+}
+
+export function changeRole(orgId: string, userId: string, role: string): Promise<Member> {
+  return write<Member>(`/v1/orgs/${orgId}/members/${userId}`, "PATCH", { role })
+}
+
+export function removeMember(orgId: string, userId: string): Promise<void> {
+  return write<void>(`/v1/orgs/${orgId}/members/${userId}`, "DELETE")
+}
+
+export function listApiKeys(projectId: string, signal?: AbortSignal): Promise<ApiKeySummary[]> {
+  return request<ApiKeySummary[]>(`/v1/projects/${projectId}/api-keys`, { signal })
+}
+
+export function createApiKey(
+  projectId: string,
+  body: { name: string; scopes: string[] },
+): Promise<ApiKeySummary> {
+  return write<ApiKeySummary>(`/v1/projects/${projectId}/api-keys`, "POST", body)
+}
+
+export function revokeApiKey(projectId: string, keyId: string): Promise<void> {
+  return write<void>(`/v1/projects/${projectId}/api-keys/${keyId}`, "DELETE")
+}
+
+/** Sign-in and sign-out go to the dashboard's own origin, never to the API directly. */
+export async function signIn(
+  action: "login" | "signup",
+  body: Record<string, unknown>,
+): Promise<{ org_id: string | null; project_id: string | null }> {
+  const response = await fetch(`/api/auth/${action}`, {
+    method: "POST",
+    headers: SAME_ORIGIN,
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) throw await toApiError(response)
+  return (await response.json()) as { org_id: string | null; project_id: string | null }
+}
+
+export async function signOut(): Promise<void> {
+  await fetch("/api/auth/logout", { method: "POST", headers: SAME_ORIGIN })
+}

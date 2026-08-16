@@ -78,8 +78,15 @@ class TestApiKeys:
         assert keys.parse_prefix(token) is None
 
     def test_the_environment_is_visible_in_the_key(self) -> None:
-        """A staging key should be obviously not a production key."""
-        assert keys.generate("staging").token.startswith("ef_staging_")
+        """A staging key should be obviously not a production key.
+
+        Short forms rather than the full word: truncating to eight characters produced
+        `ef_producti_…`, which looks like a typo on the one string a user copies, pastes, and shows
+        to a colleague. The property that matters is that the two are unmistakable at a glance.
+        """
+        assert keys.generate("staging").token.startswith("ef_stg_")
+        assert keys.generate("production").token.startswith("ef_prod_")
+        assert keys.generate("development").token.startswith("ef_dev_")
 
     def test_environment_is_sanitised(self) -> None:
         assert keys.generate("../../etc").prefix.split("_")[1].isalnum()
