@@ -50,19 +50,19 @@ partitions: ## Create the partitions the coming months need (needs DDL privilege
 	uv run python -c "$$PARTITIONS_SNIPPET"
 
 worker: ## Run the background worker (online eval, rollups, retention)
-	uv run arq evalforge_api.worker.main.WorkerSettings
+	uv run arq proofstep_api.worker.main.WorkerSettings
 
 otlp-example: ## Run the plain-OpenTelemetry example against a local API
-	@test -n "$$EVALFORGE_API_KEY" || (echo "set EVALFORGE_API_KEY (see 'make bootstrap')" && exit 1)
+	@test -n "$$PROOFSTEP_API_KEY" || (echo "set PROOFSTEP_API_KEY (see 'make bootstrap')" && exit 1)
 	OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:8000/v1/otlp \
-	OTEL_EXPORTER_OTLP_HEADERS="authorization=Bearer $$EVALFORGE_API_KEY" \
+	OTEL_EXPORTER_OTLP_HEADERS="authorization=Bearer $$PROOFSTEP_API_KEY" \
 	uv run python examples/langgraph-agent/agent.py
 
 online-eval: ## Process one batch of online evaluations now, without the worker
 	uv run python -c "$$ONLINE_EVAL_SNIPPET"
 
 api: ## Run the API against local services
-	uv run uvicorn evalforge_api.main:create_app --factory --reload --port 8000
+	uv run uvicorn proofstep_api.main:create_app --factory --reload --port 8000
 
 web-install: ## Install dashboard dependencies
 	pnpm install
@@ -71,7 +71,7 @@ web: ## Run the dashboard (needs 'make api' and 'make bootstrap' first)
 	pnpm --dir apps/web dev
 
 calibrate: ## Recompute the reference judge calibration from recorded verdicts (free)
-	uv run evalforge calibrate evals/suites/reply-tone.yaml \
+	uv run proofstep calibrate evals/suites/reply-tone.yaml \
 		-e acceptable_to_followup \
 		--verdicts evals/calibration/reply-tone.verdicts.jsonl
 
@@ -94,8 +94,8 @@ export ONLINE_EVAL_SNIPPET
 define ONLINE_EVAL_SNIPPET
 import asyncio
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from evalforge_api.settings import get_settings
-from evalforge_api.worker import jobs
+from proofstep_api.settings import get_settings
+from proofstep_api.worker import jobs
 
 async def main():
     engine = create_async_engine(get_settings().sqlalchemy_url)
@@ -112,8 +112,8 @@ export PARTITIONS_SNIPPET
 define PARTITIONS_SNIPPET
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
-from evalforge_api.db.partitions import ensure_partitions, missing_partitions
-from evalforge_api.settings import get_settings
+from proofstep_api.db.partitions import ensure_partitions, missing_partitions
+from proofstep_api.settings import get_settings
 
 async def main():
     engine = create_async_engine(get_settings().sqlalchemy_url)
@@ -137,5 +137,5 @@ keys: ## Manage API keys (list/create/rotate/revoke) — see docs/OPERATIONS.md
 
 app-role: ## Create the unprivileged role the application should connect as
 	@test -n "$$APP_ROLE_PASSWORD" || (echo "set APP_ROLE_PASSWORD (e.g. \$$(openssl rand -hex 24))" && exit 1)
-	docker exec -i evalforge-postgres-1 psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" \
+	docker exec -i proofstep-postgres-1 psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" \
 		-v role_password="$$APP_ROLE_PASSWORD" < scripts/create_app_role.sql

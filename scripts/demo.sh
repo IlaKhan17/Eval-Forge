@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One command to a working EvalForge: services, schema, a project, seeded traces, and the dashboard.
+# One command to a working Proofstep: services, schema, a project, seeded traces, and the dashboard.
 #
 #   ./scripts/demo.sh
 #
@@ -78,8 +78,8 @@ uv run alembic upgrade head >/dev/null
 uv run python -c "$(cat <<'PY'
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
-from evalforge_api.db.partitions import ensure_partitions
-from evalforge_api.settings import get_settings
+from proofstep_api.db.partitions import ensure_partitions
+from proofstep_api.settings import get_settings
 
 async def main():
     engine = create_async_engine(get_settings().sqlalchemy_url)
@@ -94,9 +94,9 @@ ok "schema ready"
 
 info "creating the demo project and an API key"
 KEY="$(uv run python scripts/bootstrap_dev.py --org demo --project demo 2>/dev/null \
-  | grep -o 'ef_dev_[A-Za-z0-9_-]*' | head -1)"
+  | grep -o 'ps_dev_[A-Za-z0-9_-]*' | head -1)"
 [ -n "$KEY" ] || die "could not create an API key — see the output of scripts/bootstrap_dev.py"
-export EVALFORGE_API_KEY="$KEY"
+export PROOFSTEP_API_KEY="$KEY"
 
 # Written here rather than with bootstrap_dev.py's --write-web-env, which hardcodes :8000. The
 # dashboard has to point at the port we actually got.
@@ -105,16 +105,16 @@ export EVALFORGE_API_KEY="$KEY"
 # dashboard reads it server-side and proxies. See apps/web/src/lib/api.ts.
 cat > apps/web/.env.local <<ENVEOF
 # Written by scripts/demo.sh — local only, not committed.
-EVALFORGE_API_URL=http://127.0.0.1:$API_PORT
-EVALFORGE_API_KEY=$KEY
+PROOFSTEP_API_URL=http://127.0.0.1:$API_PORT
+PROOFSTEP_API_KEY=$KEY
 ENVEOF
 ok "project ready"
 
 # ---------------------------------------------------------------- api
 
 info "starting the API on :$API_PORT"
-uv run uvicorn evalforge_api.main:create_app --factory --host 127.0.0.1 --port "$API_PORT" \
-  >/tmp/evalforge-demo-api.log 2>&1 &
+uv run uvicorn proofstep_api.main:create_app --factory --host 127.0.0.1 --port "$API_PORT" \
+  >/tmp/proofstep-demo-api.log 2>&1 &
 PIDS+=("$!")
 
 for _ in $(seq 1 60); do
@@ -122,7 +122,7 @@ for _ in $(seq 1 60); do
   sleep 0.5
 done
 curl -sf "http://127.0.0.1:$API_PORT/readyz" >/dev/null \
-  || die "the API did not become ready — see /tmp/evalforge-demo-api.log"
+  || die "the API did not become ready — see /tmp/proofstep-demo-api.log"
 ok "API ready"
 
 # The demo runs as the default superuser role, so RLS is installed but inert. Said out loud rather
@@ -136,14 +136,14 @@ fi
 # ---------------------------------------------------------------- seed
 
 info "seeding traces, an online rule, and a review queue"
-EVALFORGE_API_KEY="$KEY" EVALFORGE_ENDPOINT="http://127.0.0.1:$API_PORT" \
+PROOFSTEP_API_KEY="$KEY" PROOFSTEP_ENDPOINT="http://127.0.0.1:$API_PORT" \
   uv run python scripts/seed_demo.py
 
 # ---------------------------------------------------------------- dashboard
 
 if [ -d apps/web/node_modules ]; then
   info "starting the dashboard on :$WEB_PORT"
-  (cd apps/web && pnpm dev --port "$WEB_PORT" >/tmp/evalforge-demo-web.log 2>&1) &
+  (cd apps/web && pnpm dev --port "$WEB_PORT" >/tmp/proofstep-demo-web.log 2>&1) &
   PIDS+=("$!")
   for _ in $(seq 1 60); do
     if curl -sf "http://127.0.0.1:$WEB_PORT/traces" >/dev/null 2>&1; then break; fi
@@ -155,15 +155,15 @@ else
 fi
 
 printf '\n'
-ok "EvalForge is running"
+ok "Proofstep is running"
 printf '\n'
 printf '  dashboard   http://127.0.0.1:%s/traces\n' "$WEB_PORT"
 printf '  API docs    http://127.0.0.1:%s/docs\n' "$API_PORT"
 printf '  API key     %s\n' "$KEY"
 printf '\n'
 printf '  Try:\n'
-printf '    uv run evalforge eval evals/suites/davis-agent-policy.yaml\n'
-printf '    DAVIS_BREAK_POLICY=1 uv run evalforge eval evals/suites/davis-agent-policy.yaml\n'
+printf '    uv run proofstep eval evals/suites/davis-agent-policy.yaml\n'
+printf '    DAVIS_BREAK_POLICY=1 uv run proofstep eval evals/suites/davis-agent-policy.yaml\n'
 printf '\n'
 printf 'Ctrl-C to stop.\n'
 

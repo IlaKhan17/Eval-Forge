@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# EvalForge must stay application-neutral: Davis and AdaptQuiz are *reference
+# Proofstep must stay application-neutral: Davis and AdaptQuiz are *reference
 # integrations*, not product logic. Domain concepts leaking into the platform is
 # the fastest way to corrupt it, and discipline alone does not prevent it.
 #

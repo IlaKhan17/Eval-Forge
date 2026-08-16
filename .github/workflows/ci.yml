@@ -72,21 +72,21 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: evalforge
+          POSTGRES_USER: proofstep
           POSTGRES_PASSWORD: ci-only-password
-          POSTGRES_DB: evalforge
+          POSTGRES_DB: proofstep
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U evalforge"
+          --health-cmd "pg_isready -U proofstep"
           --health-interval 2s
           --health-timeout 3s
           --health-retries 30
     env:
-      POSTGRES_USER: evalforge
+      POSTGRES_USER: proofstep
       POSTGRES_PASSWORD: ci-only-password
       POSTGRES_HOST: 127.0.0.1
       POSTGRES_PORT: "5432"
-      POSTGRES_DB: evalforge
+      POSTGRES_DB: proofstep
       JWT_SECRET: ci-secret-value-that-is-long-enough-32
     steps:
       - uses: actions/checkout@v4
@@ -169,21 +169,21 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: evalforge
+          POSTGRES_USER: proofstep
           POSTGRES_PASSWORD: ci-only-password
-          POSTGRES_DB: evalforge
+          POSTGRES_DB: proofstep
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U evalforge"
+          --health-cmd "pg_isready -U proofstep"
           --health-interval 2s
           --health-timeout 3s
           --health-retries 30
     env:
-      POSTGRES_USER: evalforge
+      POSTGRES_USER: proofstep
       POSTGRES_PASSWORD: ci-only-password
       POSTGRES_HOST: 127.0.0.1
       POSTGRES_PORT: "5432"
-      POSTGRES_DB: evalforge
+      POSTGRES_DB: proofstep
       JWT_SECRET: ci-secret-value-that-is-long-enough-32
       ENV: development
       # No object storage in this job. Payloads under the inline limit never reach a bucket, and the
@@ -235,18 +235,18 @@ jobs:
         # The CLI must gate normally on a machine with no endpoint configured — which is every
         # fork PR, and every developer laptop.
         run: |
-          uv run evalforge eval evals/suites/reply-intent.yaml -o /tmp/nopublish.json 2>&1 \
+          uv run proofstep eval evals/suites/reply-intent.yaml -o /tmp/nopublish.json 2>&1 \
             | tee /tmp/nopublish.log
           grep -q "not published" /tmp/nopublish.log
 
       - name: suite validates
-        run: uv run evalforge validate evals/suites/reply-intent.yaml
+        run: uv run proofstep validate evals/suites/reply-intent.yaml
 
       - name: dry run makes no model calls
-        run: uv run evalforge eval evals/suites/reply-intent.yaml --dry-run
+        run: uv run proofstep eval evals/suites/reply-intent.yaml --dry-run
 
       - name: a healthy run exits 0
-        run: uv run evalforge eval evals/suites/reply-intent.yaml -o /tmp/pass.json
+        run: uv run proofstep eval evals/suites/reply-intent.yaml -o /tmp/pass.json
 
       - name: a protected-metric regression exits 1
         env:
@@ -254,7 +254,7 @@ jobs:
         run: |
           # The gate must block. `!` inverts, so the step fails if the CLI wrongly
           # succeeds — which is the failure mode that matters here.
-          ! uv run evalforge eval evals/suites/reply-intent.yaml -o /tmp/fail.json
+          ! uv run proofstep eval evals/suites/reply-intent.yaml -o /tmp/fail.json
 
       - name: the failing report names the blocking gate
         run: |
@@ -279,16 +279,16 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: evalforge
-          POSTGRES_PASSWORD: evalforge
-          POSTGRES_DB: evalforge
+          POSTGRES_USER: proofstep
+          POSTGRES_PASSWORD: proofstep
+          POSTGRES_DB: proofstep
         ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      POSTGRES_USER: evalforge
-      POSTGRES_PASSWORD: evalforge
-      POSTGRES_DB: evalforge
+      POSTGRES_USER: proofstep
+      POSTGRES_PASSWORD: proofstep
+      POSTGRES_DB: proofstep
       POSTGRES_HOST: 127.0.0.1
       POSTGRES_PORT: "5432"
       JWT_SECRET: ci-only-not-a-real-secret
@@ -309,7 +309,7 @@ jobs:
           # A worker whose settings object is broken fails at deploy time, not in a test,
           # so this asserts the schedule is constructible before anything ships.
           uv run python - <<'PY'
-          from evalforge_api.worker.main import WorkerSettings
+          from proofstep_api.worker.main import WorkerSettings
           names = [f.__name__ for f in WorkerSettings.functions]
           assert names == ["online_eval", "release_leases", "rollup", "retention"], names
           assert len(WorkerSettings.cron_jobs) == 4
@@ -327,16 +327,16 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: evalforge
-          POSTGRES_PASSWORD: evalforge
-          POSTGRES_DB: evalforge
+          POSTGRES_USER: proofstep
+          POSTGRES_PASSWORD: proofstep
+          POSTGRES_DB: proofstep
         ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      POSTGRES_USER: evalforge
-      POSTGRES_PASSWORD: evalforge
-      POSTGRES_DB: evalforge
+      POSTGRES_USER: proofstep
+      POSTGRES_PASSWORD: proofstep
+      POSTGRES_DB: proofstep
       POSTGRES_HOST: 127.0.0.1
       POSTGRES_PORT: "5432"
       JWT_SECRET: ci-only-not-a-real-secret
@@ -363,7 +363,7 @@ jobs:
           import asyncio
           from sqlalchemy import text
           from sqlalchemy.ext.asyncio import create_async_engine
-          from evalforge_api.settings import get_settings
+          from proofstep_api.settings import get_settings
 
           async def main():
               engine = create_async_engine(get_settings().sqlalchemy_url)
@@ -381,7 +381,7 @@ jobs:
 
       - name: the app role script produces a role RLS applies to
         run: |
-          PGPASSWORD=evalforge psql -h 127.0.0.1 -U evalforge -d evalforge \
+          PGPASSWORD=proofstep psql -h 127.0.0.1 -U proofstep -d proofstep \
             -v role_password=ci-only-not-a-real-password -f scripts/create_app_role.sql \
             | tee /tmp/role.txt
           grep -q "rls applies" /tmp/role.txt
@@ -395,16 +395,16 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: evalforge
-          POSTGRES_PASSWORD: evalforge
-          POSTGRES_DB: evalforge
+          POSTGRES_USER: proofstep
+          POSTGRES_PASSWORD: proofstep
+          POSTGRES_DB: proofstep
         ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      POSTGRES_USER: evalforge
-      POSTGRES_PASSWORD: evalforge
-      POSTGRES_DB: evalforge
+      POSTGRES_USER: proofstep
+      POSTGRES_PASSWORD: proofstep
+      POSTGRES_DB: proofstep
       POSTGRES_HOST: 127.0.0.1
       POSTGRES_PORT: "5432"
       JWT_SECRET: ci-only-not-a-real-secret
@@ -435,12 +435,12 @@ jobs:
           import yaml
           config = yaml.safe_load(open("infra/otel/collector-config.yaml"))
           pipeline = config["service"]["pipelines"]["traces"]
-          assert pipeline["exporters"] == ["otlphttp/evalforge"], pipeline
+          assert pipeline["exporters"] == ["otlphttp/proofstep"], pipeline
           # Scrubbing must come before sampling, or secrets survive in whatever the sampler
           # kept. Asserted because it is an ordering nobody notices when it is wrong.
           processors = pipeline["processors"]
           assert processors.index("attributes/scrub") < processors.index("probabilistic_sampler")
-          endpoint = config["exporters"]["otlphttp/evalforge"]["endpoint"]
+          endpoint = config["exporters"]["otlphttp/proofstep"]["endpoint"]
           # The exporter appends /v1/traces itself; an endpoint that already ends in it would
           # produce /v1/traces/v1/traces and a 404 on every export.
           assert endpoint.endswith("/v1/otlp"), endpoint
@@ -463,11 +463,11 @@ jobs:
       - run: uv sync --all-packages
 
       - name: the calibration suite validates
-        run: uv run evalforge validate evals/suites/reply-tone.yaml
+        run: uv run proofstep validate evals/suites/reply-tone.yaml
 
       - name: recomputing the committed record reproduces it
         run: |
-          uv run evalforge calibrate evals/suites/reply-tone.yaml \
+          uv run proofstep calibrate evals/suites/reply-tone.yaml \
             -e acceptable_to_followup \
             --verdicts evals/calibration/reply-tone.verdicts.jsonl \
             --no-write -o /tmp/calibration.json
@@ -504,7 +504,7 @@ jobs:
                   fh.write(json.dumps(row) + "\n")
           PY
 
-          ! uv run evalforge calibrate evals/suites/reply-tone.yaml \
+          ! uv run proofstep calibrate evals/suites/reply-tone.yaml \
               -e acceptable_to_followup --verdicts /tmp/bad-verdicts.jsonl --no-write
 
       - name: an uncalibrated gated judge is never silent
@@ -512,10 +512,10 @@ jobs:
           uv run python - <<'PY'
           import shutil, tempfile
           from pathlib import Path
-          from evalforge_cli.runner import build_gate_set, judge_metric_keys, resolve_calibrations
-          from evalforge_cli.suite.loader import load_suite
-          from evalforge_core.gates import evaluate_gates
-          from evalforge_types import Metric, Verdict
+          from proofstep_cli.runner import build_gate_set, judge_metric_keys, resolve_calibrations
+          from proofstep_cli.suite.loader import load_suite
+          from proofstep_core.gates import evaluate_gates
+          from proofstep_types import Metric, Verdict
 
           # Hide the committed record, leaving the judge uncalibrated.
           record = next(Path("evals/calibration").glob("*.calibration.json"))
@@ -639,5 +639,5 @@ jobs:
           # The build must not require a live API or a real credential. If it ever
           # does, that means a page is fetching at build time, which would also mean
           # a stale dashboard in production.
-          EVALFORGE_API_URL: http://127.0.0.1:8000
-          EVALFORGE_API_KEY: ef_dev_00000000_ci-build-placeholder-not-a-real-key
+          PROOFSTEP_API_URL: http://127.0.0.1:8000
+          PROOFSTEP_API_KEY: ps_dev_00000000_ci-build-placeholder-not-a-real-key

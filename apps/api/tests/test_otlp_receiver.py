@@ -1,7 +1,7 @@
 """The OTLP endpoint end to end: protobuf in, rows out, read back through the trace API.
 
 The acceptance criterion for this phase is "an app instrumented with plain OpenTelemetry
-plus OpenInference appears with correct span types and token counts, with no EvalForge SDK
+plus OpenInference appears with correct span types and token counts, with no Proofstep SDK
 installed". That is a round-trip claim, so these tests exercise the real route against a
 real database and then read the result back through the same endpoint the dashboard uses.
 
@@ -18,10 +18,6 @@ from typing import Any
 
 import pytest
 import pytest_asyncio
-from evalforge_api.api.dependencies import get_session
-from evalforge_api.main import create_app
-from evalforge_api.otlp.decode import JSON_CONTENT_TYPE, PROTOBUF_CONTENT_TYPE, kv
-from evalforge_api.settings import Settings
 from factories import Tenant, make_tenant
 from google.protobuf.json_format import MessageToDict
 from httpx import ASGITransport, AsyncClient
@@ -29,6 +25,10 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
     ExportTraceServiceResponse,
 )
+from proofstep_api.api.dependencies import get_session
+from proofstep_api.main import create_app
+from proofstep_api.otlp.decode import JSON_CONTENT_TYPE, PROTOBUF_CONTENT_TYPE, kv
+from proofstep_api.settings import Settings
 from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.integration
@@ -162,7 +162,7 @@ class TestRoundTrip:
     async def test_a_langgraph_export_appears_with_correct_types_and_tokens(
         self, client: AsyncClient, ingest_tenant: Tenant
     ) -> None:
-        """The phase's acceptance criterion, end to end and with no EvalForge SDK."""
+        """The phase's acceptance criterion, end to end and with no Proofstep SDK."""
         response = await client.post(
             OTLP_PATH,
             content=langgraph_export().SerializeToString(),

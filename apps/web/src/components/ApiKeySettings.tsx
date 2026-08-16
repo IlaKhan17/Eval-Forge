@@ -151,7 +151,7 @@ export function ApiKeySettings() {
           </ul>
         ) : (
           <p className="px-4 py-8 text-center text-sm text-slate-400">
-            No keys yet. Create one above, then set <code>EVALFORGE_API_KEY</code> in your app.
+            No keys yet. Create one above, then set <code>PROOFSTEP_API_KEY</code> in your app.
           </p>
         )}
       </Panel>

@@ -12,7 +12,7 @@ import math
 
 import pytest
 
-from evalforge_core.sampling import (
+from proofstep_core.sampling import (
     EscalationBudget,
     SamplingRule,
     bucket_of,

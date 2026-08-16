@@ -13,11 +13,11 @@ from typing import Any
 
 import pytest
 
-import evalforge
-from evalforge import safety
-from evalforge.client import Client
-from evalforge.config import Config
-from evalforge.exporter import Exporter
+import proofstep
+from proofstep import safety
+from proofstep.client import Client
+from proofstep.config import Config
+from proofstep.exporter import Exporter
 
 
 class TestNeverRaises:
@@ -54,7 +54,7 @@ class TestNeverRaises:
             msg = "nope"
             raise ValueError(msg)
 
-        with caplog.at_level("WARNING", logger="evalforge"):
+        with caplog.at_level("WARNING", logger="proofstep"):
             for _ in range(100):
                 always_fails()
 
@@ -101,18 +101,18 @@ class TestNeverBlocks:
         `endpoint` points at a closed port and retries are enabled, so the exporter
         is failing continuously in the background throughout.
         """
-        evalforge.init(
+        proofstep.init(
             project="bench",
-            api_key="ef_test_abcd_" + "x" * 20,
+            api_key="ps_test_abcd_" + "x" * 20,
             endpoint="http://127.0.0.1:1",  # nothing is listening
             export=True,
             flush_interval_s=0.01,
             max_retries=2,
         )
 
-        @evalforge.trace("work")
+        @proofstep.trace("work")
         def work(n: int) -> int:
-            with evalforge.start_span("inner"):
+            with proofstep.start_span("inner"):
                 return n * 2
 
         work(1)  # warm up imports and the thread
@@ -190,6 +190,6 @@ class TestExceptionsPassThrough:
 def _tiny_trace() -> Any:
     from datetime import UTC, datetime
 
-    from evalforge_types import Trace
+    from proofstep_types import Trace
 
     return Trace(trace_id="a" * 32, name="t", started_at=datetime.now(UTC))

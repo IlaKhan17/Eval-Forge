@@ -33,22 +33,22 @@ let cached: ServerConfig | null = null
 export function serverConfig(): ServerConfig {
   if (cached) return cached
 
-  const apiUrl = process.env.EVALFORGE_API_URL?.trim()
-  const apiKey = process.env.EVALFORGE_API_KEY?.trim()
+  const apiUrl = process.env.PROOFSTEP_API_URL?.trim()
+  const apiKey = process.env.PROOFSTEP_API_KEY?.trim()
 
   if (!apiUrl) {
     throw new ConfigError(
-      "EVALFORGE_API_URL is not set. Point it at the API, e.g. http://localhost:8000",
+      "PROOFSTEP_API_URL is not set. Point it at the API, e.g. http://localhost:8000",
     )
   }
   let parsed: URL
   try {
     parsed = new URL(apiUrl)
   } catch {
-    throw new ConfigError(`EVALFORGE_API_URL is not a valid URL: ${apiUrl}`)
+    throw new ConfigError(`PROOFSTEP_API_URL is not a valid URL: ${apiUrl}`)
   }
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new ConfigError(`EVALFORGE_API_URL must be http or https, got ${parsed.protocol}`)
+    throw new ConfigError(`PROOFSTEP_API_URL must be http or https, got ${parsed.protocol}`)
   }
 
   cached = { apiUrl: parsed.origin, apiKey }

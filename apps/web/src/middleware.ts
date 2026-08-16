@@ -28,7 +28,7 @@ export function middleware(request: NextRequest): NextResponse {
   // for anything more would be a real hole; it is never read as proof of anything.
   const path = request.nextUrl.pathname
   const isApi = path.startsWith("/api/")
-  const signedIn = Boolean(request.cookies.get("ef_access")?.value)
+  const signedIn = Boolean(request.cookies.get("ps_access")?.value)
 
   if (!signedIn && !isApi && !PUBLIC_PATHS.has(path)) {
     const login = new URL("/login", request.url)

@@ -1,4 +1,4 @@
-# Runs EvalForge's own reference suite on every pull request.
+# Runs Proofstep's own reference suite on every pull request.
 #
 # This doubles as the worked example: it is the workflow the documentation points
 # at, and because it runs on this repository's own PRs, it cannot silently rot.
@@ -39,7 +39,7 @@ jobs:
         with:
           fetch-depth: 0 # baseline resolution needs history
 
-      - uses: ./.github/actions/evalforge
+      - uses: ./.github/actions/proofstep
         with:
           suite: evals/suites/reply-intent.yaml
-          output: evalforge-report.json
+          output: proofstep-report.json

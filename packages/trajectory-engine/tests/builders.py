@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from evalforge_types import Span, SpanEvent, SpanType, Status, Trace
+from proofstep_types import Span, SpanEvent, SpanType, Status, Trace
 
 BASE = datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC)
 

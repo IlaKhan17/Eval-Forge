@@ -46,11 +46,11 @@ ignore = [
 
 [lint.isort]
 known-first-party = [
-    "evalforge",
-    "evalforge_types",
-    "evalforge_core",
-    "evalforge_trajectory",
-    "evalforge_cli",
+    "proofstep",
+    "proofstep_types",
+    "proofstep_core",
+    "proofstep_trajectory",
+    "proofstep_cli",
 ]
 
 [lint.flake8-tidy-imports]

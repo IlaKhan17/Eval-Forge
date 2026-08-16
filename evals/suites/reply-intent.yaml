@@ -1,4 +1,4 @@
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: reply-intent
 description: >
@@ -69,4 +69,4 @@ baseline:
 
 report:
   formats: [terminal, json]
-  output: evalforge-report.json
+  output: proofstep-report.json

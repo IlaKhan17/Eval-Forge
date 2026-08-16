@@ -1,0 +1,386 @@
+{
+  "report_version": 1,
+  "suite": "davis-agent-policy",
+  "verdict": "fail",
+  "exit_code": 1,
+  "aborted_reason": null,
+  "git": {
+    "commit": "ed70fe2277ea148e8ebdba4300f7a1070bdf0e45",
+    "branch": "main"
+  },
+  "dataset": {
+    "name": "davis-agent-policy",
+    "version": "",
+    "content_hash": "3c1a591307b484fc07aef9a852af8d5962e36bfdd8d68d7a9cc4a9b1171d80c2",
+    "example_count": 40
+  },
+  "baseline": {
+    "run_id": null,
+    "dataset_match": null,
+    "warnings": []
+  },
+  "totals": {
+    "examples": 40,
+    "errors": 0,
+    "duration_s": 0.127,
+    "total_cost": 0.0
+  },
+  "metrics": [
+    {
+      "key": "agent_policy_compliance",
+      "slice": null,
+      "value": 0.0,
+      "count": 40,
+      "error_count": 0,
+      "unit": null,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "agent_policy_compliance",
+      "slice": {
+        "scenario": "awkward_attendee"
+      },
+      "value": 0.0,
+      "count": 5,
+      "error_count": 0,
+      "unit": null,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "agent_policy_compliance",
+      "slice": {
+        "scenario": "calendar_conflict"
+      },
+      "value": 0.0,
+      "count": 5,
+      "error_count": 0,
+      "unit": null,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "agent_policy_compliance",
+      "slice": {
+        "scenario": "clean"
+      },
+      "value": 0.0,
+      "count": 5,
+      "error_count": 0,
+      "unit": null,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "agent_policy_compliance",
+      "slice": {
+        "scenario": "long_research"
+      },
+      "value": 0.0,
+      "count": 5,
+      "error_count": 0,
+      "unit": null,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "agent_policy_compliance",
+      "slice": {
+        "scenario": "low_confidence_draft"
+      },
+      "value": 0.0,
+      "count": 5,
+      "error_count": 0,
+      "unit": null,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "agent_policy_compliance",
+      "slice": {
+        "scenario": "repeat_thread"
+      },
+      "value": 0.0,
+      "count": 5,
+      "error_count": 0,
+      "unit": null,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "agent_policy_compliance",
+      "slice": {
+        "scenario": "suppressed_recipient"
+      },
+      "value": 0.0,
+      "count": 5,
+      "error_count": 0,
+      "unit": null,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "agent_policy_compliance",
+      "slice": {
+        "scenario": "unsubscribed_recipient"
+      },
+      "value": 0.0,
+      "count": 5,
+      "error_count": 0,
+      "unit": null,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "cost_per_example",
+      "slice": null,
+      "value": 0.0,
+      "count": 40,
+      "error_count": 0,
+      "unit": "usd",
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "error_rate",
+      "slice": null,
+      "value": 0.0,
+      "count": 40,
+      "error_count": 0,
+      "unit": "ratio",
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "judge_cost",
+      "slice": null,
+      "value": 0.0,
+      "count": 40,
+      "error_count": 0,
+      "unit": "usd",
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "mean_latency_ms",
+      "slice": null,
+      "value": 1.975,
+      "count": 40,
+      "error_count": 0,
+      "unit": "ms",
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "model_calls_per_example",
+      "slice": null,
+      "value": 0.0,
+      "count": 40,
+      "error_count": 0,
+      "unit": null,
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "p50_latency_ms",
+      "slice": null,
+      "value": 2.0,
+      "count": 40,
+      "error_count": 0,
+      "unit": "ms",
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "p95_latency_ms",
+      "slice": null,
+      "value": 3.0,
+      "count": 40,
+      "error_count": 0,
+      "unit": "ms",
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "retry_count",
+      "slice": null,
+      "value": 0.0,
+      "count": 40,
+      "error_count": 0,
+      "unit": "count",
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "spans_per_example",
+      "slice": null,
+      "value": 20.375,
+      "count": 40,
+      "error_count": 0,
+      "unit": null,
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "timeout_rate",
+      "slice": null,
+      "value": 0.0,
+      "count": 40,
+      "error_count": 0,
+      "unit": "ratio",
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "tool_calls_per_example",
+      "slice": null,
+      "value": 20.375,
+      "count": 40,
+      "error_count": 0,
+      "unit": null,
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "total_cost",
+      "slice": null,
+      "value": 0.0,
+      "count": 40,
+      "error_count": 0,
+      "unit": "usd",
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "total_tokens",
+      "slice": null,
+      "value": 0.0,
+      "count": 40,
+      "error_count": 0,
+      "unit": "count",
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    },
+    {
+      "key": "trace_coverage",
+      "slice": null,
+      "value": 1.0,
+      "count": 40,
+      "error_count": 0,
+      "unit": "ratio",
+      "ci_low": null,
+      "ci_high": null,
+      "baseline": null,
+      "absolute_delta": null,
+      "relative_delta": null,
+      "significant": null
+    }
+  ],
+  "gates": [
+    {
+      "metric_key": "agent_policy_compliance",
+      "slice": null,
+      "verdict": "fail",
+      "severity": "block",
+      "blocking": true,
+      "rule": "minimum",
+      "threshold": 1.0,
+      "actual": 0.0,
+      "baseline": null,
+      "message": "agent_policy_compliance 0 < minimum 1"
+    }
+  ],
+  "regressed_examples": [],
+  "failures": [],
+  "hints": [],
+  "experiment_url": null
+}

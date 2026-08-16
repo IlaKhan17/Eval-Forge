@@ -15,13 +15,13 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from evalforge_api.otlp.decode import JSON_CONTENT_TYPE, OtlpDecodeError, decode, kv
-from evalforge_api.otlp.mapping import map_span, span_type_for, status_for, trace_fields
-from evalforge_api.otlp.receiver import translate
 from google.protobuf.json_format import MessageToDict
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import ExportTraceServiceRequest
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as PbSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
+from proofstep_api.otlp.decode import JSON_CONTENT_TYPE, OtlpDecodeError, decode, kv
+from proofstep_api.otlp.mapping import map_span, span_type_for, status_for, trace_fields
+from proofstep_api.otlp.receiver import translate
 
 TRACE_ID = bytes.fromhex("4bf92f3577b34da6a3ce929d0e0e4736")
 SPAN_ID = bytes.fromhex("00f067aa0ba902b7")

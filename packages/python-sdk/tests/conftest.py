@@ -1,6 +1,6 @@
 """SDK test fixtures.
 
-Every test runs with `EVALFORGE_STRICT=1`, which turns the never-raise wrapper into
+Every test runs with `PROOFSTEP_STRICT=1`, which turns the never-raise wrapper into
 a re-raise. Swallowing bugs is correct in production and catastrophic in tests: it
 would let the SDK silently record nothing while every behavioural assertion passed.
 The one test that verifies swallowing does so explicitly.
@@ -13,25 +13,25 @@ from collections.abc import Iterator
 
 import pytest
 
-os.environ.setdefault("EVALFORGE_STRICT", "1")
+os.environ.setdefault("PROOFSTEP_STRICT", "1")
 
 from doubles import RecordingTransport  # noqa: F401 — re-exported for fixtures
 
-import evalforge
-from evalforge import safety
-from evalforge.config import Config
+import proofstep
+from proofstep import safety
+from proofstep.config import Config
 
 
 @pytest.fixture(autouse=True)
 def _isolate() -> Iterator[None]:
     """Fresh client per test, and no leaked env between tests."""
     for key in list(os.environ):
-        if key.startswith("EVALFORGE_") and key != "EVALFORGE_STRICT":
+        if key.startswith("PROOFSTEP_") and key != "PROOFSTEP_STRICT":
             del os.environ[key]
-    evalforge.reset()
+    proofstep.reset()
     safety.reset_log_throttle()
     yield
-    evalforge.reset()
+    proofstep.reset()
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def config() -> Config:
 
 
 @pytest.fixture
-def client(config: Config) -> evalforge.Client:
-    instance = evalforge.Client(config)
-    evalforge._client = instance  # the module-level API should use this one
+def client(config: Config) -> proofstep.Client:
+    instance = proofstep.Client(config)
+    proofstep._client = instance  # the module-level API should use this one
     return instance

@@ -25,7 +25,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from alembic import op
-from evalforge_api.db.rls import (
+from proofstep_api.db.rls import (
     POLICY_SUFFIX,
     PROTECTED_TABLES,
     drop_statements,

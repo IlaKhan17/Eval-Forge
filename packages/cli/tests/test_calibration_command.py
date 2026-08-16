@@ -13,24 +13,24 @@ from pathlib import Path
 
 import pytest
 
-from evalforge_cli import calibration as calibration_command
-from evalforge_cli.calibration_store import (
+from proofstep_cli import calibration as calibration_command
+from proofstep_cli.calibration_store import (
     evaluator_version_hash,
     load_all,
     read_calibration,
     status_for,
     write_calibration,
 )
-from evalforge_cli.runner import (
+from proofstep_cli.runner import (
     build_gate_set,
     judge_metric_keys,
     requirement_for,
     resolve_calibrations,
 )
-from evalforge_cli.suite.loader import load_suite
-from evalforge_core.calibration import CalibrationReport, RequirementCheck, check_requirement
-from evalforge_core.gates import evaluate_gates
-from evalforge_types import Metric, Verdict
+from proofstep_cli.suite.loader import load_suite
+from proofstep_core.calibration import CalibrationReport, RequirementCheck, check_requirement
+from proofstep_core.gates import evaluate_gates
+from proofstep_types import Metric, Verdict
 
 RUBRIC = "Answer `acceptable` unless the reply asks to stop being contacted.\n"
 
@@ -47,7 +47,7 @@ def write_suite(root: Path, *, require: str = "true", extra_judge: str = "") -> 
     suites.mkdir(parents=True, exist_ok=True)
     path = suites / "tone.yaml"
     path.write_text(
-        f"""apiVersion: evalforge.dev/v1
+        f"""apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: tone
 dataset:

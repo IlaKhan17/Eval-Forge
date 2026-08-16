@@ -1,6 +1,6 @@
 # Operations
 
-Running EvalForge somewhere real. `HARDENING.md` explains *why* the isolation model is what it is;
+Running Proofstep somewhere real. `HARDENING.md` explains *why* the isolation model is what it is;
 this is the procedure, plus the two things that only exist in an operator's world — backups and
 alerts.
 
@@ -25,11 +25,11 @@ Then two roles in the environment:
 
 ```bash
 # the application: no DDL, no ownership, subject to every policy
-POSTGRES_USER=evalforge_app
+POSTGRES_USER=proofstep_app
 POSTGRES_PASSWORD_FILE=/run/secrets/db-password
 
 # migrations and the worker's DDL jobs: owns the schema
-MIGRATION_DATABASE_URL=postgresql+psycopg://evalforge:...@db:5432/evalforge
+MIGRATION_DATABASE_URL=postgresql+psycopg://proofstep:...@db:5432/proofstep
 ```
 
 `MIGRATION_DATABASE_URL` is used by Alembic and by the worker's two DDL jobs (partition maintenance
@@ -46,7 +46,7 @@ curl -s localhost:8000/readyz | jq .checks.row_level_security
 ```
 
 **Verified.** The full stack — ingest, online evaluation, review queues, CLI publishing, and the
-worker — has been run end to end as `evalforge_app` with 26/26 tables enforced.
+worker — has been run end to end as `proofstep_app` with 26/26 tables enforced.
 
 ---
 
@@ -70,8 +70,8 @@ clearer failure than "your signing key is the empty string".
 ```bash
 uv run python scripts/manage_keys.py list   --project acme
 uv run python scripts/manage_keys.py create --project acme --name ci --scopes ingest read --expires-days 90
-uv run python scripts/manage_keys.py rotate --prefix ef_prod_ab12cd34 --grace-hours 24
-uv run python scripts/manage_keys.py revoke --prefix ef_prod_ab12cd34 --reason "rotated"
+uv run python scripts/manage_keys.py rotate --prefix ps_prod_ab12cd34 --grace-hours 24
+uv run python scripts/manage_keys.py revoke --prefix ps_prod_ab12cd34 --reason "rotated"
 ```
 
 Rotation is **overlap, not replacement**: the new key is minted and the old one is given an expiry
@@ -82,7 +82,7 @@ Revocation takes effect within `API_KEY_CACHE_TTL_S` (30s default) — worth kno
 half-minute where a revoked key still works becomes alarming.
 
 Every action is written to `audit_logs`. `preflight.py` fails when a development-issued key
-(`ef_dev_*`, `ef_test_*`) is still live in production, which is the normal residue of a database
+(`ps_dev_*`, `ps_test_*`) is still live in production, which is the normal residue of a database
 promoted from a development install.
 
 **Verified.** Create → 200, rotate → both keys valid during the grace window, revoke → 401 after the
@@ -106,8 +106,8 @@ there, because they are wrong by default —
 ## 3. Backups
 
 ```bash
-./scripts/backup.sh                                     # → backups/evalforge-<ts>.dump + manifest
-./scripts/restore.sh backups/<file>.dump --into evalforge_restore_check
+./scripts/backup.sh                                     # → backups/proofstep-<ts>.dump + manifest
+./scripts/restore.sh backups/<file>.dump --into proofstep_restore_check
 ```
 
 The backup writes a manifest beside the dump: sha256, schema version, tenant-policy count, and row
@@ -148,19 +148,19 @@ exists so that test is one command.
 Prometheus supports `authorization.credentials_file`, so this is one line of scrape config, and it
 avoids adding an unauthenticated surface to a service whose threat model is about who may read what.
 
-`infra/alerts/evalforge.rules.yml` has nine rules, each for a failure that is otherwise **silent**:
+`infra/alerts/proofstep.rules.yml` has nine rules, each for a failure that is otherwise **silent**:
 
 | Alert | Fires when | Why it is not obvious |
 |---|---|---|
-| `EvalForgeWorkerStopped` | no heartbeat for 5 min | the API stays healthy; only new data stops appearing |
-| `EvalForgeNoWorkerRegistered` | no worker ever beat | a deployment with no worker looks perfect from outside |
-| `EvalForgeQueueUnreachable` | Redis unreadable | depth 0 and "cannot see it" look identical in a number |
-| `EvalForgeQueueBacklog` | >100 ready jobs for 15 min | deferred cron jobs are excluded, or it fires constantly |
-| `EvalForgeDeadLetters` | any unresolved failure | arq drops a job after its retries, silently |
-| `EvalForgeDeadLettersUnattended` | oldest >3 days | nobody is reading the first alert |
-| `EvalForgeReviewQueueStale` | oldest pending >7 days | a queue nobody reads still looks like a control |
-| `EvalForgeTenantIsolationNotEnforced` | `rls_enforced == 0` | behaviour is identical either way |
-| `EvalForgeDown` | scrape fails | |
+| `ProofstepWorkerStopped` | no heartbeat for 5 min | the API stays healthy; only new data stops appearing |
+| `ProofstepNoWorkerRegistered` | no worker ever beat | a deployment with no worker looks perfect from outside |
+| `ProofstepQueueUnreachable` | Redis unreadable | depth 0 and "cannot see it" look identical in a number |
+| `ProofstepQueueBacklog` | >100 ready jobs for 15 min | deferred cron jobs are excluded, or it fires constantly |
+| `ProofstepDeadLetters` | any unresolved failure | arq drops a job after its retries, silently |
+| `ProofstepDeadLettersUnattended` | oldest >3 days | nobody is reading the first alert |
+| `ProofstepReviewQueueStale` | oldest pending >7 days | a queue nobody reads still looks like a control |
+| `ProofstepTenantIsolationNotEnforced` | `rls_enforced == 0` | behaviour is identical either way |
+| `ProofstepDown` | scrape fails | |
 
 Worker liveness comes from a heartbeat row written every minute by a dedicated cron job **and** after
 every job. A row rather than a Redis key with a TTL: when Redis is what broke, a TTL-based signal
@@ -196,7 +196,7 @@ Three behaviours worth knowing before an incident:
   Otherwise anyone could exhaust another tenant's budget by sending its key prefix with a wrong
   secret. This is also what makes guessing a key expensive.
 - **It fails open.** When Redis is unreachable, requests are allowed and
-  `evalforge_rate_limiter_available` goes to 0. A limiter that takes the API down when its own
+  `proofstep_rate_limiter_available` goes to 0. A limiter that takes the API down when its own
   dependency blips causes a worse outage than the abuse it prevents — but "not limiting" must not
   look like "no traffic", hence the gauge.
 - **`/metrics`, `/healthz`, and `/readyz` are exempt.** Throttling your own observability during a
@@ -230,7 +230,7 @@ trajectory policy costs nothing per trace, and switching off the safety checks b
 allowance ran out would trade a bill for an incident. Every skipped evaluation is recorded with
 `decision_reason = 'budget'`, so a coverage gap is a queryable reason rather than an absence.
 
-Watch `evalforge_project_spend_ratio` and `evalforge_project_budget_exhausted`; two alert rules
+Watch `proofstep_project_spend_ratio` and `proofstep_project_budget_exhausted`; two alert rules
 cover the 80% mark and exhaustion. Setting the ceiling needs a configuration scope, not read —
 raising it is how a bill gets bigger.
 

@@ -1,13 +1,13 @@
-# OpenTelemetry Collector, forwarding traces to EvalForge.
+# OpenTelemetry Collector, forwarding traces to Proofstep.
 #
 # Use this when you already run a Collector, or when you want the buffering, retry, and
 # redaction a Collector gives you before anything leaves your network. If you do not run
-# one, point your application's exporter straight at EvalForge instead — the receiver
+# one, point your application's exporter straight at Proofstep instead — the receiver
 # speaks OTLP/HTTP directly and this file is then unnecessary complexity.
 #
 #   docker run -v $PWD/infra/otel/collector-config.yaml:/etc/otelcol/config.yaml \
-#     -e EVALFORGE_ENDPOINT=https://your-evalforge \
-#     -e EVALFORGE_API_KEY=ef_prod_... \
+#     -e PROOFSTEP_ENDPOINT=https://your-proofstep \
+#     -e PROOFSTEP_API_KEY=ps_prod_... \
 #     -p 4317:4317 -p 4318:4318 otel/opentelemetry-collector-contrib:latest
 
 receivers:
@@ -20,7 +20,7 @@ receivers:
 
 processors:
   # Batching is what makes the exporter efficient, and its size is what decides how often a
-  # trace gets split across requests. EvalForge handles split traces (the trace name arrives
+  # trace gets split across requests. Proofstep handles split traces (the trace name arrives
   # with the root span, and a later batch of children cannot overwrite it), so a large batch
   # is safe.
   batch:
@@ -37,7 +37,7 @@ processors:
 
   # Strip attributes that should never leave your network.
   #
-  # EvalForge redacts on ingest as well, but redacting here is strictly better when you can:
+  # Proofstep redacts on ingest as well, but redacting here is strictly better when you can:
   # data that never crosses the boundary cannot be stored by mistake, and the Collector runs
   # inside your trust boundary while the receiver does not.
   attributes/scrub:
@@ -56,20 +56,20 @@ processors:
   # Keep the volume affordable. Head sampling is applied *before* export, so it also reduces
   # what you pay to send.
   #
-  # Left at 100% on purpose. EvalForge samples on ingest for the *paid* evaluations and runs
+  # Left at 100% on purpose. Proofstep samples on ingest for the *paid* evaluations and runs
   # trajectory policies on every trace it receives, so sampling here throws away coverage of
   # the free safety checks. Turn it down only if the trace volume itself is the problem.
   probabilistic_sampler:
     sampling_percentage: 100
 
 exporters:
-  otlphttp/evalforge:
+  otlphttp/proofstep:
     # The exporter appends `/v1/traces`, so the endpoint stops at `/v1/otlp`.
-    endpoint: ${env:EVALFORGE_ENDPOINT}/v1/otlp
+    endpoint: ${env:PROOFSTEP_ENDPOINT}/v1/otlp
     headers:
-      authorization: Bearer ${env:EVALFORGE_API_KEY}
+      authorization: Bearer ${env:PROOFSTEP_API_KEY}
     compression: gzip
-    # A retry queue, so a receiver restart does not cost the spans in flight. EvalForge
+    # A retry queue, so a receiver restart does not cost the spans in flight. Proofstep
     # answers a malformed body with 400 (never retried) and a storage fault with 503
     # (retried), so this queue drains rather than spinning.
     retry_on_failure:
@@ -89,7 +89,7 @@ service:
       # Order matters: limit memory first, then scrub, then sample, then batch. Scrubbing
       # after sampling would leave secrets in whatever the sampler kept.
       processors: [memory_limiter, attributes/scrub, probabilistic_sampler, batch]
-      exporters: [otlphttp/evalforge]
+      exporters: [otlphttp/proofstep]
 
   telemetry:
     logs:

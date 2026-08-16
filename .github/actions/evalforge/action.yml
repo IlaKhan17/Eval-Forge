@@ -1,6 +1,6 @@
-name: EvalForge
-description: Run an EvalForge suite, gate the pull request, and post the report as a comment.
-author: EvalForge
+name: Proofstep
+description: Run an Proofstep suite, gate the pull request, and post the report as a comment.
+author: Proofstep
 
 # A composite action rather than a Docker or JavaScript one: it is a handful of
 # steps around a Python CLI, and a container image would add a pull on every run
@@ -13,7 +13,7 @@ inputs:
   output:
     description: Where to write the JSON report.
     required: false
-    default: evalforge-report.json
+    default: proofstep-report.json
   comment:
     description: Post or update a pull-request comment.
     required: false
@@ -25,7 +25,7 @@ inputs:
   fail-on-gate:
     description: >
       Fail the job when a blocking gate fails. Setting this to "false" makes the
-      evaluation advisory, which is a reasonable way to introduce EvalForge to an
+      evaluation advisory, which is a reasonable way to introduce Proofstep to an
       existing repository before anyone depends on it.
     required: false
     default: "true"
@@ -44,7 +44,7 @@ inputs:
     required: false
     default: ${{ github.token }}
   extra-args:
-    description: Additional arguments passed through to `evalforge eval`.
+    description: Additional arguments passed through to `proofstep eval`.
     required: false
     default: ""
 
@@ -82,9 +82,9 @@ runs:
       # failing job with no explanation is the worst possible outcome.
       run: |
         set +e
-        uv run evalforge eval "${{ inputs.suite }}" \
+        uv run proofstep eval "${{ inputs.suite }}" \
           --output "${{ inputs.output }}" \
-          ${{ inputs.extra-args }} 2>&1 | tee /tmp/evalforge-stdout.txt
+          ${{ inputs.extra-args }} 2>&1 | tee /tmp/proofstep-stdout.txt
         code=${PIPESTATUS[0]}
         set -e
 
@@ -97,7 +97,7 @@ runs:
           verdict=error
         fi
         echo "verdict=${verdict}" >> "$GITHUB_OUTPUT"
-        echo "EvalForge verdict: ${verdict} (exit ${code})"
+        echo "Proofstep verdict: ${verdict} (exit ${code})"
 
     - name: Job summary
       shell: bash
@@ -105,11 +105,11 @@ runs:
       if: always()
       run: |
         if [ -f "${{ inputs.output }}" ]; then
-          uv run evalforge comment "${{ inputs.output }}" \
+          uv run proofstep comment "${{ inputs.output }}" \
             --run-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
             >> "$GITHUB_STEP_SUMMARY"
         else
-          uv run evalforge comment-error "$(tail -c 2000 /tmp/evalforge-stdout.txt)" \
+          uv run proofstep comment-error "$(tail -c 2000 /tmp/proofstep-stdout.txt)" \
             --suite "${{ inputs.suite }}" \
             --run-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
             >> "$GITHUB_STEP_SUMMARY"
@@ -119,7 +119,7 @@ runs:
       if: always() && inputs.upload-artifact == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: evalforge-report
+        name: proofstep-report
         path: ${{ inputs.working-directory }}/${{ inputs.output }}
         if-no-files-found: ignore
 
@@ -137,9 +137,9 @@ runs:
         set -euo pipefail
 
         if [ -f "${{ inputs.output }}" ]; then
-          uv run evalforge comment "${{ inputs.output }}" --run-url "$RUN_URL" -o /tmp/body.md
+          uv run proofstep comment "${{ inputs.output }}" --run-url "$RUN_URL" -o /tmp/body.md
         else
-          uv run evalforge comment-error "$(tail -c 2000 /tmp/evalforge-stdout.txt)" \
+          uv run proofstep comment-error "$(tail -c 2000 /tmp/proofstep-stdout.txt)" \
             --suite "${{ inputs.suite }}" --run-url "$RUN_URL" -o /tmp/body.md
         fi
 
@@ -149,7 +149,7 @@ runs:
         existing=$(gh api \
           "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
           --paginate --jq \
-          'map(select(.body | contains("<!-- evalforge-report -->"))) | first | .id // empty')
+          'map(select(.body | contains("<!-- proofstep-report -->"))) | first | .id // empty')
 
         if [ -n "$existing" ]; then
           gh api --method PATCH \
@@ -173,20 +173,20 @@ runs:
         verdict="${{ steps.run.outputs.verdict }}"
 
         if [ "$code" = "0" ]; then
-          echo "::notice title=EvalForge::quality gates passed (${verdict})"
+          echo "::notice title=Proofstep::quality gates passed (${verdict})"
           exit 0
         fi
 
         if [ "${{ inputs.fail-on-gate }}" != "true" ] && [ "$code" = "1" ]; then
           # Advisory mode: surface it loudly, but do not block.
-          echo "::warning title=EvalForge::blocking gate failed, but fail-on-gate is false"
+          echo "::warning title=Proofstep::blocking gate failed, but fail-on-gate is false"
           exit 0
         fi
 
         case "$code" in
-          1) echo "::error title=EvalForge::a protected quality gate regressed" ;;
-          2) echo "::error title=EvalForge::the evaluation could not be completed" ;;
-          3) echo "::error title=EvalForge::the suite configuration is invalid" ;;
-          *) echo "::error title=EvalForge::evaluation exited with ${code}" ;;
+          1) echo "::error title=Proofstep::a protected quality gate regressed" ;;
+          2) echo "::error title=Proofstep::the evaluation could not be completed" ;;
+          3) echo "::error title=Proofstep::the suite configuration is invalid" ;;
+          *) echo "::error title=Proofstep::evaluation exited with ${code}" ;;
         esac
         exit "$code"

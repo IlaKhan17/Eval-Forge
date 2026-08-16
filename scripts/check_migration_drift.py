@@ -12,10 +12,10 @@ import sys
 
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
-from evalforge_api.db import models  # noqa: F401 — registers every table
-from evalforge_api.db.base import Base
-from evalforge_api.db.partitions import is_partition_child
-from evalforge_api.settings import get_settings
+from proofstep_api.db import models  # noqa: F401 — registers every table
+from proofstep_api.db.base import Base
+from proofstep_api.db.partitions import is_partition_child
+from proofstep_api.settings import get_settings
 from sqlalchemy.ext.asyncio import create_async_engine
 
 

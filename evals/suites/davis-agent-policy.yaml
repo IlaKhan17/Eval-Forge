@@ -1,4 +1,4 @@
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: davis-agent-policy
 description: >
@@ -39,4 +39,4 @@ gates:
 
 report:
   formats: [terminal, json]
-  output: evalforge-davis-agent-policy.json
+  output: proofstep-davis-agent-policy.json

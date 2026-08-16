@@ -1,4 +1,4 @@
-# Running EvalForge in GitHub Actions
+# Running Proofstep in GitHub Actions
 
 ## Minimal workflow
 
@@ -18,7 +18,7 @@ jobs:
         with:
           fetch-depth: 0      # baseline resolution needs history
 
-      - uses: evalforge/evalforge/.github/actions/evalforge@v0
+      - uses: proofstep/proofstep/.github/actions/proofstep@v0
         with:
           suite: evals/suites/my-suite.yaml
 ```
@@ -32,14 +32,14 @@ comment, and sets the job status from the exit code.
 | Input | Default | Notes |
 |---|---|---|
 | `suite` | — | Required. Path to the suite YAML. |
-| `output` | `evalforge-report.json` | JSON report path. |
+| `output` | `proofstep-report.json` | JSON report path. |
 | `comment` | `true` | Post/update the PR comment. |
 | `upload-artifact` | `true` | Upload the JSON report. |
 | `fail-on-gate` | `true` | Set `false` to make the evaluation advisory. |
 | `python-version` | `3.12` | |
 | `working-directory` | `.` | For a suite in a subproject. |
 | `github-token` | `github.token` | Needs `pull-requests: write`. |
-| `extra-args` | — | Passed through to `evalforge eval`, e.g. `--limit 50`. |
+| `extra-args` | — | Passed through to `proofstep eval`, e.g. `--limit 50`. |
 
 Outputs: `verdict`, `exit-code`, `report`.
 
@@ -60,7 +60,7 @@ annotation.
 ## What the comment looks like
 
 One comment per PR, **edited in place** on each re-run. It is located by an HTML
-marker (`<!-- evalforge-report -->`) rather than by author or position, so a bot that
+marker (`<!-- proofstep-report -->`) rather than by author or position, so a bot that
 posts several kinds of comment cannot have the wrong one overwritten.
 
 The verdict and any blocking failure appear above the fold, uncollapsed. Metrics,
@@ -77,7 +77,7 @@ opposite of what happened. A run that dies before producing a report gets an exp
 Turn the gate off first:
 
 ```yaml
-      - uses: evalforge/evalforge/.github/actions/evalforge@v0
+      - uses: proofstep/proofstep/.github/actions/proofstep@v0
         with:
           suite: evals/suites/my-suite.yaml
           fail-on-gate: false
@@ -109,7 +109,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}   # attacker's code
-      - run: uv run evalforge eval ...
+      - run: uv run proofstep eval ...
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}    # handed to it
 ```
@@ -124,7 +124,7 @@ supply-chain compromise with extra steps.
 
 **1. Keep the suite offline (recommended).** A suite with a local `dataset.path` and
 only deterministic and trajectory evaluators needs no secrets at all, so it runs on
-fork PRs exactly as it does anywhere else. EvalForge's own `reply-intent` suite is
+fork PRs exactly as it does anywhere else. Proofstep's own `reply-intent` suite is
 built this way on purpose. Deterministic checks and trajectory policies cover safety
 properties — the ones you most want gated on an untrusted contribution — and none of
 them need a provider key.
@@ -183,13 +183,13 @@ A suite with LLM judges costs money on every run. Three things worth doing:
 
 ## Self-hosting the action
 
-The example above references the action by path (`./.github/actions/evalforge`),
+The example above references the action by path (`./.github/actions/proofstep`),
 which works inside this repository. To use it elsewhere, reference it by repository
 and tag — and pin the tag, since an action reference is remote code execution in your
 CI:
 
 ```yaml
-      - uses: evalforge/evalforge/.github/actions/evalforge@<commit-sha>
+      - uses: proofstep/proofstep/.github/actions/proofstep@<commit-sha>
 ```
 
 Pinning to a SHA rather than a tag is the stricter and better choice; a tag can be

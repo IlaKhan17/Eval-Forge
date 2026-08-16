@@ -1,8 +1,8 @@
-# EvalForge — Security & Privacy Design
+# Proofstep — Security & Privacy Design
 
 ## 1. What makes this system unusually sensitive
 
-EvalForge sits downstream of everything an AI application touches. A trace can contain the full prompt (often including retrieved customer documents), the model output, tool arguments (recipient addresses, record ids, SQL), and the application's internal state. It is, by construction, **the highest-value single target in a customer's AI stack** — richer than the application database, because it holds the data *in flight* and in plaintext.
+Proofstep sits downstream of everything an AI application touches. A trace can contain the full prompt (often including retrieved customer documents), the model output, tool arguments (recipient addresses, record ids, SQL), and the application's internal state. It is, by construction, **the highest-value single target in a customer's AI stack** — richer than the application database, because it holds the data *in flight* and in plaintext.
 
 Two consequences drive the design:
 
@@ -21,7 +21,7 @@ graph TB
         S1["instrumented app"]; S2["CLI on dev laptop / CI runner"]
         S3["custom Python evaluators"]
     end
-    subgraph T["EvalForge trust zone"]
+    subgraph T["Proofstep trust zone"]
         T1["API"]; T2["Worker"]; T3["Postgres"]; T4["Redis"]; T5["S3"]
     end
     subgraph E["External"]
@@ -122,11 +122,11 @@ TLS 1.2+ everywhere, HSTS, TLS-only Postgres/Redis/S3 in production. At rest: vo
 
 ## 10. Webhooks (designed now, shipped later)
 
-HMAC-SHA256 over `timestamp.body` in `X-EvalForge-Signature`, 5-minute tolerance to bound replay, versioned signature scheme, secret rotation with two active secrets, at-least-once delivery with an explicit `event_id` for consumer-side dedupe, SSRF checks on the target URL, exponential backoff, and auto-disable after sustained failure. Designing this up front costs nothing and prevents the usual retrofit of an insecure webhook system.
+HMAC-SHA256 over `timestamp.body` in `X-Proofstep-Signature`, 5-minute tolerance to bound replay, versioned signature scheme, secret rotation with two active secrets, at-least-once delivery with an explicit `event_id` for consumer-side dedupe, SSRF checks on the target URL, exponential backoff, and auto-disable after sustained failure. Designing this up front costs nothing and prevents the usual retrofit of an insecure webhook system.
 
 ## 11. Secure local development
 
-`docker compose up` must be safe by default *and* refuse to be deployed by accident: services bind to `127.0.0.1` only; the dev API key is randomly generated at first boot, not a constant; MinIO credentials are random and printed once; the dev JWT secret is generated per install, and the API **refuses to start** if `ENV=production` with a default/dev secret; seed data contains no real payloads; `.env.example` holds only placeholders; `.gitignore` covers `.env*`, `*.pem`, `~/.evalforge/`. Telemetry from the platform about itself is off by default.
+`docker compose up` must be safe by default *and* refuse to be deployed by accident: services bind to `127.0.0.1` only; the dev API key is randomly generated at first boot, not a constant; MinIO credentials are random and printed once; the dev JWT secret is generated per install, and the API **refuses to start** if `ENV=production` with a default/dev secret; seed data contains no real payloads; `.env.example` holds only placeholders; `.gitignore` covers `.env*`, `*.pem`, `~/.proofstep/`. Telemetry from the platform about itself is off by default.
 
 ## 12. Security test plan
 

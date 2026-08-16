@@ -18,15 +18,15 @@ from decimal import Decimal
 
 import pytest
 import pytest_asyncio
-from evalforge_api.api.dependencies import get_session
-from evalforge_api.db.models.evaluation import TrajectoryPolicyVersion
-from evalforge_api.db.models.online import OnlineEvalRule, OnlineEvaluation
-from evalforge_api.main import create_app
-from evalforge_api.services import budget
-from evalforge_api.services.online_eval import OnlineEvalService
-from evalforge_api.settings import Settings
 from factories import Tenant
 from httpx import ASGITransport, AsyncClient
+from proofstep_api.api.dependencies import get_session
+from proofstep_api.db.models.evaluation import TrajectoryPolicyVersion
+from proofstep_api.db.models.online import OnlineEvalRule, OnlineEvaluation
+from proofstep_api.main import create_app
+from proofstep_api.services import budget
+from proofstep_api.services.online_eval import OnlineEvalService
+from proofstep_api.settings import Settings
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

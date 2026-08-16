@@ -2,7 +2,7 @@
 
 ## Current state
 
-The repository at `/Users/mohdjami/EvalForge/EvalForge` is **completely empty**:
+The repository at `/Users/mohdjami/Proofstep/Proofstep` is **completely empty**:
 
 ```
 .git/          # initialized, branch `main`, zero commits

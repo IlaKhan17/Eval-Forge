@@ -11,10 +11,10 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from evalforge_api.db import models  # noqa: F401 — registers every table
-from evalforge_api.db.base import Base
-from evalforge_api.db.partitions import is_partition_child
-from evalforge_api.settings import get_settings
+from proofstep_api.db import models  # noqa: F401 — registers every table
+from proofstep_api.db.base import Base
+from proofstep_api.db.partitions import is_partition_child
+from proofstep_api.settings import get_settings
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config

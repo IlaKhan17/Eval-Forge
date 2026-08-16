@@ -13,10 +13,10 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 from doubles import RecordingTransport
 
-import evalforge
-from evalforge import safety
-from evalforge.client import Client
-from evalforge.config import Config
+import proofstep
+from proofstep import safety
+from proofstep.client import Client
+from proofstep.config import Config
 
 
 def tree(trace) -> dict[str, str | None]:  # type: ignore[no-untyped-def]
@@ -43,10 +43,10 @@ class TestNesting:
 
     def test_context_is_restored_after_a_span_ends(self, client: Client) -> None:
         with client.trace("root"):
-            assert evalforge.current_span() is None
+            assert proofstep.current_span() is None
             with client.span("a") as a:
-                assert evalforge.current_span() is a
-            assert evalforge.current_span() is None
+                assert proofstep.current_span() is a
+            assert proofstep.current_span() is None
 
     def test_context_is_restored_after_an_exception(self, client: Client) -> None:
         with client.trace("root"):
@@ -56,7 +56,7 @@ class TestNesting:
                     raise ValueError(msg)
             except ValueError:
                 pass
-            assert evalforge.current_span() is None
+            assert proofstep.current_span() is None
 
 
 class TestAsyncPropagation:
@@ -102,7 +102,7 @@ class TestAsyncPropagation:
         async def child(name: str) -> None:
             with client.span(name):
                 await asyncio.sleep(0.005)
-                current = evalforge.current_span()
+                current = proofstep.current_span()
                 seen.append(current.name if current else None)
 
         with client.trace("root"), client.span("parent"):
@@ -149,13 +149,13 @@ class TestThreadPropagation:
     def test_the_orphan_warning_names_the_fix(self, caplog: pytest.LogCaptureFixture) -> None:
         safety.reset_log_throttle()
         client = Client(Config(project="p", export=False))
-        with caplog.at_level("WARNING", logger="evalforge"), client.span("lonely"):
+        with caplog.at_level("WARNING", logger="proofstep"), client.span("lonely"):
             pass
         assert "propagate()" in caplog.text
 
     def test_propagate_carries_the_context_into_a_thread(self, client: Client) -> None:
         with client.trace("root") as trace, client.span("parent"), ThreadPoolExecutor(1) as pool:
-            pool.submit(evalforge.propagate(lambda: _work(client, "worker"))).result()
+            pool.submit(proofstep.propagate(lambda: _work(client, "worker"))).result()
 
         assert tree(trace)["worker"] == "parent"
 
@@ -165,10 +165,10 @@ class TestOrphanHandling:
         """An orphan span is more confusing than a synthetic root, and losing it is
         worse than both."""
         with client.span("lonely") as span:
-            assert span is not evalforge.NOOP
-            assert evalforge.current_trace() is not None
+            assert span is not proofstep.NOOP
+            assert proofstep.current_trace() is not None
         # The implicit trace is closed and emitted, not left dangling in the context.
-        assert evalforge.current_trace() is None
+        assert proofstep.current_trace() is None
 
 
 def _work(client: Client, name: str) -> None:

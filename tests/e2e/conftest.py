@@ -25,7 +25,7 @@ import httpx
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-E2E_DB = "evalforge_e2e"
+E2E_DB = "proofstep_e2e"
 
 #: How long to wait for the API to answer /readyz. Generous, because a cold start also applies
 #: migrations, and a flaky timeout in the acceptance test is worse than a slow one.
@@ -107,7 +107,7 @@ def stack() -> Iterator[dict[str, Any]]:
     )
     assert bootstrap.returncode == 0, f"bootstrap failed:\n{bootstrap.stdout}{bootstrap.stderr}"
     key = next(
-        (word for word in bootstrap.stdout.split() if word.startswith("ef_dev_")),
+        (word for word in bootstrap.stdout.split() if word.startswith("ps_dev_")),
         None,
     )
     assert key, f"no API key in bootstrap output:\n{bootstrap.stdout}"
@@ -120,7 +120,7 @@ def stack() -> Iterator[dict[str, Any]]:
             "uv",
             "run",
             "uvicorn",
-            "evalforge_api.main:create_app",
+            "proofstep_api.main:create_app",
             "--factory",
             "--host",
             "127.0.0.1",

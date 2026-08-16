@@ -53,7 +53,7 @@ def cli(
     regression.
     """
     completed = subprocess.run(
-        ["uv", "run", "evalforge", *args],
+        ["uv", "run", "proofstep", *args],
         cwd=ROOT,
         env=env,
         capture_output=True,
@@ -62,7 +62,7 @@ def cli(
     )
     if expect is not None and completed.returncode != expect:
         pytest.fail(
-            f"`evalforge {' '.join(args)}` exited {completed.returncode}, expected {expect}\n"
+            f"`proofstep {' '.join(args)}` exited {completed.returncode}, expected {expect}\n"
             f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}"
         )
     return completed
@@ -85,9 +85,9 @@ def test_the_whole_loop(stack: dict[str, Any], api: httpx.Client, tmp_path: Path
     endpoint, key = stack["endpoint"], stack["api_key"]
     env = {
         **stack["env"],
-        "EVALFORGE_ENDPOINT": endpoint,
-        "EVALFORGE_API_KEY": key,
-        "EVALFORGE_ENVIRONMENT": "production",
+        "PROOFSTEP_ENDPOINT": endpoint,
+        "PROOFSTEP_API_KEY": key,
+        "PROOFSTEP_ENVIRONMENT": "production",
     }
     env.pop(BREAK, None)
 
@@ -205,20 +205,20 @@ def _run_instrumented_agent(endpoint: str, key: str) -> str:
     reaching a live server — and doing it here means a failure surfaces as a Python traceback rather
     than as someone else's exit code.
     """
-    import evalforge
+    import proofstep
 
-    evalforge.init(
+    proofstep.init(
         endpoint=endpoint,
         api_key=key,
         environment="production",
     )
 
     marker = uuid.uuid4().hex[:8]
-    with evalforge.capture("reply-drafter") as captured:
-        evalforge.set_metadata(e2e=marker)
+    with proofstep.capture("reply-drafter") as captured:
+        proofstep.set_metadata(e2e=marker)
         # Nested on purpose: the parent link is the thing worth asserting after a round trip.
-        with evalforge.start_span("draft", span_type="agent"):
-            with evalforge.start_span("classify", span_type="llm") as span:
+        with proofstep.start_span("draft", span_type="agent"):
+            with proofstep.start_span("classify", span_type="llm") as span:
                 span.set_output({"intent": "unsubscribe", "confidence": 0.91})
                 span.set_model(
                     "claude-sonnet-5",
@@ -232,5 +232,5 @@ def _run_instrumented_agent(endpoint: str, key: str) -> str:
     # Flushed explicitly and checked. The exporter batches in the background, which is right for an
     # application and wrong here: without this the next assertion races the queue, and a racing
     # acceptance test is one that eventually gets marked flaky and skipped.
-    assert evalforge.get_client().flush(timeout=30), "the SDK could not export within 30s"
+    assert proofstep.get_client().flush(timeout=30), "the SDK could not export within 30s"
     return str(trace.trace_id)

@@ -20,7 +20,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 import pytest_asyncio
 from conftest import TEST_DB, _settings
-from evalforge_api.db.rls import (
+from proofstep_api.db.rls import (
     PROTECTED_TABLES,
     TENANT_SETTING,
     UNPROTECTED_TABLES,
@@ -35,7 +35,7 @@ pytestmark = pytest.mark.integration
 
 #: A role with no privileges beyond what the application needs, and crucially neither SUPERUSER nor
 #: BYPASSRLS. Created per session and dropped afterwards.
-APP_ROLE = "evalforge_rls_probe"
+APP_ROLE = "proofstep_rls_probe"
 APP_PASSWORD = "probe-only-not-a-secret"
 
 
@@ -305,8 +305,8 @@ class TestCoverage:
         Derived from the models rather than from the catalogue, so adding a table with a
         `project_id` and forgetting the policy fails here rather than in production.
         """
-        import evalforge_api.db.models  # noqa: F401 — registers the mappers
-        from evalforge_api.db.base import Base
+        import proofstep_api.db.models  # noqa: F401 — registers the mappers
+        from proofstep_api.db.base import Base
 
         scoped = {
             name

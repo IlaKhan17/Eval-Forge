@@ -2,8 +2,8 @@
 #
 # Restore a backup and prove it worked.
 #
-#   ./scripts/restore.sh backups/evalforge-20260808T170000Z.dump --into evalforge_restore_check
-#   ./scripts/restore.sh backups/latest.dump --into evalforge --force
+#   ./scripts/restore.sh backups/proofstep-20260808T170000Z.dump --into proofstep_restore_check
+#   ./scripts/restore.sh backups/latest.dump --into proofstep --force
 #
 # The verification is the point. Anyone can run pg_restore; what fails in an incident is discovering
 # afterwards that the dump was truncated, or from the wrong schema version, or missing the RLS
@@ -90,7 +90,7 @@ info "restoring into $TARGET"
 # benign warnings, so trusting its status alone produces both false alarms and false confidence.
 docker compose exec -T "$COMPOSE_SERVICE" \
   pg_restore -U "$POSTGRES_USER" -d "$TARGET" --no-owner --no-privileges < "$DUMP" \
-  > /tmp/evalforge-restore.log 2>&1 || warn "pg_restore reported warnings; verifying against the manifest"
+  > /tmp/proofstep-restore.log 2>&1 || warn "pg_restore reported warnings; verifying against the manifest"
 
 # ------------------------------------------------------------------ verification
 
@@ -134,7 +134,7 @@ fi
 
 printf '\n'
 if [ "$FAILURES" -gt 0 ]; then
-  die "$FAILURES verification check(s) failed. This restore is NOT usable — see /tmp/evalforge-restore.log"
+  die "$FAILURES verification check(s) failed. This restore is NOT usable — see /tmp/proofstep-restore.log"
 fi
 ok "restore verified against the manifest"
 printf '\nPoint an API at it with:\n  POSTGRES_DB=%s uv run python scripts/preflight.py\n' "$TARGET"

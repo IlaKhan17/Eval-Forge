@@ -14,12 +14,12 @@ from pathlib import Path
 
 import pytest
 import pytest_asyncio
-from evalforge_api.db.partitions import ensure_partitions
-from evalforge_api.settings import Settings
 from factories import Tenant, make_tenant
+from proofstep_api.db.partitions import ensure_partitions
+from proofstep_api.settings import Settings
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-TEST_DB = "evalforge_test"
+TEST_DB = "proofstep_test"
 ROOT = Path(__file__).resolve().parents[3]
 
 
@@ -37,7 +37,7 @@ def _migrate(url: str) -> None:
 def _settings() -> Settings:
     return Settings(
         env="test",
-        postgres_user=os.environ.get("POSTGRES_USER", "evalforge"),
+        postgres_user=os.environ.get("POSTGRES_USER", "proofstep"),
         postgres_password=os.environ.get("POSTGRES_PASSWORD", ""),
         postgres_host=os.environ.get("POSTGRES_HOST", "127.0.0.1"),
         postgres_port=int(os.environ.get("POSTGRES_PORT", "5432")),

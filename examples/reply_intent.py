@@ -1,7 +1,7 @@
 """A minimal reply-intent classifier, used by evals/suites/reply-intent.yaml.
 
 Deliberately rule-based rather than model-backed: the suite's job here is to
-exercise EvalForge, and a deterministic task keeps the example reproducible and
+exercise Proofstep, and a deterministic task keeps the example reproducible and
 free to run.
 """
 

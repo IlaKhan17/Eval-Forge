@@ -1,13 +1,15 @@
-# EvalForge
+# Proofstep
 
-**An open-source evaluation CI and trajectory-testing platform for production AI agents.**
+**The CI gate for AI agents that knows the difference between a regression and a bad day.**
 
-> ⚠️ **Status: pre-alpha.** It runs end to end — `./scripts/demo.sh` gives you a working system in
-> one command — and nothing about the API or the schema is stable yet. See
-> [what is deliberately not done](docs/HARDENING.md#not-done).
+> ⚠️ **Status: 0.1.0, early.** It runs end to end — `./scripts/demo.sh` gives you a working system
+> in one command, and `pip install proofstep` gives you the SDK — but the API and schema are not
+> stable yet. See [what is deliberately not done](docs/HARDENING.md#not-done).
 
-EvalForge answers the question that logging dashboards don't: **should this change be
-allowed to merge?**
+Proofstep answers the question a dashboard cannot: **should this change be allowed to merge?**
+
+It is a testing tool, not an observability tool. Traces are the evidence; the verdict is the
+product.
 
 ```
 Observe agent executions → convert failures into datasets → run repeatable evaluations
@@ -17,11 +19,13 @@ Observe agent executions → convert failures into datasets → run repeatable e
 
 ## Why another eval tool
 
-Most tools score the *output*. Agents fail in the *middle*.
+Two reasons, and both are things that make a green build a lie.
+
+**Most tools score the output. Agents fail in the middle.**
 
 An agent can produce a flawless email and still have sent it before human approval.
 It can generate a perfect quiz question from a document belonging to a different user.
-No output evaluator can detect either. EvalForge evaluates the **trajectory** — the
+No output evaluator can detect either. Proofstep evaluates the **trajectory** — the
 ordered sequence of tool calls, their arguments, and the state they left behind — with
 policies written as reviewable YAML:
 
@@ -43,23 +47,42 @@ rules:
     policy     : policies/email-approval.yaml:14
 ```
 
+**And most gates fire on noise.** A threshold says what size of change matters. It cannot say
+whether the change is real:
+
+```
+baseline 0.8239  candidate 0.8077  measured drop +0.0162
+paired test: n=40  p=0.350  mde=0.101
+
+threshold only     → pass   exit 0
+threshold + test   → error  exit 2
+  accuracy gates on a 0.02 regression, but 40 paired examples could only
+  detect 0.1007. This gate cannot see what it claims to guard.
+```
+
+Those are two runs of *identical code*, differing only by sampling noise. The threshold gate passed
+— and at forty examples it could only ever have fired on noise larger than its own threshold. That
+is the state most eval suites are quietly in.
+
 ## What makes it different
 
 1. **Agent trajectory evaluation** — order, budgets, loops, duplicate side effects
 2. **Policy-as-code** for tool-using agents, reviewable in a PR diff
 3. **Step-level failure attribution** — every failure names its offending span
-4. **CI quality gates** with protected metrics that a passing average can't hide
-5. **Evaluator calibration** — an LLM judge is not trusted until it's measured against humans
+4. **Statistically honest gates** — paired bootstrap and McNemar against a managed baseline, Holm
+   correction across metrics, and an ERROR when a run was too small to detect what it guards
+5. **Evaluator calibration** — Cohen's κ against human labels, not raw agreement
 6. **Versioned datasets and immutable experiments** — reproducibility enforced by the schema
 7. **Local-first** — the full evaluation loop runs with no server and no account
-8. **Framework-neutral** — native SDK now, OTLP/OpenInference ingestion next
+8. **Genuinely self-hostable** — real multi-tenancy with row-level security, no licence key, no
+   hosted control plane
 
 ## Quick start
 
 One command to a running system with seeded data, a populated review queue, and the dashboard:
 
 ```bash
-git clone https://github.com/IlaKhan17/EvalForge && cd EvalForge
+git clone https://github.com/IlaKhan17/Proofstep && cd Proofstep
 make setup && make web-install
 ./scripts/demo.sh
 ```
@@ -67,8 +90,8 @@ make setup && make web-install
 Then break the agent on purpose and watch the gate catch it:
 
 ```bash
-uv run evalforge eval evals/suites/davis-agent-policy.yaml                 # exit 0
-DAVIS_BREAK_POLICY=1 uv run evalforge eval evals/suites/davis-agent-policy.yaml   # exit 1
+uv run proofstep eval evals/suites/davis-agent-policy.yaml                 # exit 0
+DAVIS_BREAK_POLICY=1 uv run proofstep eval evals/suites/davis-agent-policy.yaml   # exit 1
 ```
 
 The email is byte-identical in both runs. The behaviour is not — that is the whole premise.
@@ -79,23 +102,24 @@ including instrumenting your own agent.
 ### Instrumenting your agent
 
 ```bash
-uv add evalforge
+pip install proofstep            # the tracing SDK
+pip install proofstep-cli        # the `proofstep` command for CI
 ```
 
 ```python
-import evalforge
+import proofstep
 
 
-@evalforge.trace("generate_outreach")
+@proofstep.trace("generate_outreach")
 async def generate_outreach(prospect_id: str) -> Email: ...
 
 
-@evalforge.tool("gmail.send")
+@proofstep.tool("gmail.send")
 async def send_email(to: str, subject: str, body: str) -> str: ...
 ```
 
 ```bash
-evalforge eval evals/suites/sdr-email.yaml
+proofstep eval evals/suites/sdr-email.yaml
 # exit 0 → merge;  exit 1 → a protected metric regressed
 ```
 
@@ -104,7 +128,7 @@ evalforge eval evals/suites/sdr-email.yaml
 Requires [uv](https://docs.astral.sh/uv/) and Docker.
 
 ```bash
-git clone https://github.com/IlaKhan17/EvalForge && cd EvalForge
+git clone https://github.com/IlaKhan17/Proofstep && cd Proofstep
 make setup     # install Python 3.12 toolchain + sync workspace
 make test      # unit tests, no docker needed
 make dev       # start postgres, redis, minio
@@ -148,13 +172,14 @@ same code path, and it is enforced in CI by [`.importlinter`](.importlinter).
 | [Hardening](docs/HARDENING.md) | Row-level security, the application role, what is not done |
 | [Operations](docs/OPERATIONS.md) | Roles, secrets and key rotation, backups, metrics and alerts |
 | [Testing strategy](docs/TESTING_STRATEGY.md) | Pyramid, targets, CI stages |
+| [Releasing](docs/RELEASING.md) | Publishing the packages, and the one manual step |
 | [Implementation plan](docs/IMPLEMENTATION_PLAN.md) | Phased milestones |
 | [ADRs](docs/ADR.md) | 17 architecture decision records |
 | [Open questions](docs/OPEN_QUESTIONS.md) | Critical review and unresolved questions |
 
 ## A note on evaluation methodology
 
-EvalForge takes a deliberate position: **most things should not be evaluated with an LLM.**
+Proofstep takes a deliberate position: **most things should not be evaluated with an LLM.**
 
 If an assertion holds for every input given correct code, write a unit test. If it holds
 only statistically, write an eval. If it's mechanically checkable — schema validity,

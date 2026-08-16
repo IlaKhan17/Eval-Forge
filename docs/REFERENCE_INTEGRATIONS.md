@@ -12,8 +12,8 @@ them.
 
 ```bash
 # Any of the ten. No provider key, no network, no server.
-uv run evalforge eval evals/suites/davis-lead-ranking.yaml
-uv run evalforge eval evals/suites/quiz-security.yaml --model-client examples.stub_judge:make_client
+uv run proofstep eval evals/suites/davis-lead-ranking.yaml
+uv run proofstep eval evals/suites/quiz-security.yaml --model-client examples.stub_judge:make_client
 ```
 
 ## The suites
@@ -34,7 +34,7 @@ uv run evalforge eval evals/suites/quiz-security.yaml --model-client examples.st
 Six of ten have **zero or one** judge. Roughly 60 % of the metrics across all ten are
 deterministic or statistical, which is what a well-designed suite looks like: cheap checks
 everywhere, judges reserved for the genuinely subjective residue. A suite that is mostly judges
-has usually mis-modelled the problem, and `evalforge validate` says so.
+has usually mis-modelled the problem, and `proofstep validate` says so.
 
 ## The measurements that make the arguments
 
@@ -163,8 +163,8 @@ come back unsupported. It now reads only the content block.
 
 Building the suites surfaced three real holes:
 
-- **`evalforge eval` had no way to supply a model client**, so judges were unreachable from the
-  CLI. Now `--model-client module:factory` (or `EVALFORGE_MODEL_CLIENT`), refused up front when a
+- **`proofstep eval` had no way to supply a model client**, so judges were unreachable from the
+  CLI. Now `--model-client module:factory` (or `PROOFSTEP_MODEL_CLIENT`), refused up front when a
   suite has judges and none is given.
 - **A classify-mode judge could not be gated on.** It emitted a label and no numeric value, so a
   gate on it reported "metric missing" *after* the judge calls were paid for. `passing_labels`

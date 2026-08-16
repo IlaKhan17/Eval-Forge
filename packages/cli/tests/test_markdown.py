@@ -14,8 +14,8 @@ from typing import Any
 import pytest
 from typer.testing import CliRunner
 
-from evalforge_cli.main import app
-from evalforge_cli.render.markdown import (
+from proofstep_cli.main import app
+from proofstep_cli.render.markdown import (
     GITHUB_COMMENT_LIMIT,
     MARKER,
     TRUNCATION_BUDGET,

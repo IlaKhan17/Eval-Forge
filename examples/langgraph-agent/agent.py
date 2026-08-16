@@ -1,11 +1,11 @@
-"""A LangGraph-shaped agent instrumented with plain OpenTelemetry — no EvalForge SDK.
+"""A LangGraph-shaped agent instrumented with plain OpenTelemetry — no Proofstep SDK.
 
 This is the proof of the OTLP receiver's promise: an application that has never heard of
-EvalForge, using only `opentelemetry-sdk` and OpenInference attribute conventions, appears
+Proofstep, using only `opentelemetry-sdk` and OpenInference attribute conventions, appears
 in the dashboard with correct span types, token counts, and a working span tree.
 
     export OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:8000/v1/otlp
-    export OTEL_EXPORTER_OTLP_HEADERS="authorization=Bearer ef_dev_..."
+    export OTEL_EXPORTER_OTLP_HEADERS="authorization=Bearer ps_dev_..."
     uv run python examples/langgraph-agent/agent.py
 
 Two deliberate choices in how this file is written:
@@ -15,7 +15,7 @@ framework produced the spans — it reads attributes — and an example that ins
 LangChain, and a provider SDK to demonstrate an attribute mapping would obscure the thing it
 is demonstrating. The span shape here is what
 `openinference-instrumentation-langchain` emits, so swapping in the real library changes
-nothing about what EvalForge sees.
+nothing about what Proofstep sees.
 
 **The model calls are simulated.** The example must run in CI with no provider key, and a
 token count is a token count whether it came from a real response or a fixture. Swap
@@ -41,7 +41,7 @@ SERVICE_NAME = "langgraph-sdr-agent"
 
 
 def configure_tracing() -> trace.Tracer:
-    """Standard OpenTelemetry setup. Nothing EvalForge-specific.
+    """Standard OpenTelemetry setup. Nothing Proofstep-specific.
 
     Falls back to the console exporter when no endpoint is configured, so running this file
     with no environment at all still shows what would have been sent — which is the whole
@@ -80,7 +80,7 @@ def configure_tracing() -> trace.Tracer:
 def span(tracer: trace.Tracer, name: str, kind: str, **attributes: Any) -> Iterator[trace.Span]:
     """One span with an OpenInference kind.
 
-    `openinference.span.kind` is the single attribute that decides how EvalForge classifies
+    `openinference.span.kind` is the single attribute that decides how Proofstep classifies
     the span. Everything else is refinement.
     """
     with tracer.start_as_current_span(name) as current:
@@ -135,7 +135,7 @@ def classify_intent(tracer: trace.Tracer, email: str) -> dict[str, Any]:
             "llm.cost.total", f"{(prompt_tokens * 3 + completion_tokens * 15) / 1_000_000:.8f}"
         )
 
-        # The MIME type is what tells EvalForge to parse this into structure rather than
+        # The MIME type is what tells Proofstep to parse this into structure rather than
         # storing a JSON string. Evaluators resolve paths like `output.intent`, and a string
         # has no paths inside it.
         current.set_attribute("output.value", body)
@@ -181,7 +181,7 @@ def send_email(tracer: trace.Tracer, to: str, body: str) -> None:
         time.sleep(0.01)
         if to.endswith("@suppressed.example"):
             # A recorded exception makes the span an error even if the status is never set,
-            # and gives EvalForge the exception type rather than a bare "failed".
+            # and gives Proofstep the exception type rather than a bare "failed".
             error = RuntimeError("recipient is on the suppression list")
             current.record_exception(error)
             current.set_status(Status(StatusCode.ERROR, str(error)))

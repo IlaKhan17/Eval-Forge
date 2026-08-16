@@ -1,4 +1,4 @@
-# EvalForge — Evaluation Engine Design
+# Proofstep — Evaluation Engine Design
 
 `packages/evaluation-core` — a **pure library**. No HTTP, no database, no provider SDKs. Model access arrives through an injected protocol. This is the single most important boundary in the system: it is what makes local mode, CI mode, and server mode the same code, and what makes the whole engine unit-testable without a network.
 
@@ -188,7 +188,7 @@ load suite → resolve dataset version (locked; else refuse with --allow-draft)
 Details that matter:
 
 - **Two semaphores.** Task concurrency and judge concurrency are separate limits. They contend for different resources (the user's app vs. the judge provider's rate limit) and coupling them means one throttles the other.
-- **Journaling.** Each `ExampleResult` is appended to `.evalforge/runs/<run_id>.jsonl` as it completes. A crash at example 190/200 loses nothing; `evalforge eval --resume <run_id>` skips completed ids. This costs ~20 lines and eliminates the worst developer experience in eval tooling (losing a 40-minute, $12 run to a transient 429).
+- **Journaling.** Each `ExampleResult` is appended to `.proofstep/runs/<run_id>.jsonl` as it completes. A crash at example 190/200 loses nothing; `proofstep eval --resume <run_id>` skips completed ids. This costs ~20 lines and eliminates the worst developer experience in eval tooling (losing a 40-minute, $12 run to a transient 429).
 - **Retries.** Task retries on `TimeoutError`/connection errors with exponential backoff + full jitter, default 2 attempts, configurable. **Never** retry on a low score. `retry_count` is recorded and is itself an operational metric.
 - **Timeouts.** Per-example (default 120 s) and per-evaluator (default 60 s). A hung example is marked `timeout`, not silently dropped.
 - **Cancellation.** `SIGINT` cancels the TaskGroup, drains in-flight work with a 10 s grace period, finalizes the run as `cancelled`, writes a partial report, and exits 130. A second `SIGINT` exits immediately.

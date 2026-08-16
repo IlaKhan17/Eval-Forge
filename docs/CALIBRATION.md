@@ -11,13 +11,13 @@ how well it agrees.
 
 ```bash
 # What it would do, and what it would cost. No model calls.
-evalforge calibrate evals/suites/reply-tone.yaml -e acceptable_to_followup --dry-run
+proofstep calibrate evals/suites/reply-tone.yaml -e acceptable_to_followup --dry-run
 
 # The real thing.
-evalforge calibrate evals/suites/reply-tone.yaml -e acceptable_to_followup
+proofstep calibrate evals/suites/reply-tone.yaml -e acceptable_to_followup
 
 # Recompute from verdicts the judge already gave. Free.
-evalforge calibrate evals/suites/reply-tone.yaml -e acceptable_to_followup \
+proofstep calibrate evals/suites/reply-tone.yaml -e acceptable_to_followup \
   --verdicts evals/calibration/reply-tone.verdicts.jsonl
 ```
 
@@ -192,7 +192,7 @@ Live runs need a model client, because provider SDKs are deliberately absent fro
 `evaluation-core`:
 
 ```bash
-evalforge calibrate suite.yaml -e judge --model-client myproject.models:make_client
+proofstep calibrate suite.yaml -e judge --model-client myproject.models:make_client
 ```
 
 ## Where human review is mandatory
@@ -215,7 +215,7 @@ duplicate detection, citation *existence*.
 
 Every one is deterministic, free, instant, and exactly reproducible. Reach for a judge only
 when the property is genuinely subjective and no deterministic proxy exists. A suite where
-most metrics are judges is usually a modelling mistake, and `evalforge validate` says so.
+most metrics are judges is usually a modelling mistake, and `proofstep validate` says so.
 
 ## Not built yet
 

@@ -1,6 +1,6 @@
 import { ExperimentDetailView } from "@/components/ExperimentDetail"
 
-export const metadata = { title: "Experiment · EvalForge" }
+export const metadata = { title: "Experiment · Proofstep" }
 
 export const dynamic = "force-dynamic"
 

@@ -1,19 +1,19 @@
-# Prometheus alert rules for EvalForge.
+# Prometheus alert rules for Proofstep.
 #
-#   rule_files: [/etc/prometheus/evalforge.rules.yml]
+#   rule_files: [/etc/prometheus/proofstep.rules.yml]
 #
 # and a scrape job — the metrics endpoint requires a bearer token, because adding an unauthenticated
 # surface to a service whose whole threat model is "who may read what" is not a trade worth making
 # for the convenience of one scraper:
 #
 #   scrape_configs:
-#     - job_name: evalforge
+#     - job_name: proofstep
 #       metrics_path: /metrics
 #       authorization:
 #         type: Bearer
-#         credentials_file: /etc/prometheus/evalforge.token   # a key with the `read` scope
+#         credentials_file: /etc/prometheus/proofstep.token   # a key with the `read` scope
 #       static_configs:
-#         - targets: ["evalforge-api:8000"]
+#         - targets: ["proofstep-api:8000"]
 #
 # Every alert here fires on a failure that is **silent** — one where the API keeps answering 200 and
 # the only symptom is that something gradually stops happening. Alerts for things that already page
@@ -21,16 +21,16 @@
 # here would mean two definitions drifting apart.
 
 groups:
-  - name: evalforge
+  - name: proofstep
     rules:
       # ---------------------------------------------------------------- the worker
 
-      - alert: EvalForgeWorkerStopped
+      - alert: ProofstepWorkerStopped
         # The single most important alert in this file. When the worker stops, online evaluation,
         # review-queue escalation, lease recovery, and retention all stop with it, and *nothing*
         # else changes: the API is healthy, ingestion works, the dashboard renders. The only
         # symptom is that new evaluations stop appearing, which looks exactly like a quiet week.
-        expr: max(evalforge_worker_heartbeat_age_seconds) > 300
+        expr: max(proofstep_worker_heartbeat_age_seconds) > 300
         for: 5m
         labels: {severity: critical}
         annotations:
@@ -40,11 +40,11 @@ groups:
             stop filling, and retention stops. Check the worker process and
             GET /v1/ops/queues.
 
-      - alert: EvalForgeNoWorkerRegistered
+      - alert: ProofstepNoWorkerRegistered
         # `absent()` rather than a threshold: a worker that has never beaten produces no sample at
         # all, and a rule that only compares ages would stay silent forever on a deployment whose
         # worker never started.
-        expr: absent(evalforge_worker_heartbeat_age_seconds) or evalforge_workers_known == 0
+        expr: absent(proofstep_worker_heartbeat_age_seconds) or proofstep_workers_known == 0
         for: 10m
         labels: {severity: critical}
         annotations:
@@ -55,21 +55,21 @@ groups:
 
       # ---------------------------------------------------------------- the queues
 
-      - alert: EvalForgeQueueUnreachable
+      - alert: ProofstepQueueUnreachable
         # Distinct from "the queue is empty". Depth 0 and "I cannot see the queue" look identical
         # in a number and mean opposite things, which is why the exporter reports reachability
         # separately rather than exporting 0 on failure.
-        expr: evalforge_job_queue_reachable == 0
+        expr: proofstep_job_queue_reachable == 0
         for: 5m
         labels: {severity: critical}
         annotations:
           summary: "The job queue cannot be read"
           description: "Redis is unreachable from the API. Jobs are probably not being processed."
 
-      - alert: EvalForgeQueueBacklog
+      - alert: ProofstepQueueBacklog
         # `depth - scheduled`: cron jobs sit in the same sorted set with a future score, so counting
         # them as backlog would alert on a healthy schedule every single minute.
-        expr: (evalforge_job_queue_depth - evalforge_job_queue_scheduled) > 100
+        expr: (proofstep_job_queue_depth - proofstep_job_queue_scheduled) > 100
         for: 15m
         labels: {severity: warning}
         annotations:
@@ -80,8 +80,8 @@ groups:
 
       # ------------------------------------------------------------- dead letters
 
-      - alert: EvalForgeDeadLetters
-        expr: evalforge_dead_letters_unresolved > 0
+      - alert: ProofstepDeadLetters
+        expr: proofstep_dead_letters_unresolved > 0
         for: 15m
         labels: {severity: warning}
         annotations:
@@ -90,10 +90,10 @@ groups:
             See GET /v1/ops/dead-letters. Each row names the job, the exception type, and a
             truncated message; the full traceback is in the worker's log.
 
-      - alert: EvalForgeDeadLettersUnattended
+      - alert: ProofstepDeadLettersUnattended
         # Age, not count. One failure this morning is an incident; one unresolved for three days
         # means nobody is reading the first alert, which is a different problem with a different fix.
-        expr: evalforge_dead_letters_oldest_age_seconds > 259200
+        expr: proofstep_dead_letters_oldest_age_seconds > 259200
         for: 1h
         labels: {severity: warning}
         annotations:
@@ -102,10 +102,10 @@ groups:
 
       # ------------------------------------------------------------ review queues
 
-      - alert: EvalForgeReviewQueueStale
+      - alert: ProofstepReviewQueueStale
         # A review queue is a control only while someone reads it. Depth alone cannot distinguish a
         # busy day from an abandoned queue; the age of the oldest pending item can.
-        expr: evalforge_review_queue_oldest_age_seconds > 604800
+        expr: proofstep_review_queue_oldest_age_seconds > 604800
         for: 1h
         labels: {severity: warning}
         annotations:
@@ -116,11 +116,11 @@ groups:
 
       # ------------------------------------------------------------------- budget
 
-      - alert: EvalForgeBudgetExhausted
+      - alert: ProofstepBudgetExhausted
         # Not an error — the ceiling did its job. It pages because the *consequence* is silent: paid
         # rules stop, the free ones carry on, and the dashboard keeps filling with traces that
         # simply are not being judged any more.
-        expr: evalforge_project_budget_exhausted == 1
+        expr: proofstep_project_budget_exhausted == 1
         for: 15m
         labels: {severity: warning}
         annotations:
@@ -130,8 +130,8 @@ groups:
             limit rises — see GET /v1/ops/budget, and the `budget` decision reason on skipped
             evaluations.
 
-      - alert: EvalForgeBudgetNearlySpent
-        expr: evalforge_project_spend_ratio > 0.8
+      - alert: ProofstepBudgetNearlySpent
+        expr: proofstep_project_spend_ratio > 0.8
         for: 30m
         labels: {severity: info}
         annotations:
@@ -140,11 +140,11 @@ groups:
 
       # ------------------------------------------------------------------ tenancy
 
-      - alert: EvalForgeTenantIsolationNotEnforced
+      - alert: ProofstepTenantIsolationNotEnforced
         # Deliberately included even though it cannot change without a deploy. This is the one
         # security property that is invisible in behaviour — every query returns the right rows
         # either way — so the only way it gets noticed is if something says so out loud.
-        expr: evalforge_rls_enforced == 0
+        expr: proofstep_rls_enforced == 0
         for: 10m
         labels: {severity: critical}
         annotations:
@@ -153,9 +153,9 @@ groups:
             Tenant isolation rests on the application layer alone. Run
             scripts/create_app_role.sql and connect as that role. See docs/HARDENING.md.
 
-      - alert: EvalForgeDown
-        expr: up{job="evalforge"} == 0
+      - alert: ProofstepDown
+        expr: up{job="proofstep"} == 0
         for: 2m
         labels: {severity: critical}
         annotations:
-          summary: "The EvalForge API is not answering scrapes"
+          summary: "The Proofstep API is not answering scrapes"

@@ -11,9 +11,9 @@ from datetime import timedelta
 
 from builders import BASE, TraceBuilder
 
-from evalforge_trajectory import load_policy, normalize
-from evalforge_trajectory.normalize import args_hash
-from evalforge_types import SpanEvent, SpanType, Status
+from proofstep_trajectory import load_policy, normalize
+from proofstep_trajectory.normalize import args_hash
+from proofstep_types import SpanEvent, SpanType, Status
 
 POLICY = load_policy(
     "name: p\nrules:\n  - id: r\n    kind: forbidden_action\n    actions: [nope]\n"
@@ -84,7 +84,7 @@ class TestActionNaming:
     def test_explicit_attribute_wins_over_tool_name(self, trace: TraceBuilder) -> None:
         trace.act("raw_name")
         trace.spans[-1] = trace.spans[-1].model_copy(
-            update={"attributes": {"evalforge.action": "canonical"}}
+            update={"attributes": {"proofstep.action": "canonical"}}
         )
         assert events_of(trace) == ["canonical"]
 
@@ -219,7 +219,7 @@ class TestState:
     def test_span_attributes_contribute_state(self, trace: TraceBuilder) -> None:
         trace.act("a")
         trace.spans[-1] = trace.spans[-1].model_copy(
-            update={"attributes": {"evalforge.state.approval": "granted"}}
+            update={"attributes": {"proofstep.state.approval": "granted"}}
         )
         assert normalize(trace.build(), POLICY.policy).state["approval"] == "granted"
 

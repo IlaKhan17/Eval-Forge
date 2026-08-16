@@ -18,10 +18,10 @@ from typing import Any
 import pytest
 from doubles import RecordingTransport
 
-from evalforge import redaction
-from evalforge.client import Client
-from evalforge.config import Config
-from evalforge_types import CaptureMode
+from proofstep import redaction
+from proofstep.client import Client
+from proofstep.config import Config
+from proofstep_types import CaptureMode
 
 # (label, value) — one per credential shape we claim to catch.
 CREDENTIALS = [
@@ -33,7 +33,7 @@ CREDENTIALS = [
     ("google", "AIza" + "NOTAREALKEY" + "0" * 24),
     ("slack", "xoxb-" + "1" * 12 + "-" + "2" * 13 + "-" + "NOTAREALTOKEN" + "z" * 11),
     ("stripe", "sk_" + "live_" + "NOTAREALKEY" + "0" * 13),
-    ("evalforge", "ef_prod_a1b2_abcdefghijklmnopqrstuvwxyz012345"),
+    ("proofstep", "ps_prod_a1b2_abcdefghijklmnopqrstuvwxyz012345"),
     (
         "jwt",
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
@@ -95,7 +95,7 @@ class TestCredentialCorpus:
     def test_credential_is_redacted_even_in_full_capture_mode(self, label: str, value: str) -> None:
         """`full` means full payloads, not full credentials.
 
-        There is no configuration in which EvalForge intentionally stores a secret.
+        There is no configuration in which Proofstep intentionally stores a secret.
         """
         exported = export({"note": value}, capture_mode=CaptureMode.FULL)
         assert value not in exported, f"{label} survived in full capture mode"

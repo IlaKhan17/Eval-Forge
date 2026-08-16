@@ -3,7 +3,7 @@
 One row per worker, updated in place, so "is the background work happening?" is answerable from the
 database rather than from whether anyone happened to be watching the logs.
 
-See `evalforge_api.db.models.ops.WorkerHeartbeat` for why this is a table and not a Redis key.
+See `proofstep_api.db.models.ops.WorkerHeartbeat` for why this is a table and not a Redis key.
 
 Revision ID: c7d3e91a5b42
 """
@@ -47,8 +47,8 @@ def upgrade() -> None:
         """
         DO $$
         BEGIN
-            IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'evalforge_app') THEN
-                GRANT SELECT, INSERT, UPDATE ON worker_heartbeats TO evalforge_app;
+            IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'proofstep_app') THEN
+                GRANT SELECT, INSERT, UPDATE ON worker_heartbeats TO proofstep_app;
             END IF;
         END
         $$;

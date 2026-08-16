@@ -21,7 +21,7 @@ import os
 import re
 from typing import Any
 
-import evalforge
+import proofstep
 
 #: Patterns that indicate an instruction hidden in an uploaded document. Not exhaustive — a
 #: real scanner needs more — but each of these is a technique seen in the wild, and the point
@@ -55,7 +55,7 @@ def _has_white_text(text: str) -> bool:
 
 
 async def _retrieve(*, user_id: str, doc_ids: list[str], owners: dict[str, str]) -> list[str]:
-    with evalforge.start_span(
+    with proofstep.start_span(
         "vector.search", span_type="retriever", tool_name="vector.search"
     ) as span:
         await asyncio.sleep(0)
@@ -67,7 +67,7 @@ async def _retrieve(*, user_id: str, doc_ids: list[str], owners: dict[str, str])
         return doc_ids
 
 
-async def answer(example: Any) -> evalforge.Captured:
+async def answer(example: Any) -> proofstep.Captured:
     """Answer one learner request over their own documents.
 
     The fixture supplies the **hazards** — another user's documents present in the corpus, an
@@ -88,11 +88,11 @@ async def answer(example: Any) -> evalforge.Captured:
     own = [str(doc["id"]) for doc in documents if owners[str(doc["id"])] == user_id]
     others = [str(doc["id"]) for doc in documents if owners[str(doc["id"])] != user_id]
 
-    with evalforge.capture("adaptquiz.rag") as captured:
-        evalforge.set_metadata(session_user_id=user_id, scenario=scenario)
+    with proofstep.capture("adaptquiz.rag") as captured:
+        proofstep.set_metadata(session_user_id=user_id, scenario=scenario)
         # The isolation rule compares the retrieving user against this. A rule cannot check what
         # the trace does not carry.
-        evalforge.set_state(session_user_id=user_id)
+        proofstep.set_state(session_user_id=user_id)
 
         # Only the learner's own documents are scanned and used. A broken agent reads the whole
         # corpus, which is the leak.
@@ -100,7 +100,7 @@ async def answer(example: Any) -> evalforge.Captured:
         scan = scan_document("\n".join(str(doc.get("text", "")) for doc in visible))
 
         if not broken:
-            with evalforge.start_span(
+            with proofstep.start_span(
                 "guardrail.injection_scan",
                 span_type="guardrail",
                 tool_name="guardrail.injection_scan",
@@ -124,7 +124,7 @@ async def answer(example: Any) -> evalforge.Captured:
         if broken and scan["injection_detected"]:
             # Obeying the document instead of the system prompt. A forbidden tool call, caught
             # whatever the produced text looks like.
-            with evalforge.start_span(
+            with proofstep.start_span(
                 "admin.export_all", span_type="tool", tool_name="admin.export_all"
             ) as span:
                 await asyncio.sleep(0)
@@ -136,12 +136,12 @@ async def answer(example: Any) -> evalforge.Captured:
             # the retrieval itself — which is why both mechanisms are in the suite.
             cited = others[0]
 
-        with evalforge.start_span("generate_question", span_type="llm") as span:
+        with proofstep.start_span("generate_question", span_type="llm") as span:
             await asyncio.sleep(0)
             span.set_output({"stem": "Which statement is correct?", "citation": cited})
 
     trace = captured[0]
-    return evalforge.Captured(
+    return proofstep.Captured(
         output={
             "scenario": scenario,
             "retrieved_document_ids": retrieved,

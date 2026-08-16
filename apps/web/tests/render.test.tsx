@@ -184,7 +184,7 @@ describe("TraceDetailView", () => {
       status: 403,
       contentType: "application/problem+json",
       body: {
-        type: "https://evalforge.dev/problems/forbidden",
+        type: "https://proofstep.dev/problems/forbidden",
         title: "Forbidden",
         status: 403,
         detail: "This credential cannot read traces; it needs the 'read' scope.",

@@ -68,7 +68,7 @@ REGRESSIONS: tuple[tuple[str, str, str], ...] = (
 
 #: The installed console script, resolved from the running interpreter's environment so the test
 #: exercises the same entry point a user does.
-CLI = str(Path(sys.executable).parent / "evalforge")
+CLI = str(Path(sys.executable).parent / "proofstep")
 
 
 def run_cli(*args: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:

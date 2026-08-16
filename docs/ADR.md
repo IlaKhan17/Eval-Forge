@@ -15,7 +15,7 @@ Format per record: Decision · Context · Options · Chosen · Reasoning · Cons
 **Chosen.** (b), with the structure below.
 
 ```
-evalforge/
+proofstep/
 ├── apps/{api,worker,web}/
 ├── packages/{shared-types,evaluation-core,trajectory-engine,telemetry,python-sdk,cli}/
 ├── infra/{docker,otel,migrations}/
@@ -30,7 +30,7 @@ evalforge/
 2. `packages/telemetry` merges into `packages/python-sdk`. Two packages with one consumer and no independent release story is speculative modularity; the internal module boundary (`sdk/_telemetry/`) captures the same separation at zero cost. Split it out only if a TypeScript SDK ever needs a shared spec.
 3. `shared-types` is Python (pydantic) and **generates** TS types into `apps/web/src/types/generated.ts` via the OpenAPI schema, committed and CI-verified. A hand-maintained cross-language type package drifts.
 4. Top-level `tests/` holds only cross-cutting suites (E2E, load, security); unit tests live beside their package.
-5. Added `evals/calibration/` — the calibration datasets for EvalForge's own shipped judges.
+5. Added `evals/calibration/` — the calibration datasets for Proofstep's own shipped judges.
 
 **Reasoning.** Turborepo's caching matters at ~10+ TS packages; we have one. Bazel is an infrastructure project. The polyrepo tax (coordinated releases across six repos) is real and immediate.
 
@@ -124,11 +124,11 @@ evalforge/
 
 **Decision.** Native REST ingestion in v0.1; an OTLP/HTTP receiver in v0.2 that translates into the same tables.
 
-**Reasoning.** The critical MVP loop needs one reliable, debuggable ingestion path. Native REST carries EvalForge-specific fields (capture mode, dropped counts, dataset linkage) that OTLP has no home for, and it is inspectable with `curl`. OTLP is genuinely valuable — it is the difference between "install our SDK" and "change one env var" — but it is an *adoption* feature, not a *capability* feature, and shipping it first would mean designing our data model around a spec we don't control.
+**Reasoning.** The critical MVP loop needs one reliable, debuggable ingestion path. Native REST carries Proofstep-specific fields (capture mode, dropped counts, dataset linkage) that OTLP has no home for, and it is inspectable with `curl`. OTLP is genuinely valuable — it is the difference between "install our SDK" and "change one env var" — but it is an *adoption* feature, not a *capability* feature, and shipping it first would mean designing our data model around a spec we don't control.
 
 **Consequences.** Early adopters install our SDK. Two ingestion paths to test from v0.2 (mitigated by the OTLP receiver being a pure translation into the existing service layer, plus round-trip contract tests).
 
-**Migration path.** Ship the receiver plus a Collector config; consider contributing an EvalForge exporter to the Collector's contrib repo.
+**Migration path.** Ship the receiver plus a Collector config; consider contributing an Proofstep exporter to the Collector's contrib repo.
 
 ---
 
@@ -136,7 +136,7 @@ evalforge/
 
 **Decision.** Adopt OpenInference attribute *names* (`llm.model_name`, `llm.token_count.*`, `input.value`, `retrieval.documents`, `tool.name`) on our own span model rather than adopting the spec as our schema.
 
-**Reasoning.** Interop for free: tools and exporters already emitting these attributes map cleanly. But our first-class columns (cost, tool args, capture mode, `evalforge.action`) exceed the spec, and hard-binding our schema to an external spec's evolution would make every upstream change a migration. Convergent naming, independent schema.
+**Reasoning.** Interop for free: tools and exporters already emitting these attributes map cleanly. But our first-class columns (cost, tool args, capture mode, `proofstep.action`) exceed the spec, and hard-binding our schema to an external spec's evolution would make every upstream change a migration. Convergent naming, independent schema.
 
 **Consequences.** A mapping table to maintain (small, table-driven, contract-tested). Unmapped attributes are preserved losslessly in `attributes` JSONB, so nothing is ever dropped.
 

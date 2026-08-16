@@ -12,12 +12,12 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
 import pytest
-from evalforge_api.api.schemas.ingest import IngestBatch, IngestResult
-from evalforge_api.db.models.identity import Environment, Organization
-from evalforge_api.db.models.traces import PayloadObject, Span, SpanEvent, Trace
-from evalforge_api.services.ingest import IngestService
-from evalforge_api.services.storage import InMemoryObjectStore, load_payload
 from factories import Tenant, make_tenant
+from proofstep_api.api.schemas.ingest import IngestBatch, IngestResult
+from proofstep_api.db.models.identity import Environment, Organization
+from proofstep_api.db.models.traces import PayloadObject, Span, SpanEvent, Trace
+from proofstep_api.services.ingest import IngestService
+from proofstep_api.services.storage import InMemoryObjectStore, load_payload
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker

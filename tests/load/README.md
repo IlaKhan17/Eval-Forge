@@ -2,7 +2,7 @@
 
 ```bash
 ./scripts/demo.sh                       # or any running API with a scratch project
-export EVALFORGE_API_KEY=ef_dev_...
+export PROOFSTEP_API_KEY=ps_dev_...
 uv run python tests/load/loadgen.py --endpoint http://127.0.0.1:8000 --scenario all \
     --batches 200 --concurrency 8 --out my-run.json
 ```

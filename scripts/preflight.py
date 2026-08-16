@@ -26,15 +26,15 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
-from evalforge_api.db.partitions import missing_partitions
-from evalforge_api.db.rls import PROTECTED_TABLES, role_bypasses_rls, verify_enforced
-from evalforge_api.settings import Settings, get_settings
+from proofstep_api.db.partitions import missing_partitions
+from proofstep_api.db.rls import PROTECTED_TABLES, role_bypasses_rls, verify_enforced
+from proofstep_api.settings import Settings, get_settings
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
 #: Bootstrap keys are created by a development script and printed to a terminal. One still working
 #: in production means a credential exists whose only record is somebody's scrollback.
-DEV_KEY_PREFIXES = ("ef_dev_", "ef_test_")
+DEV_KEY_PREFIXES = ("ps_dev_", "ps_test_")
 
 
 @dataclass
@@ -173,7 +173,7 @@ async def _check_database(connection: Any, settings: Settings, report: Report) -
         await connection.execute(
             text(
                 "SELECT count(*) FROM api_keys WHERE revoked_at IS NULL "
-                "AND (prefix LIKE 'ef_dev_%' OR prefix LIKE 'ef_test_%')"
+                "AND (prefix LIKE 'ps_dev_%' OR prefix LIKE 'ps_test_%')"
             )
         )
     ).scalar_one()

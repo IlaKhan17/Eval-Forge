@@ -30,12 +30,12 @@ out/
 *.key
 credentials.json
 
-# EvalForge local state
-.evalforge/
-~/.evalforge/
+# Proofstep local state
+.proofstep/
+~/.proofstep/
 # Reports a local run drops in the working tree. The name comes from the suite, so the pattern has
 # to cover all of them rather than the default filename only.
-evalforge-*.json
+proofstep-*.json
 
 # The e2e stack's server log, written next to the repo so a CI failure can print it.
 .e2e-api.log
@@ -43,7 +43,7 @@ evalforge-*.json
 # Database dumps. Never committed: they contain every tenant's data, and a backup in a git history
 # is a backup with no access control and no retention.
 backups/
-*.evalforge.local.yaml
+*.proofstep.local.yaml
 
 # Editors / OS
 .DS_Store

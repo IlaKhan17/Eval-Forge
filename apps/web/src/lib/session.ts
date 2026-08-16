@@ -27,11 +27,11 @@ import "server-only"
 
 import { cookies } from "next/headers"
 
-const ACCESS_COOKIE = "ef_access"
-const REFRESH_COOKIE = "ef_refresh"
+const ACCESS_COOKIE = "ps_access"
+const REFRESH_COOKIE = "ps_refresh"
 
 /** Marks a request as same-origin. See the note on CSRF above. */
-export const REQUEST_HEADER = "x-evalforge-request"
+export const REQUEST_HEADER = "x-proofstep-request"
 
 export interface SessionTokens {
   accessToken: string

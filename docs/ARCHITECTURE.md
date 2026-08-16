@@ -1,4 +1,4 @@
-# EvalForge — Architecture
+# Proofstep — Architecture
 
 ## 1. Guiding principles
 
@@ -15,12 +15,12 @@
 graph TB
     subgraph "User's environment"
         APP["AI application / agent<br/>(Davis, AdaptQuiz, any)"]
-        SDK["EvalForge Python SDK"]
-        CLI["EvalForge CLI"]
+        SDK["Proofstep Python SDK"]
+        CLI["Proofstep CLI"]
         GHA["GitHub Actions runner"]
     end
 
-    subgraph "EvalForge platform"
+    subgraph "Proofstep platform"
         API["FastAPI<br/>ingest + control plane"]
         WORKER["ARQ workers<br/>experiments, online eval, rollups"]
         WEB["Next.js dashboard"]

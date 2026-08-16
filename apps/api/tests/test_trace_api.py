@@ -13,14 +13,14 @@ from urllib.parse import quote
 
 import pytest
 import pytest_asyncio
-from evalforge_api.api.dependencies import get_session
-from evalforge_api.api.schemas.ingest import IngestBatch
-from evalforge_api.main import create_app
-from evalforge_api.services.ingest import IngestService
-from evalforge_api.services.storage import InMemoryObjectStore, set_store
-from evalforge_api.settings import Settings
 from factories import Tenant
 from httpx import ASGITransport, AsyncClient
+from proofstep_api.api.dependencies import get_session
+from proofstep_api.api.schemas.ingest import IngestBatch
+from proofstep_api.main import create_app
+from proofstep_api.services.ingest import IngestService
+from proofstep_api.services.storage import InMemoryObjectStore, set_store
+from proofstep_api.settings import Settings
 from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.integration

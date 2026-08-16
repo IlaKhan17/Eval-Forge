@@ -27,9 +27,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from evalforge_core.aggregate import aggregate_scores
-from evalforge_core.gates import evaluate_gates
-from evalforge_types import ExampleResult, GateRule, GateSet, Metric, Score, Severity, Verdict
+from proofstep_core.aggregate import aggregate_scores
+from proofstep_core.gates import evaluate_gates
+from proofstep_types import ExampleResult, GateRule, GateSet, Metric, Score, Severity, Verdict
 
 TOTAL = 1_200
 UNSUBSCRIBE_SHARE = 0.01

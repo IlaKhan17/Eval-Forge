@@ -69,7 +69,7 @@ export async function POST(
   }).catch(() => null)
 
   if (upstream === null) {
-    return problem(502, "Could not reach the EvalForge API.", "Upstream unreachable")
+    return problem(502, "Could not reach the Proofstep API.", "Upstream unreachable")
   }
 
   const payload = await upstream.json().catch(() => ({}))

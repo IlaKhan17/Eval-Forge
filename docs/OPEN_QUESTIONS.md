@@ -74,7 +74,7 @@ Format: Question · Why it matters · Options · **Recommended default** · What
 **Default: (a).** Every MVP decision assumes it — local-first, no vendor auth, Compose deployment.
 **Would change if:** you intend to monetize soon, in which case org/billing boundaries and hosted-runner design should land earlier.
 
-### Q2 — Is EvalForge a portfolio project or a product with external users?
+### Q2 — Is Proofstep a portfolio project or a product with external users?
 **Matters:** the difference between "impressive and complete" and "supportable". Availability targets, migration discipline, and backwards-compatibility guarantees all hinge on it.
 **Options:** (a) portfolio/reference; (b) internal tool for Davis + AdaptQuiz; (c) public OSS with users.
 **Default: (b) with (c) aspirations** — build to (c) quality on the critical loop, accept (b) scope elsewhere.
@@ -116,9 +116,9 @@ Covered in ADR-013. **Default: `latest_on_branch(main)`**, with promotion suppor
 
 ### Q11 — Do we version the suite YAML format separately from the product?
 **Matters:** suite files live in users' repos and must not break on upgrade.
-**Default: yes** — `apiVersion: evalforge.dev/v1`, with a documented deprecation policy and a migration command when v2 arrives. Cheap now, expensive to retrofit.
+**Default: yes** — `apiVersion: proofstep.dev/v1`, with a documented deprecation policy and a migration command when v2 arrives. Cheap now, expensive to retrofit.
 
-### Q12 — Should `evalforge eval` require a locked dataset version?
+### Q12 — Should `proofstep eval` require a locked dataset version?
 **Matters:** running against a draft produces an unreproducible experiment.
 **Default: require locked; `--allow-draft` marks the experiment `reproducible: false`** and excludes it from baseline eligibility. **Would change if** the friction blocks iteration — but the flag already provides the escape hatch.
 

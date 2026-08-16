@@ -6,8 +6,8 @@ from collections.abc import Sequence
 
 import pytest
 
-from evalforge_core.aggregate import aggregate_scores, scores_for
-from evalforge_types import ExampleResult, Metric, Score
+from proofstep_core.aggregate import aggregate_scores, scores_for
+from proofstep_types import ExampleResult, Metric, Score
 
 
 def result(example_id: str, *scores: Score, **metadata: object) -> ExampleResult:

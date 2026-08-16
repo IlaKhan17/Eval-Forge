@@ -1,4 +1,4 @@
-# EvalForge — Product Requirements
+# Proofstep — Product Requirements
 
 ## 1. Problem
 
@@ -100,7 +100,7 @@ Format: *As a … I want … so that …* → **AC** (all must be objectively ch
 ### Epic B — Tracing
 
 **B1.** As an engineer I want to instrument a function with one decorator so I get a trace without restructuring code.
-**AC:** `@evalforge.trace("name")` works on sync and async functions; nested calls produce correct parent/child spans; `asyncio.gather` children attach to the right parent (contextvar propagation test); exceptions record span status `error` and re-raise unchanged.
+**AC:** `@proofstep.trace("name")` works on sync and async functions; nested calls produce correct parent/child spans; `asyncio.gather` children attach to the right parent (contextvar propagation test); exceptions record span status `error` and re-raise unchanged.
 
 **B2.** As an engineer I want instrumentation that never breaks my app.
 **AC:** With the API unreachable, the instrumented app's added latency is <5 ms p99 and it raises nothing; the exporter drops to a bounded in-memory buffer, logs once per backoff window (not per span), and resumes on recovery. A chaos test kills the API mid-run and asserts application success.
@@ -119,7 +119,7 @@ Format: *As a … I want … so that …* → **AC** (all must be objectively ch
 ### Epic D — Evaluation & experiments
 
 **D1.** As an engineer I want to run a suite locally with no server.
-**AC:** `evalforge eval suite.yaml --local` runs with zero network calls to EvalForge, writes `evalforge-report.json`, prints a table, exits 0/1 correctly.
+**AC:** `proofstep eval suite.yaml --local` runs with zero network calls to Proofstep, writes `proofstep-report.json`, prints a table, exits 0/1 correctly.
 
 **D2.** As an engineer I want candidate-vs-baseline comparison with per-metric deltas.
 **AC:** Report shows per-metric baseline, candidate, absolute and relative delta, and each gate's verdict; per-example regressions (passed in baseline, failed in candidate) are listed with span links.

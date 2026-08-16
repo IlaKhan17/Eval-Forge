@@ -5,7 +5,7 @@ import type { ReactNode } from "react"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "EvalForge",
+  title: "Proofstep",
   description: "Evaluation CI and trajectory testing for production AI agents",
   // No indexing: a dashboard reachable from the internet should not end up in a search
   // index, and trace names alone can disclose more than anyone intended.
@@ -21,7 +21,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur">
               <div className="mx-auto flex max-w-[1600px] items-center gap-6 px-6 py-3">
                 <Link href="/traces" className="font-semibold tracking-tight text-slate-100">
-                  EvalForge
+                  Proofstep
                 </Link>
                 <nav className="flex gap-4 text-sm text-slate-400">
                   <Link href="/traces" className="hover:text-slate-100">

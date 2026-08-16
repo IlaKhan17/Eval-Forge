@@ -1,5 +1,5 @@
 /**
- * Proxy to the EvalForge API, carrying the caller's own session.
+ * Proxy to the Proofstep API, carrying the caller's own session.
  *
  * Originally this held one server-side API key and forwarded reads only — a sensible shape when the
  * dashboard was assumed to sit behind someone else's SSO, and the wrong shape for a product: every
@@ -38,7 +38,7 @@ async function handle(request: Request, path: string[]): Promise<NextResponse> {
   if (!decision.allowed) {
     return problem(
       403,
-      "https://evalforge.dev/problems/proxy-forbidden",
+      "https://proofstep.dev/problems/proxy-forbidden",
       "Not proxied",
       decision.reason ?? "Not allowed.",
     )
@@ -51,7 +51,7 @@ async function handle(request: Request, path: string[]): Promise<NextResponse> {
     if (request.headers.get(REQUEST_HEADER) !== "1") {
       return problem(
         403,
-        "https://evalforge.dev/problems/proxy-forbidden",
+        "https://proofstep.dev/problems/proxy-forbidden",
         "Not proxied",
         "A write through the dashboard proxy must be a same-origin request.",
       )
@@ -67,7 +67,7 @@ async function handle(request: Request, path: string[]): Promise<NextResponse> {
       // detail text is the actual fix, so it is passed through verbatim.
       return problem(
         503,
-        "https://evalforge.dev/problems/dashboard-not-configured",
+        "https://proofstep.dev/problems/dashboard-not-configured",
         "Dashboard is not configured",
         error.message,
       )
@@ -79,7 +79,7 @@ async function handle(request: Request, path: string[]): Promise<NextResponse> {
   if (!accessToken) {
     return problem(
       401,
-      "https://evalforge.dev/problems/not-signed-in",
+      "https://proofstep.dev/problems/not-signed-in",
       "Not signed in",
       "Sign in to view this.",
     )
@@ -145,18 +145,18 @@ async function handle(request: Request, path: string[]): Promise<NextResponse> {
     if (controller.signal.aborted) {
       return problem(
         504,
-        "https://evalforge.dev/problems/upstream-timeout",
+        "https://proofstep.dev/problems/upstream-timeout",
         "Upstream timed out",
         `The API did not respond within ${UPSTREAM_TIMEOUT_MS / 1000}s.`,
       )
     }
     return problem(
       502,
-      "https://evalforge.dev/problems/upstream-unreachable",
+      "https://proofstep.dev/problems/upstream-unreachable",
       "Upstream unreachable",
       // The upstream URL is not echoed: it may contain an internal hostname, and the
       // browser has no use for it.
-      error instanceof Error ? error.message : "Could not reach the EvalForge API.",
+      error instanceof Error ? error.message : "Could not reach the Proofstep API.",
     )
   } finally {
     clearTimeout(timer)

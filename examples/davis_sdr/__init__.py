@@ -1,4 +1,4 @@
-"""Davis — a reference AI SDR, used as an EvalForge example.
+"""Davis — a reference AI SDR, used as an Proofstep example.
 
 **This is an example, not a platform feature.** Nothing under `apps/` or `packages/` knows
 this directory exists, and `scripts/check-domain-leak.sh` fails the build if the word
@@ -16,6 +16,6 @@ than live model calls. Three reasons, in order of importance:
    model will not oblige with.
 
 Each module exposes one task entrypoint plus an environment flag that injects the specific
-regression its suite exists to catch — so `evalforge eval` can be shown both passing and
+regression its suite exists to catch — so `proofstep eval` can be shown both passing and
 failing without editing code.
 """

@@ -1,4 +1,4 @@
-"""AdaptQuiz — a reference adaptive-learning system, used as an EvalForge example.
+"""AdaptQuiz — a reference adaptive-learning system, used as an Proofstep example.
 
 **An example, not a platform feature**; see `examples/davis_sdr/__init__.py` for why that
 distinction is enforced by a CI check rather than by discipline.

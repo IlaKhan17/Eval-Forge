@@ -11,9 +11,9 @@ the three behaviours that follow from taking that seriously:
 
 from __future__ import annotations
 
-from evalforge_core.gates import evaluate_gates
-from evalforge_core.significance import SignificanceResult
-from evalforge_types import GateRule, GateSet, Metric, Verdict
+from proofstep_core.gates import evaluate_gates
+from proofstep_core.significance import SignificanceResult
+from proofstep_types import GateRule, GateSet, Metric, Verdict
 
 
 def metric(key: str, value: float, count: int = 200) -> Metric:

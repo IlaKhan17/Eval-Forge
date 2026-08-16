@@ -10,8 +10,8 @@ from typing import Any
 
 import pytest
 
-from evalforge_core.gates import evaluate_gates
-from evalforge_types import (
+from proofstep_core.gates import evaluate_gates
+from proofstep_types import (
     CalibrationStatus,
     ExitCode,
     GateRule,

@@ -1,4 +1,4 @@
-# EvalForge — Trajectory Policy Engine
+# Proofstep — Trajectory Policy Engine
 
 The primary differentiator. Output evaluation asks *was the answer good?*; trajectory evaluation asks *did the agent behave legitimately on the way there?* An agent can produce a flawless email and still have sent it before approval — a bug no output evaluator can ever detect.
 
@@ -13,7 +13,7 @@ The one concession is a **restricted predicate expression** for `when:` conditio
 ## 2. Policy schema
 
 ```yaml
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: TrajectoryPolicy
 name: outbound-email-policy
 description: Davis must never send email without a fresh human approval.
@@ -155,7 +155,7 @@ Ambiguity here silently produces wrong verdicts, which is worse than no verdict.
 
 **Which spans become events.** By default `span_type ∈ {tool, agent, guardrail}`. `llm`, `retriever`, `embedding` spans are excluded unless named in `include.span_types` — otherwise every policy would drown in model calls. `custom` spans are included only if explicitly listed.
 
-**Action naming.** Precedence: `attributes["evalforge.action"]` → `tool_name` → span `name`. Then aliases are applied (many→one). Alias resolution is validated at parse time to be non-cyclic and unambiguous; two aliases mapping to different canonical names for the same raw name is a `422`.
+**Action naming.** Precedence: `attributes["proofstep.action"]` → `tool_name` → span `name`. Then aliases are applied (many→one). Alias resolution is validated at parse time to be non-cyclic and unambiguous; two aliases mapping to different canonical names for the same raw name is a `422`.
 
 **Nesting.** The tree is flattened by start time, and `depth` is retained. A parent `agent` span and its child `tool` spans both become events. `required_order` with `mode: subsequence` (the default) ignores intervening events, so nesting does not break order rules. `mode: contiguous` requires adjacency at the same depth and is for tight state machines only.
 
@@ -167,7 +167,7 @@ Ambiguity here silently produces wrong verdicts, which is worse than no verdict.
 
 **Missing/orphan spans.** Orphans attach to a synthetic root. If `dropped_span_count > 0`, the trajectory is marked `incomplete` and every `required_*` rule returns `inconclusive` rather than `fail` — asserting absence over incomplete data is unsound. `forbidden_*` rules still evaluate (observing a forbidden action is valid evidence regardless of what's missing). This asymmetry is deliberate and is the single most important correctness property in the normalizer.
 
-**Metadata for conditions.** `metadata` merges, in increasing precedence: trace metadata → span attributes under `evalforge.state.*` → explicit `state_update` span events. `final_state` reads the merged state at the last event.
+**Metadata for conditions.** `metadata` merges, in increasing precedence: trace metadata → span attributes under `proofstep.state.*` → explicit `state_update` span events. `final_state` reads the merged state at the last event.
 
 **Args redaction.** Arguments are already redacted by the SDK. Policies that must match on a redacted field can use `args_hash` (computed pre-redaction, salted per project) — enabling duplicate detection on a recipient address without ever storing the address.
 
@@ -215,7 +215,7 @@ Message quality is a feature. Required format: *what happened, where, what was e
     expected   : approval_received must occur before gmail.send
     observed   : approval_received occurred at 12:04:38.901 (event #8), 7.68s later
     policy     : policies/email-approval.yaml:14
-    trace      : https://evalforge.local/t/4c8e…#span-7f3a2b1c
+    trace      : https://proofstep.local/t/4c8e…#span-7f3a2b1c
 
 ✗ search-budget  [warn]
   web_search called 12 times, limit is 8.

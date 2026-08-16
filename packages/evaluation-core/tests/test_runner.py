@@ -9,8 +9,8 @@ from typing import Any
 
 import pytest
 
-from evalforge_core import Dataset, EvalResult, FunctionEvaluator, RunConfig, evaluate, run_suite
-from evalforge_types import Example, GateRule, GateSet, Metric, ResultStatus, Score, Verdict
+from proofstep_core import Dataset, EvalResult, FunctionEvaluator, RunConfig, evaluate, run_suite
+from proofstep_types import Example, GateRule, GateSet, Metric, ResultStatus, Score, Verdict
 
 
 def data(n: int = 5) -> Dataset:

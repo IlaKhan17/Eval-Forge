@@ -13,8 +13,8 @@ import statistics as stdlib_statistics
 
 import pytest
 
-from evalforge_core import significance
-from evalforge_types import ExampleResult, Score
+from proofstep_core import significance
+from proofstep_types import ExampleResult, Score
 
 
 def result(example_id: str, metric: str, value: float | None, **kwargs: object) -> ExampleResult:

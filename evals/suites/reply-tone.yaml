@@ -1,4 +1,4 @@
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: reply-tone
 description: >
@@ -6,7 +6,7 @@ description: >
   situation calibration exists for: without evidence that the judge agrees with a human,
   the gate blocks merges on a number nobody has checked.
 
-  Run `evalforge calibrate evals/suites/reply-tone.yaml -e acceptable_to_followup
+  Run `proofstep calibrate evals/suites/reply-tone.yaml -e acceptable_to_followup
   --verdicts evals/calibration/reply-tone.verdicts.jsonl` to reproduce the committed
   record without spending anything.
 
@@ -60,4 +60,4 @@ calibration:
 
 report:
   formats: [terminal, json]
-  output: evalforge-tone-report.json
+  output: proofstep-tone-report.json

@@ -8,9 +8,9 @@ from datetime import UTC, datetime, timedelta
 
 import jwt
 import pytest
-from evalforge_api.errors import UnauthorizedError
-from evalforge_api.security import cursors, keys, passwords, tokens
-from evalforge_api.security.permissions import (
+from proofstep_api.errors import UnauthorizedError
+from proofstep_api.security import cursors, keys, passwords, tokens
+from proofstep_api.security.permissions import (
     Permission,
     Principal,
     permissions_for_role,
@@ -24,7 +24,7 @@ class TestApiKeys:
     def test_generated_key_has_the_documented_shape(self) -> None:
         generated = keys.generate("prod")
         parts = generated.token.split("_", 3)
-        assert parts[0] == "ef"
+        assert parts[0] == "ps"
         assert parts[1] == "prod"
         assert len(parts) == 4
         assert generated.token.startswith(generated.prefix)
@@ -41,13 +41,13 @@ class TestApiKeys:
             assert keys.parse_prefix(generated.token) == generated.prefix
 
     def test_a_secret_containing_underscores_still_verifies(self) -> None:
-        token = "ef_prod_abcd1234_secret_with_many_underscores_in_it"
-        assert keys.parse_prefix(token) == "ef_prod_abcd1234"
+        token = "ps_prod_abcd1234_secret_with_many_underscores_in_it"
+        assert keys.parse_prefix(token) == "ps_prod_abcd1234"
         assert keys.verify(token, keys.hash_key(token))
 
     def test_the_prefix_is_detectable_by_a_secret_scanner(self) -> None:
-        """The `ef_` prefix is what lets gitleaks and GitHub flag a leaked key."""
-        assert keys.generate().token.startswith("ef_")
+        """The `ps_` prefix is what lets gitleaks and GitHub flag a leaked key."""
+        assert keys.generate().token.startswith("ps_")
 
     def test_only_a_digest_is_retained(self) -> None:
         generated = keys.generate()
@@ -72,7 +72,7 @@ class TestApiKeys:
 
     @pytest.mark.parametrize(
         "token",
-        ["", "garbage", "ef_prod", "ef_prod_abc", "xx_prod_abc_def", "ef__abc_def", "ef_prod__def"],
+        ["", "garbage", "ps_prod", "ps_prod_abc", "xx_prod_abc_def", "ps__abc_def", "ps_prod__def"],
     )
     def test_malformed_tokens_are_rejected_before_any_query(self, token: str) -> None:
         assert keys.parse_prefix(token) is None
@@ -81,12 +81,12 @@ class TestApiKeys:
         """A staging key should be obviously not a production key.
 
         Short forms rather than the full word: truncating to eight characters produced
-        `ef_producti_…`, which looks like a typo on the one string a user copies, pastes, and shows
+        `ps_producti_…`, which looks like a typo on the one string a user copies, pastes, and shows
         to a colleague. The property that matters is that the two are unmistakable at a glance.
         """
-        assert keys.generate("staging").token.startswith("ef_stg_")
-        assert keys.generate("production").token.startswith("ef_prod_")
-        assert keys.generate("development").token.startswith("ef_dev_")
+        assert keys.generate("staging").token.startswith("ps_stg_")
+        assert keys.generate("production").token.startswith("ps_prod_")
+        assert keys.generate("development").token.startswith("ps_dev_")
 
     def test_environment_is_sanitised(self) -> None:
         assert keys.generate("../../etc").prefix.split("_")[1].isalnum()

@@ -10,7 +10,7 @@ import math
 
 import pytest
 
-from evalforge_core.stats import (
+from proofstep_core.stats import (
     bootstrap_ci,
     delta_ci,
     mean,

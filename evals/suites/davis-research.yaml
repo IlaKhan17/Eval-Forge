@@ -1,4 +1,4 @@
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: davis-research
 description: >
@@ -113,4 +113,4 @@ baseline:
 
 report:
   formats: [terminal, json]
-  output: evalforge-davis-research.json
+  output: proofstep-davis-research.json

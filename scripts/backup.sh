@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Take a verifiable backup of the EvalForge database.
+# Take a verifiable backup of the Proofstep database.
 #
-#   ./scripts/backup.sh                      # writes ./backups/evalforge-<ts>.dump
+#   ./scripts/backup.sh                      # writes ./backups/proofstep-<ts>.dump
 #   BACKUP_DIR=/mnt/backups ./scripts/backup.sh
 #
 # What this is and is not: a **logical** backup — one consistent snapshot, taken now. It is the right
@@ -35,7 +35,7 @@ die()  { printf '\033[31m✗\033[0m %s\n' "$*" >&2; exit 1; }
 # Timestamped and sortable. A backup that overwrites the previous one is a single point of failure
 # wearing a backup's clothes.
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-BASE="$BACKUP_DIR/evalforge-$STAMP"
+BASE="$BACKUP_DIR/proofstep-$STAMP"
 mkdir -p "$BACKUP_DIR"
 
 # Run psql/pg_dump inside the container by default, so the host does not need a matching client
@@ -102,4 +102,4 @@ JSON
 
 ok "$BASE.dump ($(( SIZE / 1024 )) KiB)"
 ok "$BASE.manifest.json — schema $VERSION, $POLICIES tenant policies"
-printf '\nRestore with:\n  ./scripts/restore.sh %s --into evalforge_restore_check\n' "$BASE.dump"
+printf '\nRestore with:\n  ./scripts/restore.sh %s --into proofstep_restore_check\n' "$BASE.dump"

@@ -1,4 +1,4 @@
-# EvalForge — Database Design
+# Proofstep — Database Design
 
 PostgreSQL 17. SQLAlchemy 2 (async, `psycopg3`), Alembic migrations.
 
@@ -102,7 +102,7 @@ Note the defaults: capture is **redacted** and retention is **short** by default
 Modelled as a table rather than a free-text span attribute so retention, sampling, and gates can differ per environment.
 
 #### `api_keys`
-`id` PK, `project_id` FK, `environment_id` FK NULL, `name`, `prefix` char(12) UNIQUE (public, e.g. `ef_prod_a1b2`), `key_hash` bytea (**SHA-256 of the full key**, not bcrypt — see note), `scopes` text[] (`ingest`,`read`,`write`), `created_by` FK users, `created_at`, `last_used_at`, `expires_at`, `revoked_at`.
+`id` PK, `project_id` FK, `environment_id` FK NULL, `name`, `prefix` char(12) UNIQUE (public, e.g. `ps_prod_a1b2`), `key_hash` bytea (**SHA-256 of the full key**, not bcrypt — see note), `scopes` text[] (`ingest`,`read`,`write`), `created_by` FK users, `created_at`, `last_used_at`, `expires_at`, `revoked_at`.
 Index `(prefix)` UNIQUE; index `(project_id) WHERE revoked_at IS NULL`.
 
 *Why SHA-256 and not argon2/bcrypt:* API keys are high-entropy (256-bit) random secrets, not user-chosen passwords, so brute force is infeasible and a slow KDF would add ~100 ms to **every ingest request**. Lookup is by `prefix`, then constant-time compare of the SHA-256 digest. Passwords, by contrast, use argon2id.
@@ -290,7 +290,7 @@ Three layers, because one is never enough:
 
 1. **Query layer.** All data access goes through repository classes that take an authenticated `TenantContext(org_id, project_id)` and inject the predicate. No raw session usage in route handlers — enforced by a lint rule and code review.
 2. **Test layer.** A parameterized cross-tenant suite hits every read/write endpoint with a foreign project's key and asserts 404. New endpoints are added to a registry; a test fails if an endpoint exists that the suite doesn't cover. This is the control that actually catches regressions.
-3. **Database layer (Phase 12).** Postgres RLS policies on tenant-scoped tables keyed off `current_setting('evalforge.project_id')`, set per transaction. Deferred but not designed-out — the ubiquitous `project_id` column is what makes it a one-migration change. RLS is the backstop for a bug in layer 1, not a substitute for it.
+3. **Database layer (Phase 12).** Postgres RLS policies on tenant-scoped tables keyed off `current_setting('proofstep.project_id')`, set per transaction. Deferred but not designed-out — the ubiquitous `project_id` column is what makes it a one-migration change. RLS is the backstop for a bug in layer 1, not a substitute for it.
 
 ## 4. Retention & deletion
 

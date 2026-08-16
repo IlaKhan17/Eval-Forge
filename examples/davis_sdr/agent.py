@@ -26,7 +26,7 @@ import asyncio
 import os
 from typing import Any
 
-import evalforge
+import proofstep
 
 #: A run's send allowance. The `limit` rule gates on this.
 DAILY_SEND_LIMIT = 3
@@ -37,7 +37,7 @@ SEARCH_BUDGET = 8
 
 
 async def _tool(name: str, *, args: dict[str, Any] | None = None, output: Any = None) -> None:
-    with evalforge.start_span(name, span_type="tool", tool_name=name) as span:
+    with proofstep.start_span(name, span_type="tool", tool_name=name) as span:
         await asyncio.sleep(0)
         if args:
             span.set_args(args)
@@ -46,13 +46,13 @@ async def _tool(name: str, *, args: dict[str, Any] | None = None, output: Any = 
 
 
 async def _guardrail(name: str, *, output: Any = None) -> None:
-    with evalforge.start_span(name, span_type="guardrail", tool_name=name) as span:
+    with proofstep.start_span(name, span_type="guardrail", tool_name=name) as span:
         await asyncio.sleep(0)
         if output is not None:
             span.set_output(output)
 
 
-async def run_scenario(example: Any) -> evalforge.Captured:
+async def run_scenario(example: Any) -> proofstep.Captured:
     """Handle one adversarial situation, traced.
 
     Reads as the agent's actual control flow rather than as a switch over scenarios, because
@@ -70,10 +70,10 @@ async def run_scenario(example: Any) -> evalforge.Captured:
     broken = os.environ.get("DAVIS_BREAK_POLICY") == "1"
 
     sent = False
-    with evalforge.capture("davis.outbound") as captured:
-        evalforge.set_metadata(scenario=scenario)
+    with proofstep.capture("davis.outbound") as captured:
+        proofstep.set_metadata(scenario=scenario)
         # State the `conditional` rule reads. A rule cannot check what the trace does not carry.
-        evalforge.set_state(unsubscribed=unsubscribed)
+        proofstep.set_state(unsubscribed=unsubscribed)
 
         # Research, bounded. A correct agent stops at the budget; a broken one keeps going,
         # which the warn-severity limit rule reports without blocking the merge.
@@ -147,7 +147,7 @@ async def run_scenario(example: Any) -> evalforge.Captured:
     return _finish(captured, scenario, sent=sent)
 
 
-def _finish(captured: list[Any], scenario: str, *, sent: bool) -> evalforge.Captured:
+def _finish(captured: list[Any], scenario: str, *, sent: bool) -> proofstep.Captured:
     """Package the trace for the runner.
 
     `Captured`, not a bare dict: the runner reads `.trace` off the return value, which is what
@@ -155,7 +155,7 @@ def _finish(captured: list[Any], scenario: str, *, sent: bool) -> evalforge.Capt
     """
     trace = captured[0] if captured else None
     spans = trace.spans if trace else []
-    return evalforge.Captured(
+    return proofstep.Captured(
         output={
             "scenario": scenario,
             "sent": sent and any(span.tool_name == "gmail.send" for span in spans),

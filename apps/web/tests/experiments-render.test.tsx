@@ -72,7 +72,7 @@ describe("experiment list", () => {
     render(<ExperimentList />, { wrapper })
 
     await waitFor(() => expect(screen.getByText("No experiments yet")).toBeTruthy())
-    expect(screen.getByText(/EVALFORGE_ENDPOINT/)).toBeTruthy()
+    expect(screen.getByText(/PROOFSTEP_ENDPOINT/)).toBeTruthy()
   })
 
   it("groups runs under their suite and shows the dataset they measured", async () => {

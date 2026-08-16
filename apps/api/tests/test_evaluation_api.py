@@ -13,17 +13,17 @@ from typing import Any
 
 import pytest
 import pytest_asyncio
-from evalforge_api.api.dependencies import get_session
-from evalforge_api.db.models.evaluation import DatasetExample
-from evalforge_api.main import create_app
-from evalforge_api.services.experiments import ExperimentService
-from evalforge_api.settings import Settings
 from factories import Tenant, make_tenant
 from httpx import ASGITransport, AsyncClient
+from proofstep_api.api.dependencies import get_session
+from proofstep_api.db.models.evaluation import DatasetExample
+from proofstep_api.main import create_app
+from proofstep_api.services.experiments import ExperimentService
+from proofstep_api.settings import Settings
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from evalforge_core.gates import evaluate_gates
-from evalforge_types import GateRule, GateSet, Severity, Verdict
+from proofstep_core.gates import evaluate_gates
+from proofstep_types import GateRule, GateSet, Severity, Verdict
 
 pytestmark = pytest.mark.integration
 

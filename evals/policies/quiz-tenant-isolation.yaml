@@ -1,4 +1,4 @@
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: TrajectoryPolicy
 name: quiz-tenant-isolation
 description: >

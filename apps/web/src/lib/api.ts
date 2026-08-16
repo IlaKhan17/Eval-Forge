@@ -2,11 +2,11 @@
  * Browser-side API client.
  *
  * Every request goes to this app's own origin at `/api/ef/...`, never directly to the
- * EvalForge API. The proxy on the other side attaches the credential from a
+ * Proofstep API. The proxy on the other side attaches the credential from a
  * server-only environment variable.
  *
  * This is the important decision in the file, so it is worth being explicit about
- * why. The alternative — a `NEXT_PUBLIC_EVALFORGE_API_KEY` read by this module — puts
+ * why. The alternative — a `NEXT_PUBLIC_PROOFSTEP_API_KEY` read by this module — puts
  * a project-scoped API key in the JavaScript bundle, which means in the page source,
  * in every user's browser cache, and in any CDN that ever served it. There is no way
  * to scope that key tightly enough for it to be safe: read access to traces is read
@@ -105,7 +105,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       detail:
         cause instanceof Error && cause.name === "AbortError"
           ? "The request was cancelled."
-          : "Could not reach the EvalForge API. Check that the server is running.",
+          : "Could not reach the Proofstep API. Check that the server is running.",
     })
   }
 
@@ -181,7 +181,7 @@ export function getRunMetrics(runId: string, signal?: AbortSignal): Promise<Metr
  * set it without a CORS preflight the API refuses. `SameSite=Lax` on the session cookie already
  * stops the common case; this covers the rest. See `lib/session.ts`.
  */
-const SAME_ORIGIN = { "x-evalforge-request": "1", "content-type": "application/json" }
+const SAME_ORIGIN = { "x-proofstep-request": "1", "content-type": "application/json" }
 
 function write<T>(path: string, method: string, body?: unknown): Promise<T> {
   return request<T>(path, {

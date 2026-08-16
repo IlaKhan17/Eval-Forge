@@ -12,8 +12,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from evalforge_cli.main import app
-from evalforge_cli.render.report import REPORT_VERSION, ReportError, validate_report
+from proofstep_cli.main import app
+from proofstep_cli.render.report import REPORT_VERSION, ReportError, validate_report
 
 RUNNER = CliRunner()
 ROOT = Path(__file__).resolve().parents[3]
@@ -64,7 +64,7 @@ class TestExitCodes:
         (tmp_path / "d.jsonl").write_text('{"id":"a","input":{}}\n', encoding="utf-8")
         suite = tmp_path / "s.yaml"
         suite.write_text(
-            "apiVersion: evalforge.dev/v1\nkind: EvalSuite\nname: s\n"
+            "apiVersion: proofstep.dev/v1\nkind: EvalSuite\nname: s\n"
             "dataset:\n  path: d.jsonl\ntask:\n  entrypoint: m:r\n"
             "evaluators:\n  - name: acc\n    type: exact_match\n"
             "gates:\n  typo:\n    minimum: 0.9\n",
@@ -78,7 +78,7 @@ class TestExitCodes:
         (tmp_path / "d.jsonl").write_text('{"id":"a","input":{}}\n', encoding="utf-8")
         suite = tmp_path / "s.yaml"
         suite.write_text(
-            "apiVersion: evalforge.dev/v1\nkind: EvalSuite\nname: s\n"
+            "apiVersion: proofstep.dev/v1\nkind: EvalSuite\nname: s\n"
             "dataset:\n  path: d.jsonl\ntask:\n  entrypoint: nosuchmodule:run\n"
             "evaluators:\n  - name: acc\n    type: exact_match\n",
             encoding="utf-8",
@@ -107,7 +107,7 @@ class TestDryRun:
 
     def test_it_still_catches_a_broken_suite(self, tmp_path: Path) -> None:
         bad = tmp_path / "bad.yaml"
-        bad.write_text("apiVersion: evalforge.dev/v1\nname: x\n", encoding="utf-8")
+        bad.write_text("apiVersion: proofstep.dev/v1\nname: x\n", encoding="utf-8")
         assert RUNNER.invoke(app, ["eval", str(bad), "--dry-run"]).exit_code == 3
 
 
@@ -234,18 +234,18 @@ class TestOtherCommands:
 
     def test_validate_rejects_a_bad_suite(self, tmp_path: Path) -> None:
         bad = tmp_path / "bad.yaml"
-        bad.write_text("apiVersion: evalforge.dev/v1\nname: x\n", encoding="utf-8")
+        bad.write_text("apiVersion: proofstep.dev/v1\nname: x\n", encoding="utf-8")
         assert RUNNER.invoke(app, ["validate", str(bad)]).exit_code == 3
 
     def test_doctor_reports_the_environment(self) -> None:
         result = RUNNER.invoke(app, ["doctor"])
         assert result.exit_code == 0
         assert "python" in result.output
-        assert "evalforge_core" in result.output
+        assert "proofstep_core" in result.output
 
     def test_doctor_never_prints_a_credential(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A diagnostic that prints a key leaks it into every bug report."""
-        monkeypatch.setenv("EVALFORGE_API_KEY", "ef_prod_abcd_supersecretvalue")
+        monkeypatch.setenv("PROOFSTEP_API_KEY", "ps_prod_abcd_supersecretvalue")
         result = RUNNER.invoke(app, ["doctor"])
         assert "supersecretvalue" not in result.output
         assert "api key          set" in result.output

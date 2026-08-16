@@ -3,8 +3,8 @@
 
     uv run python scripts/manage_keys.py list --project acme
     uv run python scripts/manage_keys.py create --project acme --name ci --scopes ingest read
-    uv run python scripts/manage_keys.py rotate --prefix ef_prod_ab12… --grace-hours 24
-    uv run python scripts/manage_keys.py revoke --prefix ef_prod_ab12…
+    uv run python scripts/manage_keys.py rotate --prefix ps_prod_ab12… --grace-hours 24
+    uv run python scripts/manage_keys.py revoke --prefix ps_prod_ab12…
 
 `bootstrap_dev.py` deliberately refuses to run against production, which left no way to issue a
 credential in the environment that most needs one managed properly. This is that way.
@@ -33,9 +33,9 @@ import sys
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from evalforge_api.db.models.identity import ApiKey, AuditLog, Environment, Project
-from evalforge_api.security.keys import generate
-from evalforge_api.settings import get_settings
+from proofstep_api.db.models.identity import ApiKey, AuditLog, Environment, Project
+from proofstep_api.security.keys import generate
+from proofstep_api.settings import get_settings
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 

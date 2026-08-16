@@ -19,9 +19,9 @@ be recovered — losing it means issuing another.
 
 Every request from the page goes to this app's own origin at `/api/ef/...`. A route
 handler (`src/app/api/ef/[...path]/route.ts`) attaches the credential from
-`EVALFORGE_API_KEY`, which is a server-only variable.
+`PROOFSTEP_API_KEY`, which is a server-only variable.
 
-The alternative — `NEXT_PUBLIC_EVALFORGE_API_KEY` read directly by the client — would
+The alternative — `NEXT_PUBLIC_PROOFSTEP_API_KEY` read directly by the client — would
 put a project-scoped key in the JavaScript bundle, and therefore in the page source, in
 every visitor's browser cache, and in any CDN that ever served it. There is no way to
 scope that key tightly enough to make it safe: read access to traces is read access to

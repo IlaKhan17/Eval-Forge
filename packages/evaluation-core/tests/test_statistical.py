@@ -6,7 +6,7 @@ import math
 
 import pytest
 
-from evalforge_core.evaluators.statistical import (
+from proofstep_core.evaluators.statistical import (
     CalibrationEvaluator,
     ClassificationEvaluator,
     RankingEvaluator,
@@ -16,7 +16,7 @@ from evalforge_core.evaluators.statistical import (
     ndcg_at_k,
     reciprocal_rank,
 )
-from evalforge_types import ExampleResult, Metric
+from proofstep_types import ExampleResult, Metric
 
 
 def result(example_id: str, output: object, expected: dict[str, object]) -> ExampleResult:

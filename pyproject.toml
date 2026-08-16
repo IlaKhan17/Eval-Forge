@@ -1,7 +1,7 @@
 [project]
-name = "evalforge-workspace"
+name = "proofstep-workspace"
 version = "0.0.0"
-description = "EvalForge monorepo root (not published)"
+description = "Proofstep monorepo root (not published)"
 requires-python = ">=3.12,<3.14"
 dependencies = []
 
@@ -14,19 +14,19 @@ package = false
 members = ["packages/*", "apps/api"]
 
 [tool.uv.sources]
-evalforge-types = { workspace = true }
-evalforge-core = { workspace = true }
-evalforge-trajectory = { workspace = true }
-evalforge = { workspace = true }
-evalforge-cli = { workspace = true }
+proofstep-types = { workspace = true }
+proofstep-core = { workspace = true }
+proofstep-trajectory = { workspace = true }
+proofstep = { workspace = true }
+proofstep-cli = { workspace = true }
 
 [dependency-groups]
 dev = [
-    "evalforge-types",
-    "evalforge-core",
-    "evalforge-trajectory",
-    "evalforge",
-    "evalforge-cli",
+    "proofstep-types",
+    "proofstep-core",
+    "proofstep-trajectory",
+    "proofstep",
+    "proofstep-cli",
     "pytest>=8.3",
     "pytest-asyncio>=0.24",
     "pytest-cov>=6.0",
@@ -99,7 +99,7 @@ module = ["boto3.*", "botocore.*"]
 ignore_missing_imports = true
 
 # The generated protobuf modules and google.protobuf ship no usable stubs. Confined to
-# evalforge_api.otlp.decode, which converts them to plain dataclasses immediately — so no
+# proofstep_api.otlp.decode, which converts them to plain dataclasses immediately — so no
 # untyped value escapes into the mapping or the ingest path.
 [[tool.mypy.overrides]]
 module = ["google.protobuf.*", "opentelemetry.proto.*"]

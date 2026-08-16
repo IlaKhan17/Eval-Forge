@@ -1,4 +1,4 @@
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: quiz-questions
 description: >
@@ -118,4 +118,4 @@ baseline:
 
 report:
   formats: [terminal, json]
-  output: evalforge-quiz-questions.json
+  output: proofstep-quiz-questions.json

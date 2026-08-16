@@ -190,7 +190,7 @@ after the text should be gone.
 
 ## The worker
 
-Four jobs, all in `evalforge_api.worker`, each callable directly with a session so an
+Four jobs, all in `proofstep_api.worker`, each callable directly with a session so an
 operator or a test can run one without Redis:
 
 | Job | Cadence | Why |

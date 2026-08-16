@@ -3,7 +3,7 @@
 
     uv run python tests/load/loadgen.py --endpoint http://127.0.0.1:8000 --scenario all
 
-Requires a running API and a project API key in `EVALFORGE_API_KEY`. It writes traces, so point it
+Requires a running API and a project API key in `PROOFSTEP_API_KEY`. It writes traces, so point it
 at a scratch project — `scripts/demo.sh` produces one.
 
 ## Why this and not locust
@@ -267,9 +267,9 @@ def _verdict(results: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 async def run(args: argparse.Namespace) -> int:
-    key = os.environ.get("EVALFORGE_API_KEY")
+    key = os.environ.get("PROOFSTEP_API_KEY")
     if not key:
-        print("EVALFORGE_API_KEY is not set.", file=sys.stderr)
+        print("PROOFSTEP_API_KEY is not set.", file=sys.stderr)
         return 2
 
     run_id = uuid.uuid4().hex[:8]

@@ -1,6 +1,6 @@
 import { ExperimentList } from "@/components/ExperimentList"
 
-export const metadata = { title: "Experiments · EvalForge" }
+export const metadata = { title: "Experiments · Proofstep" }
 
 // Published runs arrive continuously; there is nothing here worth prerendering.
 export const dynamic = "force-dynamic"

@@ -27,10 +27,10 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from evalforge_api.db.models.identity import ApiKey, Environment, Organization, Project
-from evalforge_api.security import keys
-from evalforge_api.services.storage import get_store
-from evalforge_api.settings import get_settings
+from proofstep_api.db.models.identity import ApiKey, Environment, Organization, Project
+from proofstep_api.security import keys
+from proofstep_api.services.storage import get_store
+from proofstep_api.settings import get_settings
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -144,14 +144,14 @@ def main() -> int:
         # browser bundle. See apps/web/src/lib/api.ts.
         target.write_text(
             "# Written by scripts/bootstrap_dev.py — local only, not committed.\n"
-            "EVALFORGE_API_URL=http://127.0.0.1:8000\n"
-            f"EVALFORGE_API_KEY={token}\n"
+            "PROOFSTEP_API_URL=http://127.0.0.1:8000\n"
+            f"PROOFSTEP_API_KEY={token}\n"
         )
         print(f"wrote {target}")
     else:
         print("Set it for the dashboard with:\n")
-        print("  EVALFORGE_API_URL=http://127.0.0.1:8000")
-        print("  EVALFORGE_API_KEY=<the token above>\n")
+        print("  PROOFSTEP_API_URL=http://127.0.0.1:8000")
+        print("  PROOFSTEP_API_KEY=<the token above>\n")
         print("in apps/web/.env.local, or re-run with --write-web-env.")
 
     return 0

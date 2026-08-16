@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-"""Seed a running EvalForge with traces, an online rule, and a populated review queue.
+"""Seed a running Proofstep with traces, an online rule, and a populated review queue.
 
 Called by `scripts/demo.sh`, but usable on its own against any project:
 
-    EVALFORGE_API_KEY=ef_dev_... EVALFORGE_ENDPOINT=http://127.0.0.1:8000 \
+    PROOFSTEP_API_KEY=ps_dev_... PROOFSTEP_ENDPOINT=http://127.0.0.1:8000 \
         uv run python scripts/seed_demo.py
 
 Everything goes through the public HTTP API with an ordinary project API key — no direct
@@ -282,11 +282,11 @@ def seed_rule(api: Api, *, policy_version_id: str, queue_id: str) -> str:
 
 
 def main() -> int:
-    key = os.environ.get("EVALFORGE_API_KEY")
+    key = os.environ.get("PROOFSTEP_API_KEY")
     if not key:
-        print("EVALFORGE_API_KEY is not set.", file=sys.stderr)
+        print("PROOFSTEP_API_KEY is not set.", file=sys.stderr)
         return 2
-    base = os.environ.get("EVALFORGE_ENDPOINT", "http://127.0.0.1:8000")
+    base = os.environ.get("PROOFSTEP_ENDPOINT", "http://127.0.0.1:8000")
     # Distinguishes this run's traces from a previous run's, so re-seeding adds rather than
     # collides. Second-resolution is enough: two runs inside one second would be the same demo.
     run_tag = datetime.now(UTC).strftime("%H%M%S")

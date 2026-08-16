@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from builders import TraceBuilder, policy_yaml
 
-from evalforge_trajectory import evaluate_policy, load_policy
-from evalforge_types import Status
+from proofstep_trajectory import evaluate_policy, load_policy
+from proofstep_types import Status
 
 
 def run(trace: TraceBuilder, *rules: str, extra: str = "") -> list[str]:

@@ -1,10 +1,10 @@
-# EvalForge — Testing Strategy
+# Proofstep — Testing Strategy
 
 A platform that tells other teams their software is broken has to be conspicuously well tested. Two ideas govern everything below.
 
 **Determinism.** No test may call a real model provider. Judges are exercised through a `FakeModelClient` implementing the `ModelClient` protocol with scripted responses. Real-provider tests live in a separate, manually-triggered, cost-tracked job (`nightly-live`) and never gate a PR. A flaky test suite in a tool that gates other people's CI destroys the product's credibility.
 
-**Eat our own dog food.** The judges and rubrics EvalForge ships are themselves calibrated with EvalForge, and results are committed to the repo.
+**Eat our own dog food.** The judges and rubrics Proofstep ships are themselves calibrated with Proofstep, and results are committed to the repo.
 
 ## 1. Pyramid and targets
 
@@ -58,7 +58,7 @@ Coverage: ≥90 % on `evaluation-core` and `trajectory-engine` (pure, no excuse 
 The seams where drift is silent and expensive.
 
 - **SDK↔API:** the SDK's request models validated against the server's OpenAPI schema; a recorded-fixture suite replays real SDK output against the API and vice versa; forward compatibility (server sends an unknown `span_type` → SDK degrades to `custom` rather than raising).
-- **CLI↔API:** every CLI command exercised against a live test API; `evalforge-report.json` validated against its published JSON Schema on every generation.
+- **CLI↔API:** every CLI command exercised against a live test API; `proofstep-report.json` validated against its published JSON Schema on every generation.
 - **Local↔server parity (the critical one):** golden `(policy, trace) → failures` and `(results, gates) → verdict` fixtures evaluated by both the library and the API; byte-equality asserted on the normalised report. This is what guarantees the CI exit code matches the dashboard.
 
   **Implemented** as `apps/api/tests/test_parity.py` over `tests/fixtures/parity/` — 8 gate cases and 6 trajectory cases, fewer than the ~70 originally planned but each chosen for a place the two paths *could* diverge rather than to hit a number. It found two real divergences on its first run: the API's wire model for a gate rule had no representation for `severity` or `max_error_rate`, so a `warn` rule arrived as blocking and a rule's error tolerance silently reverted to the default. There is also a structural test asserting every `GateRule` field is representable on the wire, so the next omission fails at the schema rather than waiting for a fixture to happen to exercise it.
@@ -78,7 +78,7 @@ Playwright (UI) + a Python driver (API/CLI) against a full `docker compose` stac
 > The other scenarios listed below — annotate → promote, offline spooling, dataset immutability
 > through the UI, the calibration warning in CI — are not written yet.
 
-**E2E-1, the MVP acceptance test** — the entire 14-step loop as one automated scenario: create org/project → issue key → run an instrumented sample app → assert the trace and its nested spans render in the explorer → create and lock a dataset → define deterministic + fake-judge evaluators → `evalforge eval` → assert exit 0 → introduce a seeded regression → re-run → assert exit 1, the correct blocking metric named, and the PR-comment markdown correct. **This test is the definition of done for the MVP**, and it is written in Phase 1 against a stub and progressively un-stubbed each phase — so "does the loop work end to end" is answered continuously rather than in Phase 12.
+**E2E-1, the MVP acceptance test** — the entire 14-step loop as one automated scenario: create org/project → issue key → run an instrumented sample app → assert the trace and its nested spans render in the explorer → create and lock a dataset → define deterministic + fake-judge evaluators → `proofstep eval` → assert exit 0 → introduce a seeded regression → re-run → assert exit 1, the correct blocking metric named, and the PR-comment markdown correct. **This test is the definition of done for the MVP**, and it is written in Phase 1 against a stub and progressively un-stubbed each phase — so "does the loop work end to end" is answered continuously rather than in Phase 12.
 
 Others: trajectory violation surfaces with the correct span link; annotate a trace → promote to dataset → appears in the next run; offline mode (API down mid-run → app unaffected, spans spooled, replayed on recovery); dataset immutability enforced through the UI; calibration run produces a stored report and an uncalibrated-judge warning in CI.
 

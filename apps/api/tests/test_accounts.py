@@ -17,11 +17,11 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 import pytest_asyncio
-from evalforge_api.api.dependencies import get_session
-from evalforge_api.db.models.identity import Invitation, RefreshToken
-from evalforge_api.main import create_app
-from evalforge_api.settings import Settings
 from httpx import ASGITransport, AsyncClient
+from proofstep_api.api.dependencies import get_session
+from proofstep_api.db.models.identity import Invitation, RefreshToken
+from proofstep_api.main import create_app
+from proofstep_api.settings import Settings
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -437,7 +437,7 @@ class TestApiKeys:
                 json={"name": "ci", "scopes": ["ingest", "read"]},
             )
         ).json()
-        assert created["token"].startswith("ef_")
+        assert created["token"].startswith("ps_")
 
         # It authenticates against the rest of the API immediately.
         traces = await client.get(

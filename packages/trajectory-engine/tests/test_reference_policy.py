@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 from builders import TraceBuilder
 
-from evalforge_trajectory import evaluate_policy, load_policy_file
-from evalforge_trajectory.evaluator import TrajectoryEvaluator
+from proofstep_trajectory import evaluate_policy, load_policy_file
+from proofstep_trajectory.evaluator import TrajectoryEvaluator
 
 POLICY_PATH = Path(__file__).resolve().parents[3] / "evals" / "policies" / "email-approval.yaml"
 

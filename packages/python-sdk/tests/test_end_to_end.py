@@ -12,14 +12,14 @@ from pathlib import Path
 
 import pytest
 
-import evalforge
-from evalforge.client import Client
-from evalforge.config import Config
-from evalforge_core import Dataset, EvalResult, evaluate
-from evalforge_core.evaluators import RegexMatch
-from evalforge_trajectory import evaluate_policy, load_policy_file
-from evalforge_trajectory.evaluator import TrajectoryEvaluator
-from evalforge_types import Example, GateRule, Metric, Verdict
+import proofstep
+from proofstep.client import Client
+from proofstep.config import Config
+from proofstep_core import Dataset, EvalResult, evaluate
+from proofstep_core.evaluators import RegexMatch
+from proofstep_trajectory import evaluate_policy, load_policy_file
+from proofstep_trajectory.evaluator import TrajectoryEvaluator
+from proofstep_types import Example, GateRule, Metric, Verdict
 
 POLICY_PATH = Path(__file__).resolve().parents[3] / "evals" / "policies" / "email-approval.yaml"
 
@@ -34,34 +34,34 @@ def metric_of(result: EvalResult, key: str) -> Metric:
 
 @pytest.fixture
 def app(client: Client) -> Client:
-    evalforge._client = client
+    proofstep._client = client
     return client
 
 
 def build_agent(*, approve_first: bool) -> Agent:
     """A miniature outbound-email agent, instrumented exactly as a user would."""
 
-    @evalforge.tool("research_prospect")
+    @proofstep.tool("research_prospect")
     def research(prospect_id: str) -> dict[str, str]:
         return {"company": "Acme", "signal": "Series B"}
 
-    @evalforge.tool("generate_email")
+    @proofstep.tool("generate_email")
     def generate(research: dict[str, str]) -> str:
         return f"Congratulations on the {research['signal']}."
 
-    @evalforge.tool("validate_claims")
+    @proofstep.tool("validate_claims")
     def validate(body: str) -> bool:
         return True
 
-    @evalforge.tool("request_approval")
+    @proofstep.tool("request_approval")
     def request_approval(body: str) -> str:
         return "pending"
 
-    @evalforge.tool("approval_received")
+    @proofstep.tool("approval_received")
     def approval_received() -> str:
         return "approved"
 
-    @evalforge.tool("gmail.send")
+    @proofstep.tool("gmail.send")
     def send(to: str, thread_id: str, body: str) -> str:
         return "sent"
 
@@ -78,8 +78,8 @@ def build_agent(*, approve_first: bool) -> Agent:
         else:
             send(to="ok@x.com", thread_id="t1", body=body)
             approval_received()
-        evalforge.set_state(approval_status="approved")
-        evalforge.set_metadata(
+        proofstep.set_state(approval_status="approved")
+        proofstep.set_metadata(
             suppression_list=[], reply_intent="interested", email_confidence=0.95
         )
         return body
@@ -90,7 +90,7 @@ def build_agent(*, approve_first: bool) -> Agent:
 class TestSdkOutputFeedsThePolicyEngine:
     def test_a_compliant_agent_passes(self, app: Client) -> None:
         run = build_agent(approve_first=True)
-        with evalforge.capture("outreach") as captured:
+        with proofstep.capture("outreach") as captured:
             run("p1")
 
         result = evaluate_policy(load_policy_file(POLICY_PATH), captured[0])
@@ -98,7 +98,7 @@ class TestSdkOutputFeedsThePolicyEngine:
 
     def test_send_before_approval_is_caught_from_a_real_sdk_trace(self, app: Client) -> None:
         run = build_agent(approve_first=False)
-        with evalforge.capture("outreach") as captured:
+        with proofstep.capture("outreach") as captured:
             body = run("p1")
 
         result = evaluate_policy(load_policy_file(POLICY_PATH), captured[0])
@@ -110,7 +110,7 @@ class TestSdkOutputFeedsThePolicyEngine:
 
     def test_the_failure_points_at_a_real_span_in_the_captured_trace(self, app: Client) -> None:
         run = build_agent(approve_first=False)
-        with evalforge.capture("outreach") as captured:
+        with proofstep.capture("outreach") as captured:
             run("p1")
 
         trace = captured[0]
@@ -126,7 +126,7 @@ class TestSdkOutputFeedsThePolicyEngine:
     def test_tool_decorator_captures_arguments_for_argument_conditions(self, app: Client) -> None:
         """`@tool` must record args, or half the policy kinds silently cannot fire."""
         run = build_agent(approve_first=True)
-        with evalforge.capture("outreach") as captured:
+        with proofstep.capture("outreach") as captured:
             run("p1")
 
         send = next(s for s in captured[0].spans if s.tool_name == "gmail.send")
@@ -142,10 +142,10 @@ class TestFullLoopThroughTheEvaluationEngine:
         """dataset -> instrumented task -> policy evaluator -> gate -> exit 1."""
         run = build_agent(approve_first=False)
 
-        async def task(example: Example) -> evalforge.Captured:
-            with evalforge.capture("outreach") as captured:
+        async def task(example: Example) -> proofstep.Captured:
+            with proofstep.capture("outreach") as captured:
                 output = run(example.input["prospect_id"])
-            return evalforge.Captured(output={"body": output}, trace=captured[0])
+            return proofstep.Captured(output={"body": output}, trace=captured[0])
 
         dataset = Dataset([Example(id=f"p{i}", input={"prospect_id": f"p{i}"}) for i in range(3)])
 
@@ -176,10 +176,10 @@ class TestFullLoopThroughTheEvaluationEngine:
     async def test_a_compliant_agent_passes_the_same_gates(self, app: Client) -> None:
         run = build_agent(approve_first=True)
 
-        async def task(example: Example) -> evalforge.Captured:
-            with evalforge.capture("outreach") as captured:
+        async def task(example: Example) -> proofstep.Captured:
+            with proofstep.capture("outreach") as captured:
                 output = run(example.input["prospect_id"])
-            return evalforge.Captured(output={"body": output}, trace=captured[0])
+            return proofstep.Captured(output={"body": output}, trace=captured[0])
 
         result = await evaluate(
             dataset=Dataset([Example(id="p1", input={"prospect_id": "p1"})]),
@@ -195,13 +195,13 @@ class TestFullLoopThroughTheEvaluationEngine:
 class TestLocalMode:
     def test_capture_works_with_no_api_key_and_no_server(self) -> None:
         """Local-first: the loop must run before anyone has an account."""
-        evalforge.init(project="local", api_key=None, export=False)
+        proofstep.init(project="local", api_key=None, export=False)
 
-        @evalforge.tool("do_thing")
+        @proofstep.tool("do_thing")
         def do_thing(x: int) -> int:
             return x * 2
 
-        with evalforge.capture("workflow") as captured:
+        with proofstep.capture("workflow") as captured:
             assert do_thing(21) == 42
 
         assert len(captured) == 1

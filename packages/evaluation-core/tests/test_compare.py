@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from evalforge_core.compare import compare_metrics
-from evalforge_types import ExampleResult, Metric, Score
+from proofstep_core.compare import compare_metrics
+from proofstep_types import ExampleResult, Metric, Score
 
 
 def m(

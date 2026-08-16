@@ -16,13 +16,13 @@ from typing import Any
 
 import pytest
 import pytest_asyncio
-from evalforge_api.api.dependencies import get_session
-from evalforge_api.db.models.ops import MAX_MESSAGE_CHARS, DeadLetterJob
-from evalforge_api.main import create_app
-from evalforge_api.settings import Settings
-from evalforge_api.worker import deadletter
 from factories import Tenant
 from httpx import ASGITransport, AsyncClient
+from proofstep_api.api.dependencies import get_session
+from proofstep_api.db.models.ops import MAX_MESSAGE_CHARS, DeadLetterJob
+from proofstep_api.main import create_app
+from proofstep_api.settings import Settings
+from proofstep_api.worker import deadletter
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -281,7 +281,7 @@ class TestWorkerIntegration:
         job_try: int | None,
         swallow: bool = True,
     ) -> None:
-        from evalforge_api.worker import main as worker_main
+        from proofstep_api.worker import main as worker_main
 
         async def boom(_session: AsyncSession, **_: Any) -> Any:
             msg = "the judge provider timed out"

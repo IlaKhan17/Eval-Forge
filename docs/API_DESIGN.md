@@ -1,4 +1,4 @@
-# EvalForge — API Design
+# Proofstep — API Design
 
 FastAPI, Pydantic v2, JSON over HTTPS. Base path `/v1`. OpenAPI 3.1 is generated and published; the Python SDK models and the frontend TS types are both generated from it, so drift is a build failure rather than a bug report.
 
@@ -38,7 +38,7 @@ RFC 9457 problem details, always:
 
 ```json
 {
-  "type": "https://errors.evalforge.dev/dataset_version_locked",
+  "type": "https://errors.proofstep.dev/dataset_version_locked",
   "title": "Dataset version is locked",
   "status": 409,
   "detail": "Version v3 of dataset email-quality was locked at 2026-07-11T09:02:11Z and cannot be modified.",
@@ -161,7 +161,7 @@ Semantics that matter:
 - Spans arriving for an unknown trace create a stub trace row.
 - Spans arriving after retention deletion are accepted and dropped silently (counted in metrics) rather than erroring.
 
-**Should ingestion use separate endpoints or an OTLP receiver?** Both, in that order. Recommendation: ship the native REST endpoint first because (a) it carries EvalForge-specific fields (dataset linkage, capture mode, dropped counts) that OTLP has no place for, (b) it is trivially debuggable with `curl`, (c) OTLP protobuf adds a compile-time dependency and a second serialization path to test. Then add an OTLP/HTTP receiver in v0.2 as a **translation layer that writes the same tables**, so any OpenTelemetry-instrumented app can point at us with a one-line env var. The OTLP path maps OpenInference attributes onto our span columns; unmapped attributes land in `attributes` JSONB losslessly.
+**Should ingestion use separate endpoints or an OTLP receiver?** Both, in that order. Recommendation: ship the native REST endpoint first because (a) it carries Proofstep-specific fields (dataset linkage, capture mode, dropped counts) that OTLP has no place for, (b) it is trivially debuggable with `curl`, (c) OTLP protobuf adds a compile-time dependency and a second serialization path to test. Then add an OTLP/HTTP receiver in v0.2 as a **translation layer that writes the same tables**, so any OpenTelemetry-instrumented app can point at us with a one-line env var. The OTLP path maps OpenInference attributes onto our span columns; unmapped attributes land in `attributes` JSONB losslessly.
 
 ### 2.4 Traces (read)
 
@@ -322,4 +322,4 @@ GET /v1/queues  → queue depths, DLQ size, oldest job age  [admin]
 
 - URL-versioned (`/v1`). Additive changes only within a major version: new optional fields, new endpoints, new enum values (clients must tolerate unknown enum values — the SDK deserializes unknown `span_type` to `custom` rather than raising).
 - Deprecation: `Deprecation` and `Sunset` headers, minimum two minor releases of overlap, warning in the SDK log once per process.
-- The SDK sends `X-EvalForge-SDK-Version`; the server rejects SDK majors it cannot parse with a `426` and an actionable message.
+- The SDK sends `X-Proofstep-SDK-Version`; the server rejects SDK majors it cannot parse with a `426` and an actionable message.

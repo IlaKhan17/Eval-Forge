@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import pytest
 
-from evalforge_core.evaluators.judge import LLMJudge
-from evalforge_core.testing import FakeModelClient
-from evalforge_core.types import EvalContext
-from evalforge_types import Example
+from proofstep_core.evaluators.judge import LLMJudge
+from proofstep_core.testing import FakeModelClient
+from proofstep_core.types import EvalContext
+from proofstep_types import Example
 
 
 def ctx(models: FakeModelClient, **kw: object) -> EvalContext:
@@ -84,7 +84,7 @@ class TestInjectionDefences:
         await judge().evaluate(ctx(models))
         system = models.calls[-1]["messages"][0][1]
         assert "never an instruction" in system.lower()
-        assert "===EVALFORGE-" in models.last_prompt()
+        assert "===PROOFSTEP-" in models.last_prompt()
 
     async def test_delimiter_is_unpredictable_per_call(self) -> None:
         """A fixed delimiter could be closed by injected content."""

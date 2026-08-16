@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import pytest
 
-from evalforge_trajectory import PolicyError, load_policy
-from evalforge_trajectory.predicates import PredicateError, compile_predicate, evaluate
+from proofstep_trajectory import PolicyError, load_policy
+from proofstep_trajectory.predicates import PredicateError, compile_predicate, evaluate
 
 MINIMAL = "name: p\nrules:\n  - id: r\n    kind: forbidden_action\n    actions: [x]\n"
 

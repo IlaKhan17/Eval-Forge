@@ -1,4 +1,4 @@
-# EvalForge — Phased Implementation Plan
+# Proofstep — Phased Implementation Plan
 
 Complexity scale: **S** (one focused PR) · **M** (2–4 PRs) · **L** (5–10 PRs) · **XL** (split it further before starting). No calendar estimates.
 
@@ -27,7 +27,7 @@ DB: none. API: none. Frontend: none.
 ## Phase 1 — Local evaluation core · **L**
 
 **Objective.** A pure, dependency-light library that runs a dataset through a task with evaluators and produces gated results. **This is the load-bearing milestone.**
-**User-visible outcome.** A developer runs `python -m evalforge.examples.basic` and gets a scored report with an exit code — no server, no account.
+**User-visible outcome.** A developer runs `python -m proofstep.examples.basic` and gets a scored report with an exit code — no server, no account.
 
 **Affected.** `packages/shared-types/`, `packages/evaluation-core/` (`types.py`, `dataset.py`, `runner.py`, `evaluators/{deterministic,statistical,judge,operational}.py`, `aggregate.py`, `gates.py`, `compare.py`, `report.py`), `examples/basic-llm/`.
 
@@ -41,7 +41,7 @@ DB: none. API: none. Frontend: none.
 ## Phase 2 — Trajectory policy engine · **L**  *(moved earlier)*
 
 **Objective.** Policy YAML → parsed policy; trace → normalized events; rules → attributed failures.
-**User-visible outcome.** `evalforge policies test policy.yaml trace.json` prints span-attributed violations.
+**User-visible outcome.** `proofstep policies test policy.yaml trace.json` prints span-attributed violations.
 
 **Affected.** `packages/trajectory-engine/` (`schema.py`, `parser.py`, `normalize.py`, `predicates.py`, `matchers/`, `result.py`), `evals/policies/`, `evals/fixtures/trajectories/`, plus a `trajectory` evaluator adapter in `evaluation-core`.
 
@@ -61,7 +61,7 @@ DB: none. API: none. Frontend: none.
 
 DB: none. API: consumes `/v1/ingest` (stubbed until Phase 4). Frontend: none.
 **Tests.** Contextvar propagation through `gather`/`TaskGroup`/threads; sync+async decorators; exception handling preserves the original traceback; the full redaction corpus in four capture modes; buffer overflow drops oldest and counts; exporter backoff and spool/replay; **overhead benchmark asserting < 5 ms p99 added latency with the API unreachable**; a chaos test killing the endpoint mid-run.
-**Acceptance.** Nested spans build a correct tree; `@evalforge.tool` produces policy-ready events (verified by feeding SDK output straight into the Phase 2 engine); the SDK never raises; secrets never appear in exported bytes.
+**Acceptance.** Nested spans build a correct tree; `@proofstep.tool` produces policy-ready events (verified by feeding SDK output straight into the Phase 2 engine); the SDK never raises; secrets never appear in exported bytes.
 **Depends on.** Phase 1 (span model in `shared-types`), Phase 2 (event shape). **Risks.** Async context edge cases — test matrix over every spawning primitive.
 
 ---
@@ -88,11 +88,11 @@ Datasets/versions/examples with lock + content hash + trigger; evaluator registr
 ## Phase 5 — CLI & quality gates · **M**
 
 **Objective.** The command that makes this a CI tool.
-**User-visible outcome.** `evalforge eval suite.yaml --baseline main` → table, JSON, exit code.
+**User-visible outcome.** `proofstep eval suite.yaml --baseline main` → table, JSON, exit code.
 
 **Affected.** `packages/cli/` (`main.py`, `commands/`, `config.py`, `suite/{schema,loader,validate}.py`, `render/{terminal,json}.py`, `baseline.py`), `evals/suites/`.
 **Tests.** Suite schema validation incl. every semantic rule; env interpolation; `extends`; `--set`; baseline resolution strategies; report JSON-Schema contract; exit-code matrix; `--dry-run` makes zero model calls; `--resume`/`--only-failed`; snapshot tests of terminal output with colour off.
-**Acceptance.** Full local run against a fixture suite; `--local` makes zero EvalForge network calls; results upload and appear in the API; exit 1 on a blocking regression, 0 on warn; report validates against its schema.
+**Acceptance.** Full local run against a fixture suite; `--local` makes zero Proofstep network calls; results upload and appear in the API; exit 1 on a blocking regression, 0 on warn; report validates against its schema.
 **Depends on.** Phases 1, 2, 3, 4c. **Risks.** Suite-format churn — freeze the schema behind `apiVersion` and version it from the first release.
 
 ---
@@ -130,7 +130,7 @@ Datasets/versions/examples with lock + content hash + trigger; evaluator registr
 ## Phase 9 — GitHub Actions integration · **M**
 
 **Objective.** The loop closes in CI.
-**Affected.** `.github/actions/evalforge-action/`, report→markdown renderer, `ci_runs`/`ci_reports` wiring, docs for the fork-PR secret pattern.
+**Affected.** `.github/actions/proofstep-action/`, report→markdown renderer, `ci_runs`/`ci_reports` wiring, docs for the fork-PR secret pattern.
 **Tests.** Markdown snapshot; comment upsert (one comment, edited, never appended); comment posts on run failure; artifact upload; exit-code propagation; comment-length truncation at the boundary.
 **Acceptance.** A demo PR with a seeded regression shows a red check and a comment naming the blocking metric with a link to the experiment; re-running updates the same comment.
 **Depends on.** Phase 5, 4c.
@@ -140,7 +140,7 @@ Datasets/versions/examples with lock + content hash + trigger; evaluator registr
 ## Phase 10 — OTLP receiver & LangGraph adapter · **M**
 
 `POST /v1/otlp/v1/traces`, OpenInference mapping table, Collector config in `infra/otel/`, `examples/langgraph-agent/`.
-**Acceptance.** An app instrumented with plain OpenTelemetry + OpenInference appears in the dashboard with correct span types and token counts, with no EvalForge SDK installed. Round-trip contract test green.
+**Acceptance.** An app instrumented with plain OpenTelemetry + OpenInference appears in the dashboard with correct span types and token counts, with no Proofstep SDK installed. Round-trip contract test green.
 **Depends on.** 4b.
 
 ---
@@ -155,7 +155,7 @@ Datasets/versions/examples with lock + content hash + trigger; evaluator registr
 
 ## Phase 12 — Hardening, docs, launch · **L**
 
-RLS policies; the full security suite; load tests against the stated targets; queue observability + DLQ handling; graceful degradation paths; retention automation; `evalforge doctor`; docs site (quickstart, concepts, SDK/CLI reference, self-hosting, security, evaluation-methodology guide); one-command demo with seeded data.
+RLS policies; the full security suite; load tests against the stated targets; queue observability + DLQ handling; graceful degradation paths; retention automation; `proofstep doctor`; docs site (quickstart, concepts, SDK/CLI reference, self-hosting, security, evaluation-methodology guide); one-command demo with seeded data.
 **Acceptance.** All `TESTING_STRATEGY.md` §8 targets met and recorded; the security suite is green; a new user completes the quickstart in under 15 minutes without reading source; `docker compose up` yields a working demo in under two minutes.
 
 ---

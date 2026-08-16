@@ -21,7 +21,7 @@ they drift is not a wrong answer — it is one side quietly gaining a special ca
 }
 ```
 
-`candidate` and `baseline` are lists of `ExampleResult` (`evalforge_types.results`), so a case can
+`candidate` and `baseline` are lists of `ExampleResult` (`proofstep_types.results`), so a case can
 exercise errored scores, slices, and non-scalar payloads — not just final numbers. That matters:
 aggregation is where the interesting divergences live, because "exclude errored scores from the mean
 but count them" is a rule that exists in two places the moment anyone reimplements it in SQL.

@@ -11,10 +11,10 @@ from __future__ import annotations
 import uuid
 
 import pytest
-from evalforge_api.db.models.identity import ApiKey, Environment, Project
-from evalforge_api.repositories.base import TenantContext, TenantRepository
-from evalforge_api.security import keys as key_utils
 from factories import Tenant, make_tenant
+from proofstep_api.db.models.identity import ApiKey, Environment, Project
+from proofstep_api.repositories.base import TenantContext, TenantRepository
+from proofstep_api.security import keys as key_utils
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -186,7 +186,7 @@ class TestSchemaConstraints:
             await session.flush()
 
     async def test_an_invalid_role_is_rejected(self, session: AsyncSession) -> None:
-        from evalforge_api.db.models.identity import Membership
+        from proofstep_api.db.models.identity import Membership
 
         tenant = await make_tenant(session, slug="gamma")
         session.add(Membership(org_id=tenant.org.id, user_id=tenant.user.id, role="superuser"))

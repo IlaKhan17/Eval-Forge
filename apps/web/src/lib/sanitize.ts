@@ -173,7 +173,7 @@ export interface SecretScan {
  * Mask anything credential-shaped that survived export.
  *
  * A second line of defence, not the primary one — the SDK redacts before anything
- * leaves the instrumented process (see `evalforge.redaction`). This exists because
+ * leaves the instrumented process (see `proofstep.redaction`). This exists because
  * the dashboard also shows payloads ingested through the HTTP API by clients that
  * never ran that code, and because a redaction rule added today does not retroactively
  * clean what was stored yesterday.

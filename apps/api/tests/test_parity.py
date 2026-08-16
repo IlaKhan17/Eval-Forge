@@ -31,17 +31,17 @@ from typing import Any
 
 import pytest
 import pytest_asyncio
-from evalforge_api.api.dependencies import get_session
-from evalforge_api.main import create_app
-from evalforge_api.settings import Settings
 from factories import Tenant
 from httpx import ASGITransport, AsyncClient
+from proofstep_api.api.dependencies import get_session
+from proofstep_api.main import create_app
+from proofstep_api.settings import Settings
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from evalforge_core.aggregate import aggregate_scores
-from evalforge_core.gates import evaluate_gates
-from evalforge_trajectory import evaluate_policy, load_policy
-from evalforge_types import ExampleResult, GateRule, GateSet, Span, Trace
+from proofstep_core.aggregate import aggregate_scores
+from proofstep_core.gates import evaluate_gates
+from proofstep_trajectory import evaluate_policy, load_policy
+from proofstep_types import ExampleResult, GateRule, GateSet, Span, Trace
 
 pytestmark = pytest.mark.integration
 
@@ -291,7 +291,7 @@ def test_the_wire_model_can_express_every_gate_rule_field() -> None:
     which is how `severity` and `max_error_rate` became silently unrepresentable, turning every
     `warn` rule into a blocking one on the server.
     """
-    from evalforge_api.api.routes.evaluation import GateRuleIn
+    from proofstep_api.api.routes.evaluation import GateRuleIn
 
     shared = set(GateRule.model_fields)
     wire = set(GateRuleIn.model_fields)

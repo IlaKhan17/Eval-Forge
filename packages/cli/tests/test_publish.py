@@ -21,11 +21,11 @@ from typing import Any
 import httpx
 import pytest
 
-from evalforge_cli import publish as publish_module
-from evalforge_cli.runner import execute
-from evalforge_cli.suite.loader import load_suite
-from evalforge_core.dataset import Dataset
-from evalforge_types import Example
+from proofstep_cli import publish as publish_module
+from proofstep_cli.runner import execute
+from proofstep_cli.suite.loader import load_suite
+from proofstep_core.dataset import Dataset
+from proofstep_types import Example
 
 ROOT = Path(__file__).resolve().parents[3]
 SUITE = ROOT / "evals" / "suites" / "reply-intent.yaml"
@@ -121,11 +121,11 @@ class Server:
 
 
 def publisher_for(server: Server) -> publish_module.Publisher:
-    publisher = publish_module.Publisher("http://server", "ef_test_key")
+    publisher = publish_module.Publisher("http://server", "ps_test_key")
     publisher._client = httpx.Client(
         base_url="http://server",
         transport=server.transport(),
-        headers={"authorization": "Bearer ef_test_key"},
+        headers={"authorization": "Bearer ps_test_key"},
     )
     return publisher
 
@@ -187,7 +187,7 @@ class TestPublishNeverBreaksTheRun:
             dataset(),
             # Port 1 is reserved and refuses immediately, so the test does not wait on a timeout.
             endpoint="http://127.0.0.1:1",
-            api_key="ef_test_key",
+            api_key="ps_test_key",
             git=(None, None, False),
             timeout=1.0,
         )
@@ -242,7 +242,7 @@ class TestBaseline:
         # Absolute floors still gate correctly without a baseline; only regression rules are
         # skipped. Failing the run instead would make every gate depend on the server being up.
         baseline = publish_module.fetch_baseline(
-            loaded, endpoint="http://127.0.0.1:1", api_key="ef_test_key", timeout=1.0
+            loaded, endpoint="http://127.0.0.1:1", api_key="ps_test_key", timeout=1.0
         )
         assert baseline.run_id is None
         assert baseline.error
@@ -256,8 +256,8 @@ class TestBatching:
         The API caps a results batch at 500 in its wire model. Discovering that at publish time,
         after a long run, is the worst moment to discover it.
         """
-        from evalforge_core.runner import EvalResult
-        from evalforge_types import ExampleResult
+        from proofstep_core.runner import EvalResult
+        from proofstep_types import ExampleResult
 
         server = Server()
         result = EvalResult(

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import uuid
 
-from evalforge_api.db.models.identity import (
+from proofstep_api.db.models.identity import (
     ApiKey,
     Environment,
     Membership,
@@ -17,7 +17,7 @@ from evalforge_api.db.models.identity import (
     Project,
     User,
 )
-from evalforge_api.security import keys as key_utils
+from proofstep_api.security import keys as key_utils
 from sqlalchemy.ext.asyncio import AsyncSession
 
 

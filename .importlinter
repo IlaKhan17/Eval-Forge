@@ -5,18 +5,18 @@
 
 [importlinter]
 root_packages =
-    evalforge_types
-    evalforge_core
-    evalforge_trajectory
-    evalforge
-    evalforge_cli
+    proofstep_types
+    proofstep_core
+    proofstep_trajectory
+    proofstep
+    proofstep_cli
 include_external_packages = True
 
 [importlinter:contract:pure-core]
 name = evaluation-core is a pure library (no I/O, no framework)
 type = forbidden
 source_modules =
-    evalforge_core
+    proofstep_core
 forbidden_modules =
     httpx
     requests
@@ -27,13 +27,13 @@ forbidden_modules =
     fastapi
     starlette
     arq
-    evalforge_api
+    proofstep_api
 
 [importlinter:contract:pure-trajectory]
 name = trajectory-engine is a pure library (no I/O, no framework)
 type = forbidden
 source_modules =
-    evalforge_trajectory
+    proofstep_trajectory
 forbidden_modules =
     httpx
     requests
@@ -44,24 +44,24 @@ forbidden_modules =
     fastapi
     starlette
     arq
-    evalforge_api
+    proofstep_api
 
 [importlinter:contract:layers]
 name = Dependency direction is one-way
 type = layers
 layers =
-    evalforge_cli
-    evalforge
-    evalforge_core : evalforge_trajectory
-    evalforge_types
+    proofstep_cli
+    proofstep
+    proofstep_core : proofstep_trajectory
+    proofstep_types
 
 [importlinter:contract:types-are-leaf]
 name = shared-types depends on nothing of ours
 type = forbidden
 source_modules =
-    evalforge_types
+    proofstep_types
 forbidden_modules =
-    evalforge_core
-    evalforge_trajectory
-    evalforge
-    evalforge_cli
+    proofstep_core
+    proofstep_trajectory
+    proofstep
+    proofstep_cli

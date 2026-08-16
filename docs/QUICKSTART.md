@@ -11,7 +11,7 @@ You need [uv](https://docs.astral.sh/uv/), Docker, and (for the dashboard) Node 
 ## 1. The whole thing, in one command (3 min)
 
 ```bash
-git clone https://github.com/IlaKhan17/EvalForge && cd EvalForge
+git clone https://github.com/IlaKhan17/Proofstep && cd Proofstep
 make setup            # python toolchain + workspace
 make web-install      # dashboard dependencies (skip if you don't want the UI)
 ./scripts/demo.sh
@@ -27,7 +27,7 @@ It prints where everything is:
 ```
   dashboard   http://127.0.0.1:3010/traces
   API docs    http://127.0.0.1:8010/docs
-  API key     ef_dev_...
+  API key     ps_dev_...
 ```
 
 It also prints a warning you should read once:
@@ -50,14 +50,14 @@ email in that trace is fine. The behaviour is not — and that difference is the
 No server involved in this step. The CLI runs the same evaluation code the API does.
 
 ```bash
-uv run evalforge eval evals/suites/davis-agent-policy.yaml
+uv run proofstep eval evals/suites/davis-agent-policy.yaml
 ```
 
 You get a per-metric table, gate results, and exit code 0. Now break the agent the way a bad refactor
 would:
 
 ```bash
-DAVIS_BREAK_POLICY=1 uv run evalforge eval evals/suites/davis-agent-policy.yaml
+DAVIS_BREAK_POLICY=1 uv run proofstep eval evals/suites/davis-agent-policy.yaml
 echo $?    # 1
 ```
 
@@ -72,8 +72,8 @@ agent_policy_compliance            —           0          —  ✗  min 1
 ```
 
 Which rule, in which span, is in the JSON report the run writes
-(`evalforge-davis-agent-policy.json`) — every violation names its offending span id and event index.
-The same attribution is what the PR comment renders, and `evalforge policy-check <policy> <trace>`
+(`proofstep-davis-agent-policy.json`) — every violation names its offending span id and event index.
+The same attribution is what the PR comment renders, and `proofstep policy-check <policy> <trace>`
 prints it for a single trace while you are writing the policy.
 
 That non-zero exit is the whole product. Everything else — the dashboard, the queues, the online
@@ -82,9 +82,9 @@ rules — exists to feed it.
 Other suites worth a look, all offline:
 
 ```bash
-uv run evalforge eval evals/suites/davis-email.yaml         # judges, via a deterministic stub
-uv run evalforge eval evals/suites/quiz-learning.yaml       # AUC/Brier — no judge, on purpose
-uv run evalforge eval evals/suites/quiz-security.yaml       # cross-tenant leakage as an eval
+uv run proofstep eval evals/suites/davis-email.yaml         # judges, via a deterministic stub
+uv run proofstep eval evals/suites/quiz-learning.yaml       # AUC/Brier — no judge, on purpose
+uv run proofstep eval evals/suites/quiz-security.yaml       # cross-tenant leakage as an eval
 ```
 
 `evals/suites/davis-email.yaml` uses a judge. It runs with no API key because
@@ -93,7 +93,7 @@ uv run evalforge eval evals/suites/quiz-security.yaml       # cross-tenant leaka
 answers from fixture markers rather than from the rubric. Swap in a real client with one flag:
 
 ```bash
-uv run evalforge eval evals/suites/davis-email.yaml --model-client myproject.models:make_client
+uv run proofstep eval evals/suites/davis-email.yaml --model-client myproject.models:make_client
 ```
 
 ---
@@ -101,27 +101,27 @@ uv run evalforge eval evals/suites/davis-email.yaml --model-client myproject.mod
 ## 3. Instrument your own agent (5 min)
 
 ```bash
-uv add evalforge      # from this checkout: uv pip install -e packages/python-sdk
+uv add proofstep      # from this checkout: uv pip install -e packages/python-sdk
 ```
 
 ```python
-import evalforge
+import proofstep
 
-evalforge.init(
+proofstep.init(
     endpoint="http://127.0.0.1:8010",
-    api_key="ef_dev_...",       # the key demo.sh printed
+    api_key="ps_dev_...",       # the key demo.sh printed
     environment="production",
 )
 
 async def handle(prospect_id: str) -> dict:
-    with evalforge.capture("outbound") as captured:
+    with proofstep.capture("outbound") as captured:
         # State a policy can read. A rule cannot check what the trace does not carry.
-        evalforge.set_state(unsubscribed=False)
+        proofstep.set_state(unsubscribed=False)
 
-        with evalforge.start_span("draft", span_type="llm") as span:
+        with proofstep.start_span("draft", span_type="llm") as span:
             span.set_output({"subject": "..."})
 
-        with evalforge.start_span("gmail.send", span_type="tool", tool_name="gmail.send") as span:
+        with proofstep.start_span("gmail.send", span_type="tool", tool_name="gmail.send") as span:
             span.set_args({"to": "buyer@example.com", "thread_id": "t-1"})
 
     return {"trace": captured[0].trace_id}
@@ -147,7 +147,7 @@ Your traces appear in the dashboard immediately. Nothing else is required to sta
 A policy is reviewable YAML — the point is that it shows up in a PR diff, not in a config UI:
 
 ```yaml
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: TrajectoryPolicy
 name: my-agent
 aliases:
@@ -177,7 +177,7 @@ rules:
 Check it without running anything:
 
 ```bash
-uv run evalforge policy-check my-policy.yaml
+uv run proofstep policy-check my-policy.yaml
 ```
 
 `severity: warn` for the budget rule is deliberate. A search overrun costs money; sending without
@@ -202,7 +202,7 @@ jobs:
       pull-requests: write        # required for the comment; without it the run still gates
     steps:
       - uses: actions/checkout@v4
-      - uses: IlaKhan17/EvalForge/.github/actions/evalforge@main
+      - uses: IlaKhan17/Proofstep/.github/actions/proofstep@main
         with:
           suite: evals/suites/my-agent.yaml
 ```
@@ -217,7 +217,7 @@ baseline:
   branch: main
 ```
 
-Set `EVALFORGE_ENDPOINT` and `EVALFORGE_API_KEY` in the job and each run is **recorded on the
+Set `PROOFSTEP_ENDPOINT` and `PROOFSTEP_API_KEY` in the job and each run is **recorded on the
 server**: the dataset it ran against, every score, the gate verdict, and the commit. The baseline is
 pulled from there before the run, so "did my branch make it worse than main?" is answered by the
 same process that produces the exit code.
@@ -263,9 +263,9 @@ browser (`apps/web/src/lib/proxy-policy.ts`).
 **A suite fails on a fresh clone** — regenerate the fixtures:
 `uv run python scripts/gen_reference_fixtures.py`.
 
-**`evalforge eval` refuses to start** — a suite with judges needs `--model-client`. It refuses up
+**`proofstep eval` refuses to start** — a suite with judges needs `--model-client`. It refuses up
 front rather than failing halfway through a paid run.
 
-**"not published · EVALFORGE_ENDPOINT and EVALFORGE_API_KEY are not both set"** — expected on a
+**"not published · PROOFSTEP_ENDPOINT and PROOFSTEP_API_KEY are not both set"** — expected on a
 laptop with no server. Runs still gate on their absolute floors; only the record and the baseline
 comparison are skipped.

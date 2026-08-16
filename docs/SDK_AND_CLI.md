@@ -1,33 +1,33 @@
-# EvalForge — SDK, CLI, and Suite Configuration
+# Proofstep — SDK, CLI, and Suite Configuration
 
 ## 1. Public Python API — tracing
 
 Design goal: the smallest possible diff to an existing application. Three levels of intrusiveness, all producing the same spans.
 
 ```python
-import evalforge
+import proofstep
 
-evalforge.init(                      # once, at startup; env vars are the default source
-    api_key=os.environ["EVALFORGE_API_KEY"],
+proofstep.init(                      # once, at startup; env vars are the default source
+    api_key=os.environ["PROOFSTEP_API_KEY"],
     project="davis",
     environment="production",
     capture_mode="redacted",         # full | redacted | metadata_only | disabled
     sample_rate=1.0,
-    enabled=True,                    # EVALFORGE_ENABLED=0 kills it entirely
+    enabled=True,                    # PROOFSTEP_ENABLED=0 kills it entirely
 )
 
 # Level 1 — decorator
-@evalforge.trace("generate_outreach")
+@proofstep.trace("generate_outreach")
 async def generate_outreach(prospect_id: str) -> Email: ...
 
-@evalforge.span("research_prospect", span_type="agent")
+@proofstep.span("research_prospect", span_type="agent")
 async def research(prospect_id: str) -> Research: ...
 
-@evalforge.tool("gmail.send")        # records tool_name + args; enables policies
+@proofstep.tool("gmail.send")        # records tool_name + args; enables policies
 async def send_email(to: str, subject: str, body: str) -> str: ...
 
 # Level 2 — context managers
-with evalforge.trace("generate_outreach") as t:
+with proofstep.trace("generate_outreach") as t:
     t.set_metadata(prospect_id=pid, icp_version="v4")
     with t.span("research_prospect", span_type="agent") as s:
         s.set_input({"prospect_id": pid})
@@ -36,25 +36,25 @@ with evalforge.trace("generate_outreach") as t:
     t.set_state(approval_status="approved")     # feeds final_state policy rules
 
 # Level 3 — manual
-span = evalforge.start_span("custom", span_type="custom", parent=other)
+span = proofstep.start_span("custom", span_type="custom", parent=other)
 span.end(status="ok")
 ```
 
 Auxiliary surface:
 
 ```python
-evalforge.current_trace() -> Trace | None
-evalforge.current_span()  -> Span | None
-evalforge.record_event("retry", attempt=2)          # → span_events
-evalforge.set_state(approval_status="approved")
-evalforge.flush(timeout=5.0)                        # before process exit
-evalforge.shutdown()
-@evalforge.redact("body", "recipient")              # field-level opt-out
+proofstep.current_trace() -> Trace | None
+proofstep.current_span()  -> Span | None
+proofstep.record_event("retry", attempt=2)          # → span_events
+proofstep.set_state(approval_status="approved")
+proofstep.flush(timeout=5.0)                        # before process exit
+proofstep.shutdown()
+@proofstep.redact("body", "recipient")              # field-level opt-out
 ```
 
 Design decisions worth stating:
 
-- **`@evalforge.tool` is separate from `@evalforge.span`.** It sets `span_type="tool"` and `tool_name`, and captures the call arguments as `args`. This is what the policy engine consumes, so making it a distinct, obvious decorator is what makes trajectory policies usable rather than a configuration exercise.
+- **`@proofstep.tool` is separate from `@proofstep.span`.** It sets `span_type="tool"` and `tool_name`, and captures the call arguments as `args`. This is what the policy engine consumes, so making it a distinct, obvious decorator is what makes trajectory policies usable rather than a configuration exercise.
 - **`set_state`** exists so `final_state` and `conditional` policy rules have a defined data source instead of scraping outputs.
 - **Never raises.** Every public entry point is wrapped: an internal error logs once (rate-limited) and returns a no-op span. A telemetry library that can crash the host application is unusable, and this is non-negotiable.
 - **Sync and async.** The decorator inspects the wrapped function and returns the matching wrapper; context managers implement both `__enter__` and `__aenter__`.
@@ -63,8 +63,8 @@ Design decisions worth stating:
 
 `contextvars.ContextVar[SpanContext]`. `asyncio.create_task` and `TaskGroup` copy the context automatically, so children attach correctly with no user action — this is the main reason for contextvars over thread-locals.
 
-- **Threads:** `evalforge.propagate(fn)` wraps a callable to carry the current context; `ThreadPoolExecutor` users call it explicitly (Python does not copy contextvars across threads).
-- **Cross-service:** W3C `traceparent` header. `evalforge.inject(headers)` / `evalforge.extract(headers)`, plus an optional httpx/requests hook that injects automatically.
+- **Threads:** `proofstep.propagate(fn)` wraps a callable to carry the current context; `ThreadPoolExecutor` users call it explicitly (Python does not copy contextvars across threads).
+- **Cross-service:** W3C `traceparent` header. `proofstep.inject(headers)` / `proofstep.extract(headers)`, plus an optional httpx/requests hook that injects automatically.
 - **Celery/ARQ:** helpers to serialize the context into the job payload.
 
 ## 3. Exporter
@@ -74,7 +74,7 @@ span.end() → redact → serialize → size check → bounded ring buffer (10k)
            → background asyncio task (or thread for sync apps)
            → batch on 512 spans or 2 s, gzip → POST /v1/ingest/traces
            → on 5xx/timeout: exponential backoff + full jitter, 5 attempts
-           → on persistent failure: optional disk spool (~/.evalforge/spool), else drop-oldest
+           → on persistent failure: optional disk spool (~/.proofstep/spool), else drop-oldest
 ```
 
 - **Never blocks the caller.** `span.end()` is a non-blocking enqueue; if the buffer is full it drops and increments a counter (reported in the trace's `dropped_span_count` and logged once per minute). Visible loss beats invisible stalls.
@@ -90,10 +90,10 @@ Runs **in the SDK, before export** — the strongest privacy guarantee available
 Pipeline: key deny-list (case-insensitive substring on `authorization`, `api_key`, `apikey`, `token`, `secret`, `password`, `passwd`, `cookie`, `session`, `refresh_token`, `client_secret`, `private_key`, `ssn`, `credit_card`) → value patterns (JWT, `sk-*`/`ghp_*`-style provider keys, PEM blocks, AWS keys, high-entropy strings ≥32 chars matching base64/hex charsets) → optional PII patterns (email, phone, IBAN, card) → user hooks.
 
 ```python
-evalforge.init(redactors=[
-    evalforge.redactors.default(),
-    evalforge.redactors.keys(["prospect_email"]),
-    evalforge.redactors.regex(r"CUST-\d{8}", replacement="[CUSTOMER_ID]"),
+proofstep.init(redactors=[
+    proofstep.redactors.default(),
+    proofstep.redactors.keys(["prospect_email"]),
+    proofstep.redactors.regex(r"CUST-\d{8}", replacement="[CUSTOMER_ID]"),
     my_custom_redactor,                 # (path: str, value: Any) -> Any | REDACTED
 ])
 ```
@@ -105,8 +105,8 @@ Replacement is `"[REDACTED:<reason>]"`, and a `redaction_count` per span makes t
 Two entry points. The imperative one for scripts, the decorator one for suites.
 
 ```python
-from evalforge import evaluate, Dataset
-from evalforge.evaluators import exact_match, json_schema, llm_judge
+from proofstep import evaluate, Dataset
+from proofstep.evaluators import exact_match, json_schema, llm_judge
 
 result = await evaluate(
     dataset=Dataset.from_jsonl("reply-intent.jsonl"),
@@ -119,7 +119,7 @@ print(result.summary()); result.to_json("report.json")
 ```
 
 ```python
-from evalforge import EvalSuite, Dataset
+from proofstep import EvalSuite, Dataset
 
 suite = EvalSuite(name="reply-intent", dataset=Dataset.from_jsonl("reply-intent.jsonl"))
 
@@ -152,7 +152,7 @@ Returns are coerced: `bool` → 0.0/1.0, `float` → score, `Score` → verbatim
 ## 6. Suite YAML
 
 ```yaml
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: sdr-email-quality
 description: Gates outbound email generation quality.
@@ -234,7 +234,7 @@ baseline:
 
 report:
   formats: [terminal, json]
-  output: evalforge-report.json
+  output: proofstep-report.json
 ```
 
 **Validation:** JSON Schema + semantic checks at load, before any model call. Errors carry file, line, and column. Semantic checks that catch real mistakes: a gate whose `metric_key` matches no evaluator (**error**, not warning); an evaluator referencing a missing schema/rubric/policy file; a `max_regression` gate with no baseline strategy; a judge without `inputs`; a locked-version reference that doesn't exist. Failing fast here saves an entire expensive run.
@@ -247,26 +247,26 @@ report:
 ## 7. CLI
 
 ```bash
-evalforge configure                 # interactive; writes ~/.evalforge/config.toml
-evalforge login                     # device-code flow; token in the OS keyring
-evalforge whoami
-evalforge projects list|create
-evalforge datasets list|show|push|pull|lock|import|export
-evalforge evaluators list|push|calibrate
-evalforge policies validate|test
-evalforge eval <suite.yaml>
-evalforge experiments list|show|compare A B|promote-baseline <id>
-evalforge traces list|show|export
-evalforge doctor                    # env + connectivity + config diagnosis
+proofstep configure                 # interactive; writes ~/.proofstep/config.toml
+proofstep login                     # device-code flow; token in the OS keyring
+proofstep whoami
+proofstep projects list|create
+proofstep datasets list|show|push|pull|lock|import|export
+proofstep evaluators list|push|calibrate
+proofstep policies validate|test
+proofstep eval <suite.yaml>
+proofstep experiments list|show|compare A B|promote-baseline <id>
+proofstep traces list|show|export
+proofstep doctor                    # env + connectivity + config diagnosis
 ```
 
 Core command:
 
 ```bash
-evalforge eval evals/suites/sdr-email.yaml \
+proofstep eval evals/suites/sdr-email.yaml \
   --baseline main \
   --candidate HEAD \
-  --output evalforge-report.json \
+  --output proofstep-report.json \
   --concurrency 8 \
   [--local] [--dry-run] [--resume RUN_ID] [--only-failed RUN_ID] \
   [--filter 'metadata.segment==enterprise'] [--limit 20] [--set k=v]
@@ -320,7 +320,7 @@ make visible.
 
 ### Publishing
 
-**Implemented.** `eval` records the run on the server whenever `EVALFORGE_ENDPOINT` and `EVALFORGE_API_KEY` are both set. `--local` opts out; there is no flag to opt *in*, because a run that needs a flag to be recorded is a run nobody records.
+**Implemented.** `eval` records the run on the server whenever `PROOFSTEP_ENDPOINT` and `PROOFSTEP_API_KEY` are both set. `--local` opts out; there is no flag to opt *in*, because a run that needs a flag to be recorded is a run nobody records.
 
 What it does, in order — before the run: resolve the baseline for this suite on the baseline branch and load its metrics, so regression gates fire in the same process that produces the exit code. After the run: ensure the dataset and a **content-addressed** version (`sha-<12 hex>` of the examples, so identical data reuses a version and changed data cannot reuse a label), mirror the suite's gates, open an experiment and run, upload results in batches, complete the run, submit the corpus metrics the server cannot derive, and compare.
 
@@ -341,7 +341,7 @@ Two server capabilities exist for this and are worth knowing about directly:
 Terminal report:
 
 ```
-EvalForge · sdr-email-quality
+Proofstep · sdr-email-quality
 dataset email-quality@v3 (200 examples, sha 4f2a…)   commit a1b2c3d (dirty)
 baseline exp_018e… (main, 2 days ago)
 
@@ -360,18 +360,18 @@ p95_latency_ms                    3210       4890    +52.3%   ✓ pass   max 500
 ✗ approval_trajectory  ex-118  gmail.send before approval_received (span 7f3a2b1c)
 ✗ no_placeholders      ex-042  matched "[Company]" in output.body
 
-Report: evalforge-report.json   Experiment: https://…/exp_018f…
+Report: proofstep-report.json   Experiment: https://…/exp_018f…
 exit 1
 ```
 
 Design: the gate column carries the threshold, so the reader never has to open the YAML to interpret a failure. Regressed examples are listed inline with the concrete reason. Colour is disabled under `CI=true`/`NO_COLOR`, and unicode degrades to ASCII when the terminal encoding can't handle it.
 
-`evalforge-report.json` is versioned (`report_version: 1`) and is the contract consumed by the GitHub Action, so it gets its own JSON Schema and contract tests.
+`proofstep-report.json` is versioned (`report_version: 1`) and is the contract consumed by the GitHub Action, so it gets its own JSON Schema and contract tests.
 
 ## 8. GitHub Actions
 
 ```yaml
-name: EvalForge
+name: Proofstep
 on: pull_request
 permissions: {contents: read, pull-requests: write}
 jobs:
@@ -382,17 +382,17 @@ jobs:
         with: {fetch-depth: 0}
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --frozen
-      - uses: evalforge/evalforge-action@v1
+      - uses: proofstep/proofstep-action@v1
         with:
           suite: evals/suites/sdr-email.yaml
           baseline: main
-          api-key: ${{ secrets.EVALFORGE_API_KEY }}
+          api-key: ${{ secrets.PROOFSTEP_API_KEY }}
           comment: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
 
-The action is a thin composite wrapper: install CLI → `evalforge eval` → parse the report → upload as an artifact → upsert one PR comment (found by an HTML marker comment, edited in place, never appended) → set the job status from the exit code. If the run itself errors, the comment reports the error rather than staying silent — a missing comment reads as "no problems", which is the wrong default.
+The action is a thin composite wrapper: install CLI → `proofstep eval` → parse the report → upload as an artifact → upsert one PR comment (found by an HTML marker comment, edited in place, never appended) → set the job status from the exit code. If the run itself errors, the comment reports the error rather than staying silent — a missing comment reads as "no problems", which is the wrong default.
 
 **Fork PRs have no secrets.** Documented pattern: run the eval on `pull_request_target` with an explicit maintainer `approved-for-eval` label gate, or skip evaluation on forks and gate on merge to a staging branch. Do not paper over this — running untrusted PR code with production secrets is a supply-chain compromise, and the docs will say so directly.
 

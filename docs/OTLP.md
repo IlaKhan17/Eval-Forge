@@ -1,11 +1,11 @@
 # Sending traces with plain OpenTelemetry
 
-If your application is already instrumented with OpenTelemetry, you do not need the EvalForge
+If your application is already instrumented with OpenTelemetry, you do not need the Proofstep
 SDK. Point the exporter at the receiver:
 
 ```bash
-OTEL_EXPORTER_OTLP_ENDPOINT=https://your-evalforge/v1/otlp
-OTEL_EXPORTER_OTLP_HEADERS="authorization=Bearer ef_prod_..."
+OTEL_EXPORTER_OTLP_ENDPOINT=https://your-proofstep/v1/otlp
+OTEL_EXPORTER_OTLP_HEADERS="authorization=Bearer ps_prod_..."
 ```
 
 That is the whole integration. `examples/langgraph-agent/agent.py` is a working agent using
@@ -43,7 +43,7 @@ underneath it, and the more specific producer is the one to trust.
 
 ### Span types
 
-| Attribute value | EvalForge span type |
+| Attribute value | Proofstep span type |
 |---|---|
 | `openinference.span.kind: LLM` / `gen_ai.operation.name: chat` | `llm` |
 | `CHAIN` | `workflow` |
@@ -163,7 +163,7 @@ Two things in that file worth copying:
 - **Scrub before sampling.** Scrubbing after would leave secrets in whatever the sampler kept.
   Redacting in the Collector is strictly better than relying on ingest-side redaction alone:
   data that never crosses the boundary cannot be stored by mistake.
-- **Sampling stays at 100 %.** EvalForge samples on ingest for the *paid* evaluations and runs
+- **Sampling stays at 100 %.** Proofstep samples on ingest for the *paid* evaluations and runs
   trajectory policies on every trace it receives, so head sampling here throws away coverage
   of the free safety checks. Turn it down only if trace volume itself is the problem.
 
@@ -185,7 +185,7 @@ about this because it happened while writing it.
 
 - **OTLP/gRPC.** HTTP only. gRPC needs a second server port and a second serialization path
   to test, and every SDK can speak HTTP.
-- **Logs and metrics.** Traces only. EvalForge evaluates trajectories; a metrics pipeline is
+- **Logs and metrics.** Traces only. Proofstep evaluates trajectories; a metrics pipeline is
   a different product.
 - **`tracestate` and links.** Span links are dropped rather than stored; the schema has no
   place for them, and inventing one before something reads them would be speculative.

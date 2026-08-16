@@ -12,7 +12,7 @@ from decimal import Decimal
 
 import pytest
 
-from evalforge_core.calibration import (
+from proofstep_core.calibration import (
     MIN_CEILING_EXAMPLES,
     CalibrationRequirement,
     JudgeVerdict,

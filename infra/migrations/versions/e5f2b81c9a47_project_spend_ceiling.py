@@ -3,7 +3,7 @@
 A monthly limit on server-initiated spend, plus the decision reason that records an evaluation
 skipped because of it.
 
-See `evalforge_api.services.budget` for what the ceiling can and cannot stop — only spend the server
+See `proofstep_api.services.budget` for what the ceiling can and cannot stop — only spend the server
 initiates, which is online evaluation.
 
 Revision ID: e5f2b81c9a47

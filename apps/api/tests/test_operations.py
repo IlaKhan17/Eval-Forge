@@ -16,15 +16,15 @@ from typing import Any
 
 import pytest
 import pytest_asyncio
-from evalforge_api.api.dependencies import get_session
-from evalforge_api.api.routes import metrics as metrics_module
-from evalforge_api.db.models.ops import WorkerHeartbeat
-from evalforge_api.main import create_app
-from evalforge_api.security import ratelimit
-from evalforge_api.settings import Settings
-from evalforge_api.worker import deadletter
 from factories import Tenant
 from httpx import ASGITransport, AsyncClient
+from proofstep_api.api.dependencies import get_session
+from proofstep_api.api.routes import metrics as metrics_module
+from proofstep_api.db.models.ops import WorkerHeartbeat
+from proofstep_api.main import create_app
+from proofstep_api.security import ratelimit
+from proofstep_api.settings import Settings
+from proofstep_api.worker import deadletter
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -93,7 +93,7 @@ class TestProductionRefusals:
             env="production",
             jwt_secret=SECRET,
             postgres_password="x" * 20,
-            migration_database_url="postgresql+psycopg://owner:pw@db/evalforge",
+            migration_database_url="postgresql+psycopg://owner:pw@db/proofstep",
         )
         assert settings.migration_url != settings.sqlalchemy_url
 
@@ -151,11 +151,11 @@ class TestMetrics:
 
         body = response.text
         for name in (
-            "evalforge_up",
-            "evalforge_build_info",
-            "evalforge_dead_letters_unresolved",
-            "evalforge_job_queue_reachable",
-            "evalforge_rls_enforced",
+            "proofstep_up",
+            "proofstep_build_info",
+            "proofstep_dead_letters_unresolved",
+            "proofstep_job_queue_reachable",
+            "proofstep_rls_enforced",
         ):
             assert f"{name}" in body, f"{name} is missing; an alert reads it"
 
@@ -182,10 +182,10 @@ class TestMetrics:
         samples = [
             line
             for line in body.splitlines()
-            if line.startswith("evalforge_worker_heartbeat_age_seconds{")
+            if line.startswith("proofstep_worker_heartbeat_age_seconds{")
         ]
         assert samples == []
-        assert "evalforge_workers_known 0" in body
+        assert "proofstep_workers_known 0" in body
 
     async def test_a_recorded_beat_appears_with_its_age(
         self, client: AsyncClient, tenant_a: Tenant, session: AsyncSession
@@ -205,7 +205,7 @@ class TestMetrics:
         sample = next(
             line
             for line in body.splitlines()
-            if line.startswith('evalforge_worker_heartbeat_age_seconds{worker="w1"}')
+            if line.startswith('proofstep_worker_heartbeat_age_seconds{worker="w1"}')
         )
         assert 85 < float(sample.rsplit(" ", 1)[1]) < 200
 
@@ -359,7 +359,7 @@ class TestRateLimiting:
         counter = _Counting()
         app.state.rate_limiter = ratelimit.RateLimiter(counter)
 
-        head = {"authorization": "Bearer ef_dev_deadbeef_nope"}
+        head = {"authorization": "Bearer ps_dev_deadbeef_nope"}
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as http:
             first = await http.get("/v1/traces", headers=head)
             second = await http.get("/v1/traces", headers=head)

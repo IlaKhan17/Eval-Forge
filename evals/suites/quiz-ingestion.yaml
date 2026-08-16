@@ -1,4 +1,4 @@
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: quiz-ingestion
 description: >
@@ -88,4 +88,4 @@ gates:
 
 report:
   formats: [terminal, json]
-  output: evalforge-quiz-ingestion.json
+  output: proofstep-quiz-ingestion.json

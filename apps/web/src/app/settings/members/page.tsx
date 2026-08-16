@@ -1,6 +1,6 @@
 import { MemberSettings } from "@/components/MemberSettings"
 
-export const metadata = { title: "Members · EvalForge" }
+export const metadata = { title: "Members · Proofstep" }
 export const dynamic = "force-dynamic"
 
 export default function MembersPage() {

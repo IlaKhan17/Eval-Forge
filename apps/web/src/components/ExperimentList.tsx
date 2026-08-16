@@ -34,8 +34,8 @@ export function ExperimentList() {
         title="No experiments yet"
         hint={
           <>
-            Runs appear here once the CLI publishes them. Set <code>EVALFORGE_ENDPOINT</code> and{" "}
-            <code>EVALFORGE_API_KEY</code> in the job that runs <code>evalforge eval</code>; without
+            Runs appear here once the CLI publishes them. Set <code>PROOFSTEP_ENDPOINT</code> and{" "}
+            <code>PROOFSTEP_API_KEY</code> in the job that runs <code>proofstep eval</code>; without
             them the run still gates, it just is not recorded.
           </>
         }

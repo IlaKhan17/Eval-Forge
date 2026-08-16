@@ -77,7 +77,7 @@ export function TraceList() {
                 // The empty state has to distinguish "nothing sent yet" from "nothing
                 // matched", because the fix is completely different.
                 <>
-                  Instrument an application with the SDK, or run <code>evalforge eval</code>.
+                  Instrument an application with the SDK, or run <code>proofstep eval</code>.
                 </>
               )
             }

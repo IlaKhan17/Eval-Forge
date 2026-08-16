@@ -10,7 +10,7 @@ backstop the threat model has been deferring since Phase 2 — and is explicit a
 psql "$ADMIN_URL" -v role_password="$(openssl rand -hex 24)" -f scripts/create_app_role.sql
 
 # Then point the application at it.
-POSTGRES_USER=evalforge_app
+POSTGRES_USER=proofstep_app
 POSTGRES_PASSWORD=<the password you generated>
 ```
 
@@ -25,7 +25,7 @@ If instead you see this, the policies exist and do **nothing**:
 
 ```json
 {"checks": {"row_level_security": "not_enforced"},
- "warnings": ["RLS IS NOT IN EFFECT: role 'evalforge' is a superuser, which is exempt from every RLS policy"]}
+ "warnings": ["RLS IS NOT IN EFFECT: role 'proofstep' is a superuser, which is exempt from every RLS policy"]}
 ```
 
 ## Why that warning is the most important line in this document
@@ -65,8 +65,8 @@ from anything a request body can influence.
 ALTER TABLE traces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE traces FORCE ROW LEVEL SECURITY;
 CREATE POLICY traces_tenant_isolation ON traces
-  USING      (project_id = nullif(current_setting('evalforge.project_id', true), '')::uuid)
-  WITH CHECK (project_id = nullif(current_setting('evalforge.project_id', true), '')::uuid);
+  USING      (project_id = nullif(current_setting('proofstep.project_id', true), '')::uuid)
+  WITH CHECK (project_id = nullif(current_setting('proofstep.project_id', true), '')::uuid);
 ```
 
 - **`FORCE`** — without it a table's owner is exempt, so a deployment that runs migrations and the
@@ -179,7 +179,7 @@ Each was a blocking gap; each has been executed against a running system rather 
   application's connection, Alembic and the worker's two DDL jobs use it, and **the API refuses to
   start in production** when its role bypasses RLS (`ALLOW_RLS_BYPASS=1` is the deliberate, loudly
   logged escape hatch). Verified: the whole stack — ingest, online eval, review queues, publishing,
-  and the worker — runs as `evalforge_app` with 26/26 tables enforced.
+  and the worker — runs as `proofstep_app` with 26/26 tables enforced.
 - **Secrets and key management.** Every sensitive setting accepts a `<NAME>_FILE` variant, so a
   secret never has to live in an environment variable. `scripts/manage_keys.py` creates, lists,
   rotates, and revokes keys in production; rotation is an overlap with a grace window rather than a
@@ -191,7 +191,7 @@ Each was a blocking gap; each has been executed against a running system rather 
   PITR is *not* configured — that is WAL archiving, and OPERATIONS.md says what to set.
 - **Metrics and alert rules.** `GET /metrics` (authenticated) exposes worker heartbeat age, dead
   letters, queue depth and reachability, review-queue age, and whether RLS applies.
-  `infra/alerts/evalforge.rules.yml` has nine rules, each for a failure that is otherwise silent.
+  `infra/alerts/proofstep.rules.yml` has nine rules, each for a failure that is otherwise silent.
   Verified: scraped live; heartbeats appear within a minute of the worker starting. **No alert has
   fired into a pager** — routing and escalation are the operator's.
 

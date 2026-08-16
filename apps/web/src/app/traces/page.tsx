@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/Primitives"
 import { TraceList } from "@/components/TraceList"
 import { Suspense } from "react"
 
-export const metadata = { title: "Traces · EvalForge" }
+export const metadata = { title: "Traces · Proofstep" }
 
 // Filters come from the URL and the data is live, so there is nothing to prerender.
 export const dynamic = "force-dynamic"

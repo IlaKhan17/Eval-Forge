@@ -13,10 +13,10 @@ misleading about what calibration looks like.
 
 Swap it for a real client with one flag:
 
-    evalforge eval suite.yaml --model-client myproject.models:make_client
+    proofstep eval suite.yaml --model-client myproject.models:make_client
 
-The interface is `evalforge_core.types.ModelClient`, which is four keyword arguments and a
-`ModelResponse`. Nothing here depends on EvalForge internals beyond that.
+The interface is `proofstep_core.types.ModelClient`, which is four keyword arguments and a
+`ModelResponse`. Nothing here depends on Proofstep internals beyond that.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from collections.abc import Sequence
 from decimal import Decimal
 from typing import Any
 
-from evalforge_core.types import Message, ModelResponse
+from proofstep_core.types import Message, ModelResponse
 
 #: Share of answers the stub deliberately gets wrong, so calibration reports look like real ones
 #: rather than reporting a perfect kappa. Deterministic in the content hash rather than random, so

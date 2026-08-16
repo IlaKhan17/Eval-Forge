@@ -10,10 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from evalforge_cli.suite.loader import SuiteError, load_suite
+from proofstep_cli.suite.loader import SuiteError, load_suite
 
 MINIMAL = """
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: minimal
 dataset:
@@ -51,7 +51,7 @@ class TestBasics:
 
     def test_an_unsupported_api_version_is_refused(self, tmp_path: Path) -> None:
         """Suite files live in users' repos, so the format is versioned from day one."""
-        body = MINIMAL.replace("evalforge.dev/v1", "evalforge.dev/v99")
+        body = MINIMAL.replace("proofstep.dev/v1", "proofstep.dev/v99")
         with pytest.raises(SuiteError, match="unsupported apiVersion"):
             load_suite(write(tmp_path, body))
 
@@ -89,7 +89,7 @@ class TestDatasetReference:
 
 class TestJudgeRequirements:
     JUDGE = """
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: judged
 dataset:
@@ -166,7 +166,7 @@ class TestMetricCollisions:
         reported value depends on evaluation order.
         """
         body = """
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: collide
 dataset:
@@ -185,7 +185,7 @@ evaluators:
 
     def test_distinct_names_are_fine(self, tmp_path: Path) -> None:
         body = """
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: fine
 dataset:
@@ -245,7 +245,7 @@ class TestComposition:
     def test_a_child_inherits_and_overrides(self, tmp_path: Path) -> None:
         write(tmp_path, MINIMAL, name="base.yaml")
         child = """
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: child
 extends: base.yaml
@@ -261,7 +261,7 @@ execution:
         """Concatenating would make it impossible to remove an inherited evaluator."""
         write(tmp_path, MINIMAL, name="base.yaml")
         child = """
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: child
 extends: base.yaml
@@ -278,11 +278,11 @@ evaluators:
         write(tmp_path, MINIMAL, name="grand.yaml")
         write(
             tmp_path,
-            "apiVersion: evalforge.dev/v1\nkind: EvalSuite\nname: mid\nextends: grand.yaml\n",
+            "apiVersion: proofstep.dev/v1\nkind: EvalSuite\nname: mid\nextends: grand.yaml\n",
             name="mid.yaml",
             data=False,
         )
-        child = "apiVersion: evalforge.dev/v1\nkind: EvalSuite\nname: kid\nextends: mid.yaml\n"
+        child = "apiVersion: proofstep.dev/v1\nkind: EvalSuite\nname: kid\nextends: mid.yaml\n"
         with pytest.raises(SuiteError, match="one level deep"):
             load_suite(write(tmp_path, child, name="kid.yaml", data=False))
 
@@ -310,7 +310,7 @@ class TestHints:
     def test_a_judge_heavy_suite_is_flagged(self, tmp_path: Path) -> None:
         """Advice, not an error: most things should not be judged by a model."""
         body = """
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: judgey
 dataset:
@@ -336,7 +336,7 @@ evaluators:
 
     def test_gating_on_an_uncalibrated_judge_is_flagged(self, tmp_path: Path) -> None:
         body = """
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: EvalSuite
 name: uncal
 dataset:

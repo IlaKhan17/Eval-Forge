@@ -1,0 +1,104 @@
+name: release
+
+# Publishes the five distributions to PyPI when a version tag is pushed.
+#
+# Trusted Publishing (OIDC), not an API token. A long-lived token in repository secrets is a
+# credential that can publish a package forever and is readable by any workflow that gets modified;
+# OIDC mints a short-lived one per run, scoped to this repository and this workflow file.
+#
+# One manual step before the first release: configure each project's trusted publisher on PyPI
+# (Publishing → Add a pending publisher) with owner `IlaKhan17`, repository `proofstep`, workflow
+# `release.yml`, and environment `pypi`. See docs/RELEASING.md.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # The gate before anything is published. A broken release cannot be unpublished from PyPI — the
+  # version number is burned even if the file is deleted — so the whole suite runs first.
+  verify:
+    name: tests must pass before anything ships
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: proofstep
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: proofstep
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U proofstep"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      POSTGRES_USER: proofstep
+      POSTGRES_PASSWORD: ci-only-password
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: proofstep
+      JWT_SECRET: ci-secret-value-that-is-long-enough-32
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-packages
+      - run: uv run ruff check .
+      - run: uv run mypy packages apps/api/src
+      - run: uv run pytest -q
+
+      - name: the tag matches the packaged version
+        # A tag that disagrees with pyproject.toml publishes a version nobody can find from the
+        # repository, and the mismatch is invisible until someone tries.
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="$(uv run python -c "
+          import tomllib, pathlib
+          print(tomllib.loads(pathlib.Path('packages/python-sdk/pyproject.toml').read_text())['project']['version'])
+          ")"
+          echo "tag=$TAG package=$PKG"
+          test "$TAG" = "$PKG" || { echo "tag $TAG does not match packaged version $PKG"; exit 1; }
+
+  build:
+    name: build distributions
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: build all five
+        run: |
+          for pkg in packages/shared-types packages/evaluation-core packages/trajectory-engine \
+                     packages/python-sdk packages/cli; do
+            uv build "$pkg" --out-dir dist
+          done
+          ls -l dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: distributions
+          path: dist/
+
+  publish:
+    name: publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    # The environment is what a trusted publisher is scoped to, and it is where a required reviewer
+    # can be added later without touching this file.
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: distributions
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        # No `password`: the OIDC token is minted from `id-token: write` above.

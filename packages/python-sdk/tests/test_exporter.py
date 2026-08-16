@@ -9,10 +9,10 @@ from pathlib import Path
 import pytest
 from doubles import RecordingTransport
 
-import evalforge
-from evalforge.client import Client, sampled
-from evalforge.config import Config
-from evalforge.exporter import Exporter
+import proofstep
+from proofstep.client import Client, sampled
+from proofstep.config import Config
+from proofstep.exporter import Exporter
 
 
 def exporting_client(transport: RecordingTransport, **overrides: object) -> Client:
@@ -179,27 +179,27 @@ class TestSampling:
 
 class TestTraceContextPropagation:
     def test_inject_emits_a_w3c_traceparent(self, client: Client) -> None:
-        evalforge._client = client
+        proofstep._client = client
         with client.trace("t") as trace, client.span("s") as span:
-            headers = evalforge.inject({"content-type": "application/json"})
+            headers = proofstep.inject({"content-type": "application/json"})
 
         assert headers["content-type"] == "application/json"
         assert headers["traceparent"] == f"00-{trace.trace_id}-{span.span_id}-01"
 
     def test_inject_is_a_noop_outside_a_span(self, client: Client) -> None:
-        evalforge._client = client
-        assert evalforge.inject({}) == {}
+        proofstep._client = client
+        assert proofstep.inject({}) == {}
 
     def test_extract_parses_a_valid_header(self) -> None:
         trace_id, span_id = "a" * 32, "b" * 16
-        assert evalforge.extract({"traceparent": f"00-{trace_id}-{span_id}-01"}) == (
+        assert proofstep.extract({"traceparent": f"00-{trace_id}-{span_id}-01"}) == (
             trace_id,
             span_id,
             True,
         )
 
     def test_extract_is_case_insensitive(self) -> None:
-        assert evalforge.extract({"TraceParent": f"00-{'a' * 32}-{'b' * 16}-00"}) is not None
+        assert proofstep.extract({"TraceParent": f"00-{'a' * 32}-{'b' * 16}-00"}) is not None
 
     @pytest.mark.parametrize(
         "header",
@@ -214,12 +214,12 @@ class TestTraceContextPropagation:
     )
     def test_malformed_headers_are_rejected(self, header: str) -> None:
         """A caller-supplied header is untrusted and must not corrupt our ids."""
-        assert evalforge.extract({"traceparent": header}) is None
+        assert proofstep.extract({"traceparent": header}) is None
 
     def test_a_round_trip_preserves_the_ids(self, client: Client) -> None:
-        evalforge._client = client
+        proofstep._client = client
         with client.trace("t") as trace, client.span("s") as span:
-            extracted = evalforge.extract(evalforge.inject({}))
+            extracted = proofstep.extract(proofstep.inject({}))
         assert extracted == (trace.trace_id, span.span_id, True)
 
     def test_an_extracted_context_continues_the_same_trace(self, client: Client) -> None:

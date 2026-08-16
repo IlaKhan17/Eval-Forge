@@ -22,7 +22,8 @@ from typing import Any
 
 import pytest
 import pytest_asyncio
-from evalforge_api.db.models.evaluation import (
+from factories import Tenant, make_tenant
+from proofstep_api.db.models.evaluation import (
     Dataset,
     DatasetVersion,
     Evaluator,
@@ -30,22 +31,21 @@ from evalforge_api.db.models.evaluation import (
     TrajectoryPolicy,
     TrajectoryPolicyVersion,
 )
-from evalforge_api.db.models.identity import Organization
-from evalforge_api.db.models.online import (
+from proofstep_api.db.models.identity import Organization
+from proofstep_api.db.models.online import (
     Annotation,
     OnlineEvalRule,
     OnlineEvaluation,
     ReviewAssignment,
     ReviewQueue,
 )
-from evalforge_api.db.models.traces import Span as SpanRow
-from evalforge_api.db.models.traces import Trace as TraceRow
-from evalforge_api.errors import UnprocessableError
-from evalforge_api.services.online_eval import OnlineEvalService, coverage, unprocessed_count
-from evalforge_api.services.retention import droppable_partitions, month_end, month_start
-from evalforge_api.services.review import ReviewService
-from evalforge_api.worker import jobs
-from factories import Tenant, make_tenant
+from proofstep_api.db.models.traces import Span as SpanRow
+from proofstep_api.db.models.traces import Trace as TraceRow
+from proofstep_api.errors import UnprocessableError
+from proofstep_api.services.online_eval import OnlineEvalService, coverage, unprocessed_count
+from proofstep_api.services.retention import droppable_partitions, month_end, month_start
+from proofstep_api.services.review import ReviewService
+from proofstep_api.worker import jobs
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -55,7 +55,7 @@ pytestmark = pytest.mark.integration
 # A policy that demands human approval before a send, which is the canonical thing an agent
 # gets wrong in production.
 POLICY_YAML = """
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: TrajectoryPolicy
 name: approval-before-send
 description: An email must not be sent before a human approves it.
@@ -140,7 +140,7 @@ async def make_trace(
 #: rather than a violation. `forbidden_before` is different: a send with no approval among the
 #: spans we did see is a real violation whether or not other spans went missing.
 REQUIRED_POLICY_YAML = """
-apiVersion: evalforge.dev/v1
+apiVersion: proofstep.dev/v1
 kind: TrajectoryPolicy
 name: approval-required
 description: Every run must record a human approval.
@@ -395,7 +395,7 @@ class TestDeterministicCoverage:
             policy_id=broken.id,
             version=1,
             source_yaml=(
-                "apiVersion: evalforge.dev/v1\nkind: TrajectoryPolicy\nname: broken\n"
+                "apiVersion: proofstep.dev/v1\nkind: TrajectoryPolicy\nname: broken\n"
                 "rules:\n  - id: x\n    kind: not_a_real_kind\n"
             ),
             parsed={},
@@ -685,7 +685,7 @@ class TestReviewQueue:
     ) -> None:
         queue = await make_queue(session, tenant_a)
         other = ReviewService(session, project_id=tenant_b.project.id)
-        from evalforge_api.errors import NotFoundError
+        from proofstep_api.errors import NotFoundError
 
         # 404, never 403: a 403 confirms the queue exists.
         with pytest.raises(NotFoundError):
@@ -784,7 +784,7 @@ class TestPromotion:
             trace_id="prov", dataset_slug="golden", expected={"ok": True}
         )
 
-        from evalforge_api.db.models.evaluation import DatasetExample
+        from proofstep_api.db.models.evaluation import DatasetExample
 
         example = (
             await session.execute(
@@ -881,7 +881,7 @@ class TestPromotion:
             trace_id="annotated", dataset_slug="golden", annotation_id=annotation.id
         )
 
-        from evalforge_api.db.models.evaluation import DatasetExample
+        from proofstep_api.db.models.evaluation import DatasetExample
 
         example = (
             await session.execute(
@@ -1020,13 +1020,13 @@ class TestJobs:
     async def test_retention_deletes_payload_rows_past_their_window(
         self, session: AsyncSession, tenant_a: Tenant
     ) -> None:
-        from evalforge_api.db.models.traces import PayloadObject
-        from evalforge_api.services.retention import RetentionService
+        from proofstep_api.db.models.traces import PayloadObject
+        from proofstep_api.services.retention import RetentionService
 
         old = PayloadObject(
             project_id=tenant_a.project.id,
             sha256=b"\x03" * 32,
-            bucket="evalforge-test",
+            bucket="proofstep-test",
             object_key=f"{tenant_a.project.id}/old",
             size_bytes=10,
             content_type="application/json",
@@ -1035,7 +1035,7 @@ class TestJobs:
         fresh = PayloadObject(
             project_id=tenant_a.project.id,
             sha256=b"\x04" * 32,
-            bucket="evalforge-test",
+            bucket="proofstep-test",
             object_key=f"{tenant_a.project.id}/fresh",
             size_bytes=10,
             content_type="application/json",

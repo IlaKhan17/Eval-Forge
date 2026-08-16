@@ -1,6 +1,6 @@
 """invitations
 
-Pending invitations to join an organization. See `evalforge_api.db.models.identity.Invitation` for
+Pending invitations to join an organization. See `proofstep_api.db.models.identity.Invitation` for
 why the token is hashed at rest.
 
 Revision ID: f8a3c21d7e59
@@ -63,8 +63,8 @@ def upgrade() -> None:
         """
         DO $$
         BEGIN
-            IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'evalforge_app') THEN
-                GRANT SELECT, INSERT, UPDATE, DELETE ON invitations TO evalforge_app;
+            IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'proofstep_app') THEN
+                GRANT SELECT, INSERT, UPDATE, DELETE ON invitations TO proofstep_app;
             END IF;
         END
         $$;
