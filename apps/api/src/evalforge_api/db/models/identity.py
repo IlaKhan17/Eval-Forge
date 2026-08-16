@@ -88,6 +88,36 @@ class Membership(IdentifiedBase, TimestampMixin):
     )
 
 
+class Invitation(IdentifiedBase, TimestampMixin):
+    """A pending invitation to join an organization.
+
+    The token is stored as a SHA-256 digest, never in the clear, for the same reason an API key is:
+    an invitation link *is* a credential — it grants membership of an organization and everything
+    that organization can see — and a leaked database should not hand out access to every workspace
+    with an outstanding invite.
+
+    Rows are kept after acceptance rather than deleted, so "who invited this person, and when?"
+    stays answerable. That question is asked exactly once, during an incident, and always about a
+    membership somebody does not recognise.
+    """
+
+    __tablename__ = "invitations"
+    __table_args__ = (
+        Index("ix_invitations_org_id_email", "org_id", "email"),
+        CheckConstraint(f"role IN {ROLES}", name="role_valid"),
+    )
+
+    org_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"))
+    email: Mapped[str] = mapped_column(String(320))
+    role: Mapped[str] = mapped_column(String(20))
+    token_hash: Mapped[bytes] = mapped_column(LargeBinary(32), unique=True)
+    invited_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), default=None
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+
+
 class Project(IdentifiedBase, TimestampMixin, UpdatedAtMixin, SoftDeleteMixin):
     __tablename__ = "projects"
 

@@ -16,6 +16,8 @@ from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from evalforge_api.api.routes import (
+    accounts,
+    auth,
     evaluation,
     health,
     ingest,
@@ -196,6 +198,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     _install_middleware(app, config)
     _install_error_handlers(app)
     app.include_router(health.router)
+    app.include_router(auth.router)
+    app.include_router(accounts.router)
     app.include_router(ingest.router)
     app.include_router(traces.router)
     app.include_router(evaluation.router)

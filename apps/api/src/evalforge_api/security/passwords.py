@@ -7,6 +7,8 @@ high-entropy and hashed with plain SHA-256 (see `keys.py`).
 
 from __future__ import annotations
 
+import secrets
+
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerifyMismatchError
 
@@ -15,6 +17,14 @@ _hasher = PasswordHasher(time_cost=2, memory_cost=19456, parallelism=1)
 
 MIN_LENGTH = 12
 MAX_LENGTH = 1024
+
+#: A real argon2id hash of a value nobody knows, verified against when the account does not exist.
+#:
+#: Without it, "no such user" returns in microseconds while "wrong password" pays the full hashing
+#: cost — and that difference is a reliable oracle for which addresses have accounts here. Computed
+#: once at import rather than per request, because doing the work every time would be the same cost
+#: it exists to disguise.
+DUMMY_HASH = _hasher.hash(secrets.token_urlsafe(32))
 
 
 class WeakPasswordError(ValueError):

@@ -10,7 +10,9 @@ dependencies = [
     "evalforge-trajectory",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
-    "pydantic>=2.9",
+    # `[email]` for EmailStr: sign-up and invitations validate addresses, and a hand-rolled regex
+    # for email is a well-known way to reject valid addresses while accepting invalid ones.
+    "pydantic[email]>=2.9",
     "pydantic-settings>=2.6",
     "sqlalchemy[asyncio]>=2.0.36",
     "alembic>=1.14",

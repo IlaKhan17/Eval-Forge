@@ -87,6 +87,54 @@ EXCUSED: dict[tuple[str, str], str] = {
         "POST",
         "/v1/ops/dead-letters/{dead_letter_id}/resolve",
     ): "deployment-wide operational records, not tenant data",
+    # ---------------------------------------------------------------- the account surface
+    #
+    # These are on a *different* tenancy axis from everything above. This sweep asks "can an API key
+    # for project A reach project B?"; the account routes are scoped by a user's organization
+    # membership, and an API key is refused by all of them outright (asserted directly by
+    # test_accounts.py::TestApiKeys::test_an_api_key_cannot_manage_the_account — a leaked ingest key
+    # must not be able to invite a person or mint another credential).
+    #
+    # Their cross-tenant behaviour is covered in test_accounts.py, which drives two real signed-in
+    # users: `test_another_organization_is_not_found` and
+    # `test_another_organizations_project_is_not_found` both assert 404 rather than 403, the same
+    # rule this file enforces everywhere else.
+    ("POST", "/v1/auth/signup"): "unauthenticated by design; creates the caller's own tenant",
+    ("POST", "/v1/auth/login"): "unauthenticated by design",
+    ("POST", "/v1/auth/refresh"): "unauthenticated; the refresh token is the proof of possession",
+    ("POST", "/v1/auth/logout"): "unauthenticated; must work with an expired access token",
+    ("GET", "/v1/auth/me"): "the caller's own identity; refuses API keys",
+    ("GET", "/v1/orgs"): "lists only the caller's memberships",
+    ("POST", "/v1/orgs"): "creates an organization owned by the caller; no id in the request",
+    ("GET", "/v1/orgs/{org_id}/members"): "org-scoped by membership; covered by test_accounts.py",
+    ("GET", "/v1/orgs/{org_id}/invites"): "org-scoped by membership; covered by test_accounts.py",
+    ("POST", "/v1/orgs/{org_id}/invites"): "org-scoped by membership; covered by test_accounts.py",
+    (
+        "PATCH",
+        "/v1/orgs/{org_id}/members/{member_id}",
+    ): "org-scoped by membership; covered by test_accounts.py",
+    (
+        "DELETE",
+        "/v1/orgs/{org_id}/members/{member_id}",
+    ): "org-scoped by membership; covered by test_accounts.py",
+    ("GET", "/v1/orgs/{org_id}/projects"): "org-scoped by membership; covered by test_accounts.py",
+    ("POST", "/v1/orgs/{org_id}/projects"): "org-scoped by membership; covered by test_accounts.py",
+    (
+        "POST",
+        "/v1/invites/accept",
+    ): "scoped by a hashed single-use token *and* a matching email address",
+    (
+        "GET",
+        "/v1/projects/{project_id}/api-keys",
+    ): "resolved through the project's org membership; covered by test_accounts.py",
+    (
+        "POST",
+        "/v1/projects/{project_id}/api-keys",
+    ): "resolved through the project's org membership; covered by test_accounts.py",
+    (
+        "DELETE",
+        "/v1/projects/{project_id}/api-keys/{key_id}",
+    ): "resolved through the project's org membership; covered by test_accounts.py",
 }
 
 

@@ -90,6 +90,11 @@ UNPROTECTED_TABLES: dict[str, str] = {
     "projects": "the tenant itself — a policy here would make the tenant unresolvable",
     "users": "identities span organizations; membership is what scopes them",
     "memberships": "the join that decides scope; filtered by org at the repository layer",
+    # Org-scoped, and read *before* the invitee is a member of anything — accepting an invitation is
+    # precisely the moment someone has no membership to filter by. Isolation comes from the token:
+    # the lookup is by a unique SHA-256 digest, so a row is useless without the link that produced
+    # it, and acceptance additionally requires the signed-in email to match.
+    "invitations": "read before the invitee is a member; scoped by a hashed single-use token",
     "refresh_tokens": "keyed by user, not project; rotation must work before a tenant is known",
     "alembic_version": "migration bookkeeping",
     # Deployment-level operational records, not tenant data. These jobs sweep every project, so a
