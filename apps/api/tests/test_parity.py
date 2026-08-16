@@ -53,7 +53,8 @@ def cases() -> list[Path]:
 
 
 def load(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text())
+    loaded: dict[str, Any] = json.loads(path.read_text())
+    return loaded
 
 
 @pytest_asyncio.fixture

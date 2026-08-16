@@ -34,15 +34,29 @@ generate app_db_password
 generate jwt_secret
 generate s3_secret_key
 
+# .env.prod, with the one secret that cannot live in a file already filled in. Postgres reads the
+# owner password from its secret file, but the migration URL needs it inline — a connection string
+# cannot reference a file — so it has to appear in both places. Copying it by hand is a step that is
+# easy to get subtly wrong (a trailing newline, the wrong file) and whose failure mode is an
+# authentication error three services deep.
+#
+# Same rule as the secrets: never overwrite. This file accumulates real configuration.
+if [ -f .env.prod ]; then
+  echo
+  echo "  = .env.prod              already exists, left alone"
+else
+  owner_password="$(cat secrets/owner_db_password)"
+  sed "s|^OWNER_DB_PASSWORD=.*|OWNER_DB_PASSWORD=${owner_password}|" .env.prod.example > .env.prod
+  chmod 600 .env.prod
+  echo
+  echo "  + .env.prod              created from .env.prod.example, owner password filled in"
+fi
+
 cat <<'NOTE'
 
 Next:
-  1. cp .env.prod.example .env.prod
-  2. Put the *same* owner password into .env.prod as OWNER_DB_PASSWORD — Postgres reads it from
-     the secret file, and the migration URL needs it inline because a connection string cannot
-     reference a file. That duplication is the one place a secret appears twice; it is why
-     .env.prod belongs in the same place as the secrets directory and out of git.
-  3. docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+  1. Review .env.prod — at minimum PROOFSTEP_TAG, WEB_PORT, and FORWARDED_ALLOW_IPS.
+  2. docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
 Back these up somewhere you can reach when the host is gone. Losing jwt_secret signs everyone out;
 losing app_db_password is recoverable with ALTER ROLE, but only if you can still reach the database.

@@ -1,0 +1,65 @@
+# Background jobs: online evaluations, experiment scheduling, retention sweeps, partition creation.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proofstep-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: proofstep-worker}
+  # Recreate, not RollingUpdate. Two workers briefly overlapping is not a correctness problem — arq
+  # jobs are idempotent — but it doubles concurrent evaluation spend during every deploy, and spend
+  # is the thing the budget ceiling exists to bound.
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: proofstep-worker}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+        - name: worker
+          image: ghcr.io/ilakhan17/proofstep/api
+          args: ["worker"]
+          envFrom:
+            - configMapRef: {name: proofstep-config}
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: {name: proofstep-secrets, key: database-url}
+            # The worker is the exception to "only the Job holds the owner's credential". Partition
+            # creation is DDL — a monthly table for the next month's spans — and it is a scheduled
+            # job, not a deploy step, because a deployment that has not rolled in six weeks must not
+            # be the reason ingestion stops. Used only by that job; see worker/main.py.
+            - name: MIGRATION_DATABASE_URL
+              valueFrom:
+                secretKeyRef: {name: proofstep-secrets, key: migration-database-url}
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef: {name: proofstep-secrets, key: jwt-secret}
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef: {name: proofstep-secrets, key: s3-secret-key}
+          # No HTTP server here, so liveness is "has this worker written a heartbeat recently".
+          # `GET /v1/ops/queues` on the API surfaces the same row: if the worker stops, the
+          # dashboard says so rather than the queue silently growing.
+          livenessProbe:
+            exec:
+              command: ["python", "-m", "proofstep_api.worker.liveness"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests: {cpu: 250m, memory: 512Mi}
+            limits: {memory: 1Gi}
+      # Long enough for an in-flight evaluation to finish rather than be retried. Evaluations cost
+      # money; a job killed at 10 seconds and retried is paid for twice.
+      terminationGracePeriodSeconds: 60

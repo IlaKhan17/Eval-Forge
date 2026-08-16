@@ -1,0 +1,141 @@
+name: images
+
+# Publishes the API and dashboard images to GitHub Container Registry.
+#
+# Separate from `release.yml` on purpose, even though both fire on a version tag. The two artefacts
+# have different audiences and different failure modes: a Python distribution cannot be unpublished
+# once its version number is taken, while an image tag can be repushed. Coupling them would mean a
+# registry hiccup blocking a PyPI release that had already passed its gate, or the reverse.
+#
+# It also runs on pushes to main, tagged `edge`. A self-hosted deployment tracking `edge` is
+# tracking main, and saying so in the tag is better than a `latest` that means whatever was pushed
+# most recently — which is the tag that turns "roll back to the previous image" into archaeology.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+# `packages: write` is the only elevated permission, and only the publish job has it.
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # For the build provenance attestation below: a signed statement, verifiable with `gh
+      # attestation verify`, that this image came from this workflow at this commit. Without it,
+      # "the image on ghcr matches the source" is a claim rather than something a user can check.
+      id-token: write
+      attestations: write
+    strategy:
+      # Independent images. One failing should still tell you whether the other builds.
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            dockerfile: infra/docker/api.Dockerfile
+          - name: web
+            dockerfile: infra/docker/web.Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.name }}
+          # `edge` for main, the full version for a tag, plus the major.minor so a deployment can
+          # track patch releases without editing anything. Deliberately no `latest`: a tag that
+          # silently changes meaning is how a rollback stops being a rollback.
+          tags: |
+            type=edge,branch=main
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=long
+
+      - id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          # amd64 and arm64: the second is not optional now that a large share of both developer
+          # laptops and cloud instances are arm, and an amd64-only image on those runs under
+          # emulation slowly enough to look like a performance bug in the product.
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Layer cache in the registry itself, so a build on a fresh runner still reuses the
+          # dependency layer. `mode=max` caches intermediate stages too, which is what makes the
+          # multi-stage builder worth having in CI.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.name }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+  smoke:
+    name: the published images start
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Not a formality. Every bug this stack has produced so far was invisible to the test suite
+      # and fatal in a container: a dependency that was only present in the dev environment, a
+      # settings guard that demanded a credential the process should not have, a role that could not
+      # be provisioned. A green build that has never been run proves the Dockerfile parses.
+      - name: bring the whole stack up and exercise it
+        run: |
+          set -euo pipefail
+          ./scripts/init_secrets.sh
+          # Lowercased: GHCR rejects an uppercase path, and GitHub owners can contain capitals.
+          # docker/metadata-action does this for you, which is exactly why it is easy to forget here.
+          repo="${GITHUB_REPOSITORY,,}"
+          cat >> .env.prod <<EOF
+          COMPOSE_PROJECT_NAME=proofstep-ci
+          PROOFSTEP_IMAGE=${REGISTRY}/${repo}/api
+          PROOFSTEP_WEB_IMAGE=${REGISTRY}/${repo}/web
+          PROOFSTEP_TAG=sha-${GITHUB_SHA}
+          WEB_PORT=3080
+          EOF
+          docker compose -f docker-compose.prod.yml -f docker-compose.expose-api.yml \
+            --env-file .env.prod up -d --wait
+          ./scripts/smoke_stack.sh http://127.0.0.1:3080 http://127.0.0.1:8000
+
+      - name: what the stack said, if it failed
+        if: failure()
+        run: |
+          docker compose -f docker-compose.prod.yml -f docker-compose.expose-api.yml \
+            --env-file .env.prod logs --tail 100

@@ -641,3 +641,34 @@ jobs:
           # a stale dashboard in production.
           PROOFSTEP_API_URL: http://127.0.0.1:8000
           PROOFSTEP_API_KEY: ps_dev_00000000_ci-build-placeholder-not-a-real-key
+
+  # Deployment manifests. Cheap, and the failure they catch is expensive: a manifest is only ever
+  # exercised at deploy time, so a typo in one sits in the repository looking correct until the
+  # moment someone is trying to ship.
+  manifests:
+    name: compose · kubernetes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: the compose files resolve
+        run: |
+          # `config` renders the file with substitutions applied, which is what catches a bad anchor
+          # or a variable nobody defined. The env file has to exist for it to read.
+          ./scripts/init_secrets.sh
+          docker compose -f docker-compose.prod.yml --env-file .env.prod config -q
+          docker compose -f docker-compose.prod.yml -f docker-compose.expose-api.yml \
+            --env-file .env.prod config -q
+
+      - name: install kubeconform
+        run: |
+          curl -sSL -o /tmp/kubeconform.tar.gz \
+            https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+          tar -xzf /tmp/kubeconform.tar.gz -C /tmp kubeconform
+          sudo mv /tmp/kubeconform /usr/local/bin/
+
+      - name: the kubernetes manifests are valid
+        # `kubectl kustomize` first, then validate the built output — validating the sources one by
+        # one would miss anything the kustomization itself breaks, which is where the image tags and
+        # the namespace come from.
+        run: kubectl kustomize infra/k8s | kubeconform -strict -summary -

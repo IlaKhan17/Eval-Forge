@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: proofstep
+
+# One place to change the version. `newTag` here beats editing four manifests, and beats `latest`,
+# which turns any pod reschedule into an unplanned deploy.
+images:
+  - name: ghcr.io/ilakhan17/proofstep/api
+    newTag: edge
+  - name: ghcr.io/ilakhan17/proofstep/web
+    newTag: edge
+
+# `labels` rather than the deprecated `commonLabels`. Not `includeSelectors: true` — that would
+# write these into every Deployment's selector, and a selector is immutable once applied, so the
+# next label change would need every workload deleted and recreated.
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: proofstep
+
+resources:
+  - config.yaml
+  - migrate-job.yaml
+  - api.yaml
+  - worker.yaml
+  - web.yaml
+  - ingress.yaml

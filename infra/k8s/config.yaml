@@ -1,0 +1,19 @@
+# Non-secret configuration. Everything here is safe in `kubectl get -o yaml`; anything that is not
+# lives in the `proofstep-secrets` Secret the README tells you to create.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proofstep-config
+data:
+  ENV: production
+  REDIS_URL: redis://redis:6379/0
+  S3_ENDPOINT: https://s3.amazonaws.com
+  S3_BUCKET: proofstep-payloads
+  S3_ACCESS_KEY: change-me
+  # Empty is right when only the dashboard calls the API, which is the default topology. A browser
+  # never talks to the API directly in that shape, so there is no origin to allow.
+  CORS_ORIGINS: ""
+  # The ingress controller's pod network. Without an allow-list uvicorn trusts X-Forwarded-For from
+  # anyone, and every client address in the audit log becomes whatever the caller claimed. Narrow
+  # this to your controller's CIDR; the default here is the widest possible and is a placeholder.
+  FORWARDED_ALLOW_IPS: "0.0.0.0/0"

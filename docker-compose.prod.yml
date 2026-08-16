@@ -96,7 +96,7 @@ services:
   # API does on boot: migrations need the *owning* role, and every replica would otherwise race the
   # same DDL.
   migrate:
-    image: ${PROOFSTEP_IMAGE:-ghcr.io/ilakhan17/proofstep-api}:${PROOFSTEP_TAG:-latest}
+    image: ${PROOFSTEP_IMAGE:-ghcr.io/ilakhan17/proofstep/api}:${PROOFSTEP_TAG:-latest}
     command: ["migrate"]
     restart: "no"
     environment:
@@ -109,7 +109,7 @@ services:
         condition: service_healthy
 
   api:
-    image: ${PROOFSTEP_IMAGE:-ghcr.io/ilakhan17/proofstep-api}:${PROOFSTEP_TAG:-latest}
+    image: ${PROOFSTEP_IMAGE:-ghcr.io/ilakhan17/proofstep/api}:${PROOFSTEP_TAG:-latest}
     command: ["api"]
     restart: unless-stopped
     environment: *app-env
@@ -128,7 +128,7 @@ services:
       - "8000"
 
   worker:
-    image: ${PROOFSTEP_IMAGE:-ghcr.io/ilakhan17/proofstep-api}:${PROOFSTEP_TAG:-latest}
+    image: ${PROOFSTEP_IMAGE:-ghcr.io/ilakhan17/proofstep/api}:${PROOFSTEP_TAG:-latest}
     command: ["worker"]
     restart: unless-stopped
     environment:
@@ -143,9 +143,21 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+    # Overrides the image's HTTP check, which was written for the API and inherited by every
+    # container built from the same image. The worker serves no HTTP, so it answered that check by
+    # failing it — a healthy worker permanently marked `unhealthy`, which `up --wait` never accepts
+    # and an orchestrator acting on health would restart in a loop. This asks the question the
+    # worker can actually answer: has the heartbeat cron run recently.
+    healthcheck:
+      test: ["CMD", "python", "-m", "proofstep_api.worker.liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      # The heartbeat runs at startup, but the worker has to connect to Redis and Postgres first.
+      start_period: 60s
 
   web:
-    image: ${PROOFSTEP_WEB_IMAGE:-ghcr.io/ilakhan17/proofstep-web}:${PROOFSTEP_TAG:-latest}
+    image: ${PROOFSTEP_WEB_IMAGE:-ghcr.io/ilakhan17/proofstep/web}:${PROOFSTEP_TAG:-latest}
     restart: unless-stopped
     environment:
       PROOFSTEP_API_URL: http://api:8000

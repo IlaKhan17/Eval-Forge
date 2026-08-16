@@ -169,6 +169,7 @@ same code path, and it is enforced in CI by [`.importlinter`](.importlinter).
 | [Dashboard](docs/DASHBOARD.md) | Trace viewer, proxy security, waterfall semantics |
 | [Security](docs/SECURITY.md) | Threat model, redaction, tenant isolation |
 | [Quickstart](docs/QUICKSTART.md) | Clone to a failing CI gate in fifteen minutes |
+| [Deploying](docs/DEPLOYING.md) | Container images, Docker Compose, Kubernetes, what to check first |
 | [Hardening](docs/HARDENING.md) | Row-level security, the application role, what is not done |
 | [Operations](docs/OPERATIONS.md) | Roles, secrets and key rotation, backups, metrics and alerts |
 | [Testing strategy](docs/TESTING_STRATEGY.md) | Pyramid, targets, CI stages |

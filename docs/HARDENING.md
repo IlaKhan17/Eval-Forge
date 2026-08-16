@@ -6,13 +6,20 @@ backstop the threat model has been deferring since Phase 2 — and is explicit a
 ## The one thing you must do before trusting isolation
 
 ```bash
-# Once, as a superuser, after migrations.
-psql "$ADMIN_URL" -v role_password="$(openssl rand -hex 24)" -f scripts/create_app_role.sql
+# Once, against the database, as an owning or superuser role, after migrations.
+psql "$ADMIN_URL" -v ON_ERROR_STOP=1 \
+  -c "SET proofstep.role_password = '$(openssl rand -hex 24)'" \
+  -f scripts/create_app_role.sql
 
 # Then point the application at it.
 POSTGRES_USER=proofstep_app
-POSTGRES_PASSWORD=<the password you generated>
+POSTGRES_PASSWORD=<the password you set above>
 ```
+
+The container images do this for you: `migrate` runs `alembic upgrade head` and then
+`scripts/provision_app_role.py`, which executes the same file with the password from
+`POSTGRES_PASSWORD`. Re-running is expected — it rotates the password and re-applies the grants, so
+the newest migration's tables are reachable by the application role.
 
 Check it took effect:
 

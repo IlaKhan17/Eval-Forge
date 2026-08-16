@@ -17,9 +17,14 @@ every policy carries `FORCE`, which a future migration can silently drop). Conne
 neither, and tenant isolation has three layers instead of one.
 
 ```bash
-# once, as a superuser
-psql -v role_password="$(openssl rand -hex 24)" -f scripts/create_app_role.sql
+# once, as an owning or superuser role, after migrations
+psql -v ON_ERROR_STOP=1 \
+  -c "SET proofstep.role_password = '$(openssl rand -hex 24)'" \
+  -f scripts/create_app_role.sql
 ```
+
+The container images do this as the second half of their `migrate` command, so a compose or
+Kubernetes deployment gets it without a manual step. See `scripts/provision_app_role.py`.
 
 Then two roles in the environment:
 

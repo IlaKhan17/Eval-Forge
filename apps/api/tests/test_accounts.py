@@ -14,6 +14,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 import pytest_asyncio
@@ -54,7 +55,9 @@ def email() -> str:
     return f"user-{uuid.uuid4().hex[:8]}@example.com"
 
 
-async def signup(client: AsyncClient, address: str | None = None, **extra: object) -> dict:
+async def signup(
+    client: AsyncClient, address: str | None = None, **extra: object
+) -> dict[str, Any]:
     response = await client.post(
         "/v1/auth/signup",
         json={"email": address or email(), "password": PASSWORD, **extra},
@@ -63,7 +66,7 @@ async def signup(client: AsyncClient, address: str | None = None, **extra: objec
     return dict(response.json())
 
 
-def auth(session_payload: dict) -> dict[str, str]:
+def auth(session_payload: dict[str, Any]) -> dict[str, str]:
     return {"authorization": f"Bearer {session_payload['access_token']}"}
 
 

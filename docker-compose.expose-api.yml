@@ -1,0 +1,20 @@
+# Publishes the API to the host. An overlay, not a default.
+#
+#   docker compose -f docker-compose.prod.yml -f docker-compose.expose-api.yml \
+#     --env-file .env.prod up -d
+#
+# The base file keeps the API on the compose network only, because in the common topology the
+# dashboard is the only thing that talks to it and everything else arrives through a proxy that
+# terminates TLS. But SDKs have to reach the API from wherever the instrumented application runs, so
+# a real deployment publishes it somehow — behind a proxy, or, with this file, directly.
+#
+# Directly means directly: no TLS, no rate limiting beyond the application's own, and API keys
+# travelling in plaintext to whatever address you bind. `API_BIND` defaults to loopback for that
+# reason. Set it to 0.0.0.0 only when something else is terminating TLS in front of this host.
+#
+# CI uses this file to run scripts/smoke_stack.sh against the published images.
+
+services:
+  api:
+    ports:
+      - "${API_BIND:-127.0.0.1}:${API_PORT:-8000}:8000"

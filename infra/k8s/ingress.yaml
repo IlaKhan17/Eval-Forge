@@ -1,0 +1,45 @@
+# Two hosts, because the product has two front doors with different callers.
+#
+# `app.` is the dashboard: browsers, session cookies, a CSRF header on every write.
+# `api.` is the API: SDKs and CI, authenticating with a key.
+#
+# Splitting them is not cosmetic. If the API were served under a path on the dashboard's origin, a
+# browser session cookie would be attached to SDK-shaped requests by virtue of matching the origin,
+# and the separation the proxy's allow-list exists to enforce would be one misconfigured route from
+# gone. Different origins mean the browser cannot accidentally speak the machine's protocol.
+#
+# Adjust the hosts, the ingressClassName, and the TLS secret. How that secret gets created is a
+# property of your cluster — cert-manager, a cloud load balancer, something in front of it.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: proofstep
+  annotations:
+    # Trace payloads are large by nature: a batch of spans carries prompts and completions. The
+    # common controller default is 1MB, which rejects a perfectly ordinary batch with a 413 that
+    # never reaches the application and so never appears in its logs.
+    nginx.ingress.kubernetes.io/proxy-body-size: "16m"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [app.example.com, api.example.com]
+      secretName: proofstep-tls
+  rules:
+    - host: app.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: proofstep-web
+                port: {name: http}
+    - host: api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: proofstep-api
+                port: {name: http}

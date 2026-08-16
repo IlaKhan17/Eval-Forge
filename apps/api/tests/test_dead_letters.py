@@ -22,9 +22,10 @@ from proofstep_api.api.dependencies import get_session
 from proofstep_api.db.models.ops import MAX_MESSAGE_CHARS, DeadLetterJob
 from proofstep_api.main import create_app
 from proofstep_api.settings import Settings
-from proofstep_api.worker import deadletter
+from proofstep_api.worker import deadletter, liveness
+from proofstep_api.worker.deadletter import HEARTBEATS
 from sqlalchemy import delete, select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 pytestmark = pytest.mark.integration
 
@@ -294,7 +295,7 @@ class TestWorkerIntegration:
         # The session factory is patched rather than the recorder: patching the recorder would
         # test that a call happened, and what matters is that a row exists.
         original = worker_main._session_factory
-        worker_main._session_factory = lambda: factory(session)  # type: ignore[assignment]
+        worker_main._session_factory = lambda: factory(session)
         try:
             if swallow:
                 # Every case but one is about what was *recorded*; the exception itself is the
@@ -304,7 +305,7 @@ class TestWorkerIntegration:
             else:
                 await worker_main._with_session("online_eval", boom, ctx)
         finally:
-            worker_main._session_factory = original  # type: ignore[assignment]
+            worker_main._session_factory = original
 
 
 class TestOpsEndpoints:
@@ -414,3 +415,80 @@ class TestSurvivesRollback:
             async with maker() as cleanup:
                 await cleanup.execute(delete(DeadLetterJob))
                 await cleanup.commit()
+
+
+class TestLiveness:
+    """The check a container orchestrator runs against the worker.
+
+    The worker serves no HTTP, so it inherited the image's HTTP health check — written for the API —
+    and answered it by failing forever. A healthy worker permanently marked `unhealthy` is not a
+    cosmetic problem: `docker compose up --wait` never returns, and an orchestrator acting on health
+    restarts a working process in a loop.
+
+    What is pinned here is the *interpretation* of the heartbeat row, because that is where the
+    judgement lives. Too strict and a slow database moment restarts a worker mid-evaluation, paying
+    for the same model call twice; too loose and a wedged event loop goes unnoticed.
+
+    These commit for real, rather than using the shared rolled-back session, because
+    `liveness.check` opens its own connection — as it must, being a separate probe process. A row
+    that exists only inside an uncommitted transaction is invisible to it, and that is the whole
+    point of the check.
+    """
+
+    @pytest_asyncio.fixture
+    async def beat(
+        self, engine: AsyncEngine, monkeypatch: pytest.MonkeyPatch
+    ) -> AsyncIterator[Any]:
+        """Write a heartbeat with a chosen age, and remove it afterwards.
+
+        The probe reads its own settings to find the database, which in a test process means the
+        development one. Pointed at the engine under test instead — the alternative is asserting
+        against whatever happens to be in the developer's own database.
+        """
+        url = engine.url.render_as_string(hide_password=False)
+        monkeypatch.setattr(
+            liveness, "get_settings", lambda: Settings(env="test", database_url=url)
+        )
+        names: list[str] = []
+
+        async def write(name: str, age: timedelta = timedelta(0)) -> str:
+            unique = f"{name}-{uuid.uuid4().hex[:8]}"
+            names.append(unique)
+            async with engine.begin() as connection:
+                await connection.execute(
+                    HEARTBEATS.insert().values(
+                        id=uuid.uuid4(),
+                        worker_name=unique,
+                        last_seen_at=datetime.now(UTC) - age,
+                        detail={},
+                    )
+                )
+            return unique
+
+        yield write
+
+        async with engine.begin() as connection:
+            await connection.execute(HEARTBEATS.delete().where(HEARTBEATS.c.worker_name.in_(names)))
+
+    async def test_a_recent_heartbeat_is_alive(self, beat: Any) -> None:
+        alive, detail = await liveness.check(await beat("probe-alive"))
+        assert alive, detail
+
+    async def test_a_stale_heartbeat_is_not(self, beat: Any) -> None:
+        # Backdated past the tolerance rather than waited out: the point of the test is the
+        # threshold, and a test that sleeps for two minutes gets deleted by whoever is in a hurry.
+        name = await beat("probe-stale", liveness.STALE_AFTER + timedelta(seconds=1))
+        alive, detail = await liveness.check(name)
+        assert not alive
+        assert "ago" in detail
+
+    async def test_a_worker_that_has_never_beaten_is_not_alive_yet(self) -> None:
+        """And says "yet".
+
+        This is the window between the process starting and its first beat, which is what a startup
+        grace period covers. Reporting it as death would be accurate for a worker that never starts
+        and wrong for every worker that does.
+        """
+        alive, detail = await liveness.check(f"probe-never-{uuid.uuid4().hex[:8]}")
+        assert not alive
+        assert "yet" in detail
