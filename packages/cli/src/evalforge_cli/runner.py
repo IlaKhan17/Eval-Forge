@@ -30,6 +30,7 @@ from evalforge_core.compare import compare_metrics
 from evalforge_types import (
     CalibrationRequirementSpec,
     CalibrationStatus,
+    ExampleResult,
     ExitCode,
     GateRule,
     GateSet,
@@ -171,6 +172,8 @@ def build_gate_set(loaded: LoadedSuite) -> GateSet | None:
                 severity=Severity.BLOCK if spec.blocking else Severity.WARN,
                 slice=spec.slice,
                 require_baseline=spec.require_baseline,
+                significance=spec.significance,
+                require_power=spec.require_power,
             )
         )
     return GateSet(
@@ -291,6 +294,7 @@ async def execute(
     *,
     models: Any = None,
     baseline_metrics: list[Metric] | None = None,
+    baseline_results: list[ExampleResult] | None = None,
     journal: Path | None = None,
     resume: Path | None = None,
     limit: int | None = None,
@@ -327,6 +331,7 @@ async def execute(
         corpus_evaluators=corpus,
         gate_set=build_gate_set(loaded),
         baseline=baseline_metrics,
+        baseline_results=baseline_results,
         models=models,
         config=config,
         suite_name=suite.name,

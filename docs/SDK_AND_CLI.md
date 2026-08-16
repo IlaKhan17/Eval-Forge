@@ -274,6 +274,50 @@ evalforge eval evals/suites/sdr-email.yaml \
 
 Sequence: load+validate config → resolve dataset version → resolve baseline → register evaluator/policy versions → open experiment+run → execute (journaled) → aggregate → compare → gates → report → exit.
 
+### Statistically honest gates
+
+A threshold says what size of change *matters*. It cannot say whether the change is real, and at the
+sample sizes eval suites actually run at, most measured "regressions" are neither:
+
+```yaml
+gates:
+  intent_accuracy:
+    max_regression: 0.02
+    significance: 0.05      # only fail if the drop is distinguishable from noise
+    require_power: true     # and ERROR if this run could never have detected it
+```
+
+- `significance` runs a **paired** test on the same examples in both runs — a paired bootstrap for
+  continuous scores, McNemar's exact test for pass/fail. Pairing is what makes it sensitive enough
+  to be worth running: comparing two means pays for the variance *between examples*, which is
+  usually far larger than the variance between model versions.
+- `require_power` reports ERROR when the run was too small to detect the regression the rule names.
+  A green check from a test that could never have failed is worse than no check, because it is
+  believed.
+
+Both are opt-in per gate. Absolute floors (`minimum`) are untouched — "recall on this class must be
+0.98" is not a claim about noise, and a protected metric does not negotiate.
+
+Holm's correction is applied across the gated metrics, because a suite gating twenty of them at
+α=0.05 expects one false alarm per run from chance alone — and after the second one, nobody reads
+the gate.
+
+**A worked example.** Two runs of the same code at 40 examples, differing only by sampling noise:
+
+```
+baseline 0.8239  candidate 0.8077  measured drop +0.0162
+paired test: n=40  p=0.350  mde=0.101
+
+threshold only     → pass   exit 0
+threshold + test   → error  exit 2
+  accuracy gates on a 0.02 regression, but 40 paired example(s) could only detect 0.1007.
+  This gate cannot see what it claims to guard — add examples or widen the threshold.
+```
+
+The threshold gate passed, and it was never capable of doing anything else: at 40 examples it could
+only have fired on noise larger than its own threshold. That is the failure this feature exists to
+make visible.
+
 ### Publishing
 
 **Implemented.** `eval` records the run on the server whenever `EVALFORGE_ENDPOINT` and `EVALFORGE_API_KEY` are both set. `--local` opts out; there is no flag to opt *in*, because a run that needs a flag to be recorded is a run nobody records.

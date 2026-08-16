@@ -224,6 +224,11 @@ class GateRuleIn(BaseModel):
     slice: dict[str, str] | None = None
     require_baseline: bool = False
     max_error_rate: float = Field(default=0.05, ge=0, le=1)
+    #: Both halves of a statistically honest gate. Without them on the wire the server would store
+    #: a rule that fails on noise the CLI deliberately passed — the exact class of divergence the
+    #: parity suite exists to catch, and it caught these.
+    significance: float | None = Field(default=None, ge=0, le=1)
+    require_power: bool = False
 
     @property
     def resolved_severity(self) -> Severity:
@@ -705,6 +710,29 @@ async def cancel_run(run_id: uuid.UUID, session: SessionDep, principal: Runner) 
     return _run_out(await service.cancel_run(run_id))
 
 
+@router.get("/experiment-runs/{run_id}/results", response_model=list[ExampleResult])
+async def run_results(
+    run_id: uuid.UUID,
+    session: SessionDep,
+    principal: Reader,
+    limit: Annotated[int, Query(ge=1, le=5_000)] = 1_000,
+) -> list[ExampleResult]:
+    """Per-example results for one run.
+
+    Exists so a candidate can be compared against a baseline *pairwise*. Aggregates cannot support
+    that: a paired test needs each example's score on both sides, and matching them is the whole
+    reason the test is far more sensitive than comparing two means. Without this endpoint the CLI
+    can fetch a baseline's numbers but not the data underneath them, and "is this regression real?"
+    stays unanswerable.
+
+    Bounded, and the bound is honest — a caller that hits it is told, because a silently truncated
+    comparison would drop examples from one side and quietly bias the result.
+    """
+    service = ExperimentService(session, project_id=principal.project)
+    await service.get_run(run_id)
+    return (await service.load_results(run_id))[:limit]
+
+
 @router.post("/experiment-runs/{run_id}/metrics", response_model=SubmitMetricsOut)
 async def submit_metrics(
     run_id: uuid.UUID, body: MetricsIn, session: SessionDep, principal: Runner
@@ -1057,6 +1085,8 @@ async def create_gate_set(
             slice=rule.slice,
             require_baseline=rule.require_baseline,
             max_error_rate=rule.max_error_rate,
+            significance=rule.significance,
+            require_power=rule.require_power,
         )
         session.add(
             QualityGateRule(
@@ -1072,6 +1102,8 @@ async def create_gate_set(
                 slice_key=slice_key(validated.slice),
                 require_baseline=validated.require_baseline,
                 max_error_rate=validated.max_error_rate,
+                significance=validated.significance,
+                require_power=validated.require_power,
             )
         )
     await session.flush()

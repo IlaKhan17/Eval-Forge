@@ -513,6 +513,8 @@ class ExperimentService:
                     slice=rule.slice,
                     require_baseline=rule.require_baseline,
                     max_error_rate=rule.max_error_rate,
+                    significance=rule.significance,
+                    require_power=rule.require_power,
                 )
                 for rule in rules
             ],

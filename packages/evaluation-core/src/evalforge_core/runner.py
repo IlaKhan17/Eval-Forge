@@ -35,6 +35,7 @@ from typing import Any
 from evalforge_core.aggregate import aggregate_scores
 from evalforge_core.dataset import Dataset
 from evalforge_core.gates import GateReport, evaluate_gates
+from evalforge_core.significance import SignificanceResult, analyse_all
 from evalforge_core.types import CorpusEvaluator, EvalContext, Evaluator, ModelClient
 from evalforge_types import (
     CalibrationStatus,
@@ -83,6 +84,10 @@ class EvalResult:
     ended_at: float = 0.0
     cancelled: bool = False
     aborted_reason: str | None = None
+    #: Paired significance tests for the gated metrics, when a baseline's per-example results were
+    #: available. Empty rather than absent when no test ran, so a reader can tell "not tested" from
+    #: "tested and unremarkable" — the report renders the difference.
+    significance: dict[str, SignificanceResult] = field(default_factory=dict)
 
     @property
     def duration_s(self) -> float:
@@ -120,6 +125,7 @@ async def run_suite(
     corpus_evaluators: Sequence[CorpusEvaluator] = (),
     gate_set: GateSet | None = None,
     baseline: Sequence[Metric] | None = None,
+    baseline_results: Sequence[ExampleResult] | None = None,
     models: ModelClient | None = None,
     config: RunConfig | None = None,
     suite_name: str = "eval",
@@ -219,6 +225,16 @@ async def run_suite(
     result.ended_at = time.monotonic()
 
     if gate_set is not None:
+        # Paired tests only for the metrics a rule actually gates on. Testing every metric would
+        # cost bootstrap resamples for numbers nobody is deciding anything with, and — worse —
+        # inflate the multiple-comparison correction, making the gated metrics harder to call
+        # significant because of metrics that were never in question.
+        significance = None
+        if baseline_results:
+            gated = sorted({rule.metric_key for rule in gate_set.rules if rule.needs_significance})
+            if gated:
+                significance = analyse_all(result.results, list(baseline_results), gated)
+
         result.gates = evaluate_gates(
             gate_set,
             result.metrics,
@@ -226,7 +242,9 @@ async def run_suite(
             dataset_match=dataset_match,
             judge_metrics=judge_metrics,
             calibrations=calibrations,
+            significance=significance,
         )
+        result.significance = significance or {}
 
     _check_error_ceiling(result, cfg)
     return result

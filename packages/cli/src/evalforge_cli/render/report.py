@@ -68,8 +68,27 @@ def build_report(
             }
         )
 
+    # Paired tests, when any ran. Keyed by metric so a consumer can join them to the gate results
+    # without re-deriving which rule asked for what.
+    significance = {
+        key: {
+            "test": test.test,
+            "n_pairs": test.n_pairs,
+            "difference": test.difference,
+            "ci_low": test.ci_low,
+            "ci_high": test.ci_high,
+            "p_value": test.p_value,
+            "adjusted_p_value": test.adjusted_p_value,
+            "minimum_detectable_effect": test.minimum_detectable_effect,
+            "dropped": test.dropped,
+            "notes": list(test.notes),
+        }
+        for key, test in getattr(result, "significance", {}).items()
+    }
+
     report: dict[str, Any] = {
         "report_version": REPORT_VERSION,
+        "significance": significance,
         "suite": result.suite,
         "verdict": result.gates.verdict.value,
         "exit_code": result.exit_code,

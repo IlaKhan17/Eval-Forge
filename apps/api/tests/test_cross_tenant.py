@@ -284,6 +284,7 @@ BY_ID: tuple[tuple[str, str, str, dict[str, Any] | None], ...] = (
     ("POST", "/v1/experiment-runs/{run_id}/cancel", "run", {}),
     ("POST", "/v1/experiment-runs/{run_id}/complete", "run", {}),
     ("GET", "/v1/experiment-runs/{run_id}/metrics", "run", None),
+    ("GET", "/v1/experiment-runs/{run_id}/results", "run", None),
     ("GET", "/v1/experiments/{experiment_id}/runs", "experiment", None),
     ("POST", "/v1/experiment-runs/{run_id}/results", "run", {"results": []}),
     ("POST", "/v1/experiment-runs/{run_id}/metrics", "run", {"metrics": []}),

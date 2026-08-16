@@ -138,6 +138,7 @@ def eval(  # noqa: PLR0917 — Typer maps CLI options onto arguments
                 loaded,
                 models=models,
                 baseline_metrics=baseline.metrics or None,
+                baseline_results=baseline.results or None,
                 journal=journal,
                 resume=resume,
                 limit=limit,
@@ -211,7 +212,16 @@ def _fetch_baseline(loaded: Any, *, local: bool) -> publish_module.Baseline:
     if local or not endpoint or not api_key:
         return publish_module.Baseline()
 
-    baseline = publish_module.fetch_baseline(loaded, endpoint=endpoint, api_key=api_key)
+    # Only when a gate actually asks for a test. Otherwise the run pays to download every example's
+    # scores for a feature it does not use.
+    from evalforge_cli.runner import build_gate_set  # noqa: PLC0415 — avoids a cycle
+
+    gate_set = build_gate_set(loaded)
+    wants_pairs = bool(gate_set and any(rule.needs_significance for rule in gate_set.rules))
+
+    baseline = publish_module.fetch_baseline(
+        loaded, endpoint=endpoint, api_key=api_key, want_results=wants_pairs
+    )
     if baseline.error:
         # A warning, not a failure. Absolute floors still gate correctly with no baseline; only
         # regression rules are skipped, and `require_baseline` on a rule is how a suite declares

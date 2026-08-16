@@ -243,6 +243,13 @@ class GateSpec(BaseModel):
     blocking: bool = True
     slice: dict[str, str] | None = None
     require_baseline: bool = False
+    #: Alpha for a paired significance test. With it, a regression must be both bigger than the
+    #: threshold *and* distinguishable from noise before it fails the build — because at the sample
+    #: sizes eval suites actually run at, most measured regressions are neither.
+    significance: float | None = Field(default=None, ge=0.0, le=1.0)
+    #: Report ERROR when the run was too small to have detected the regression this gate guards.
+    #: A green check from a test that could never have failed is worse than no check.
+    require_power: bool = False
 
     @model_validator(mode="after")
     def _has_a_condition(self) -> GateSpec:

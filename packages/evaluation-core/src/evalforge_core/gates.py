@@ -18,6 +18,7 @@ from __future__ import annotations
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass, field
 
+from evalforge_core.significance import SignificanceResult
 from evalforge_types import (
     CalibrationStatus,
     ExitCode,
@@ -66,17 +67,23 @@ def evaluate_gates(
     dataset_match: bool = True,
     judge_metrics: Collection[str] = (),
     calibrations: Mapping[str, CalibrationStatus] | None = None,
+    significance: Mapping[str, SignificanceResult] | None = None,
 ) -> GateReport:
     """Apply every rule in the set and combine the verdicts.
 
     `judge_metrics` names the metrics produced by LLM judges. The gate engine cannot
     infer it — a `Metric` is just a key and a number — and it is needed because gating on
     a judge nobody has checked is the specific thing calibration exists to catch.
+
+    `significance` carries the paired tests, keyed by metric. Computed by the caller rather than
+    here, because the test needs *per-example* results and this function deliberately takes only
+    aggregates — that boundary is what lets the same gate engine run against a report loaded from
+    disk. A rule that asked for a test but got no result is treated as untested, never as passed.
     """
     index = {(m.key, _key(m.slice)): m for m in candidate}
     base_index = {(m.key, _key(m.slice)): m for m in (baseline or [])}
 
-    results = [_apply(rule, index, base_index) for rule in gate_set.rules]
+    results = [_apply(rule, index, base_index, significance or {}) for rule in gate_set.rules]
     results.extend(
         _calibration_results(gate_set, judge_metrics=judge_metrics, calibrations=calibrations or {})
     )
@@ -214,6 +221,7 @@ def _apply(  # noqa: PLR0911 — one early return per gate clause reads better t
     rule: GateRule,
     candidate: dict[tuple[str, tuple[tuple[str, str], ...]], Metric],
     baseline: dict[tuple[str, tuple[tuple[str, str], ...]], Metric],
+    significance: Mapping[str, SignificanceResult],
 ) -> GateResult:
     lookup = (rule.metric_key, _key(rule.slice))
     metric = candidate.get(lookup)
@@ -305,7 +313,7 @@ def _apply(  # noqa: PLR0911 — one early return per gate clause reads better t
                 message=f"{rule.full_key} {metric.value:.4g} (no baseline to compare against)",
             )
 
-        if regression := _check_regression(rule, metric, base):
+        if regression := _check_regression(rule, metric, base, significance.get(rule.metric_key)):
             return regression
 
         return _result(
@@ -329,8 +337,19 @@ def _apply(  # noqa: PLR0911 — one early return per gate clause reads better t
     )
 
 
-def _check_regression(rule: GateRule, metric: Metric, base: Metric) -> GateResult | None:
+def _check_regression(
+    rule: GateRule,
+    metric: Metric,
+    base: Metric,
+    test: SignificanceResult | None = None,
+) -> GateResult | None:
     drop = base.value - metric.value
+
+    if power := _check_power(rule, metric, base, test):
+        return power
+
+    if noise := _explained_by_noise(rule, metric, base, test, drop):
+        return noise
 
     if rule.max_absolute_regression is not None and drop > rule.max_absolute_regression:
         return _result(
@@ -412,6 +431,114 @@ _RANK = {Verdict.PASS: 0, Verdict.WARN: 1, Verdict.FAIL: 2, Verdict.ERROR: 3}
 
 def _rank(v: Verdict) -> int:
     return _RANK[v]
+
+
+def _check_power(
+    rule: GateRule,
+    metric: Metric,
+    base: Metric,
+    test: SignificanceResult | None,
+) -> GateResult | None:
+    """Refuse to certify a gate the run could never have failed.
+
+    `max_absolute_regression: 0.02` over twenty noisy examples is a promise the data cannot keep.
+    The rule looks satisfied, the build goes green, and nobody learns that the check was incapable
+    of detecting the thing it names. Opt-in via `require_power`, because on a small suite the honest
+    answer is often "add examples", and forcing that on every existing gate would be a breaking
+    change dressed up as rigour.
+    """
+    if not rule.require_power:
+        return None
+
+    threshold = rule.max_absolute_regression
+    if threshold is None:
+        return None
+
+    if test is None or test.minimum_detectable_effect is None:
+        return _result(
+            rule,
+            Verdict.ERROR,
+            "power_unknown",
+            actual=metric.value,
+            baseline=base.value,
+            threshold=threshold,
+            message=(
+                f"{rule.full_key} requires a powered comparison, but no paired test was available "
+                "(too few examples ran on both sides, or the runs share no examples)."
+            ),
+        )
+
+    if test.underpowered_for(threshold):
+        return _result(
+            rule,
+            Verdict.ERROR,
+            "underpowered",
+            actual=metric.value,
+            baseline=base.value,
+            threshold=threshold,
+            message=(
+                f"{rule.full_key} gates on a {threshold:.4g} regression, but {test.n_pairs} paired "
+                f"example(s) could only detect {test.minimum_detectable_effect:.4g}. This gate "
+                "cannot see what it claims to guard — add examples or widen the threshold."
+            ),
+        )
+    return None
+
+
+def _explained_by_noise(
+    rule: GateRule,
+    metric: Metric,
+    base: Metric,
+    test: SignificanceResult | None,
+    drop: float,
+) -> GateResult | None:
+    """Pass a threshold-breaking regression that the data cannot distinguish from noise.
+
+    Only when the rule opted in with `significance`. This is the half a threshold cannot do: at
+    forty examples a two-point drop is one example flipping, and blocking a merge on it teaches
+    people to bypass the gate that also carries the real checks.
+
+    Reported as PASS with the numbers attached rather than silently — "we measured a drop and could
+    not tell it from noise" is a different statement from "nothing moved", and a reader deciding
+    whether to trust the green tick needs the difference.
+    """
+    if rule.significance is None:
+        return None
+    if rule.max_absolute_regression is None or drop <= rule.max_absolute_regression:
+        return None
+
+    if test is None:
+        # Asked for a test and got none. Untested is not passed: a rule that quietly downgrades to
+        # a plain threshold when the data is missing is a rule nobody can reason about.
+        return _result(
+            rule,
+            Verdict.ERROR,
+            "significance_unavailable",
+            actual=metric.value,
+            baseline=base.value,
+            message=(
+                f"{rule.full_key} asks for a significance test, but no paired comparison was "
+                "available. The two runs must share examples for this rule to be decidable."
+            ),
+        )
+
+    if test.is_significant(rule.significance):
+        return None
+
+    p_value = test.adjusted_p_value if test.adjusted_p_value is not None else test.p_value
+    return _result(
+        rule,
+        Verdict.PASS,
+        "not_significant",
+        actual=metric.value,
+        baseline=base.value,
+        threshold=rule.max_absolute_regression,
+        message=(
+            f"{rule.full_key} measured a {drop:.4g} regression over {test.n_pairs} paired "
+            f"example(s), which this run cannot distinguish from noise "
+            f"(p={p_value:.3g} > {rule.significance:g}). Not failing the build on it."
+        ),
+    )
 
 
 def _key(slice_: dict[str, str] | None) -> tuple[tuple[str, str], ...]:

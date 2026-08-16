@@ -36,6 +36,34 @@ class GateRule(BaseModel):
         default=0.05,
         description="Above this share of errored evaluations the gate reports ERROR, not PASS",
     )
+    significance: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Alpha for a paired significance test. When set, a regression must be both larger "
+            "than the threshold *and* distinguishable from noise before it fails the build. A "
+            "threshold alone says what size of change matters; it cannot say whether the change "
+            "is real, and at small sample sizes most measured 'regressions' are neither."
+        ),
+    )
+    require_power: bool = Field(
+        default=False,
+        description=(
+            "Report ERROR when the run was too small to have detected the regression this rule "
+            "guards against. A green check from a test that could never have failed is worse than "
+            "no check, because it is believed."
+        ),
+    )
+
+    @property
+    def needs_significance(self) -> bool:
+        """Whether this rule wants a paired test computed for it.
+
+        `require_power` counts: reporting that a run could not have detected the regression it
+        guards needs the same paired data as testing whether one happened.
+        """
+        return self.significance is not None or self.require_power
 
     @property
     def blocking(self) -> bool:

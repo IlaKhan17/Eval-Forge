@@ -527,6 +527,11 @@ class QualityGateRule(IdentifiedBase, TimestampMixin):
     slice_key: Mapped[str] = mapped_column(String(300), default="")
     require_baseline: Mapped[bool] = mapped_column(Boolean, default=False)
     max_error_rate: Mapped[float] = mapped_column(Float, default=0.05)
+    #: Alpha for a paired significance test, and whether to refuse an underpowered gate. Stored
+    #: because a gate set is the durable record of what the repository asked for — a rule that came
+    #: back from the database missing them would gate differently from the one that was published.
+    significance: Mapped[float | None] = mapped_column(Float, default=None)
+    require_power: Mapped[bool] = mapped_column(Boolean, default=False)
 
     gate_set: Mapped[QualityGateSet] = relationship(back_populates="rules")
 

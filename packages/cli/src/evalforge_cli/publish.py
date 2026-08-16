@@ -37,7 +37,7 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 
-from evalforge_types import Metric
+from evalforge_types import ExampleResult, Metric
 
 if TYPE_CHECKING:
     from evalforge_cli.suite.loader import LoadedSuite
@@ -48,6 +48,11 @@ if TYPE_CHECKING:
 #: chunked rather than rejected.
 EXAMPLES_PER_REQUEST = 1_000
 RESULTS_PER_REQUEST = 500
+
+#: Cap on baseline results fetched for a paired test. Large enough for any suite anyone runs in CI,
+#: and a bound rather than unbounded because a comparison that silently used half of one side would
+#: be biased in a way nobody could see.
+MAX_BASELINE_RESULTS = 5_000
 
 DEFAULT_TIMEOUT = 60.0
 
@@ -447,6 +452,10 @@ class Baseline:
     run_id: str | None = None
     git_commit: str | None = None
     metrics: list[Metric] = field(default_factory=list)
+    #: The baseline's per-example results, when they could be fetched. Needed for a *paired*
+    #: significance test — aggregates cannot support one, because pairing is what makes the test
+    #: sensitive enough to be worth running at eval sample sizes.
+    results: list[ExampleResult] = field(default_factory=list)
     error: str | None = None
 
     @property
@@ -457,7 +466,12 @@ class Baseline:
 
 
 def fetch_baseline(
-    loaded: LoadedSuite, *, endpoint: str, api_key: str, timeout: float = DEFAULT_TIMEOUT
+    loaded: LoadedSuite,
+    *,
+    endpoint: str,
+    api_key: str,
+    timeout: float = DEFAULT_TIMEOUT,
+    want_results: bool = False,
 ) -> Baseline:
     """Pull the baseline's metrics so regression gates can be applied locally.
 
@@ -484,10 +498,34 @@ def fetch_baseline(
 
     if payload.get("run_id") is None:
         return Baseline()
+
+    # A second call, and only when a rule actually needs it. Per-example results for a large suite
+    # are far bigger than its metrics, and fetching them for every run would make the common case
+    # (no significance rules) pay for a feature it does not use.
+    results: list[ExampleResult] = []
+    if want_results:
+        try:
+            with Publisher(endpoint, api_key, timeout=timeout) as publisher:
+                rows = publisher.get(
+                    f"/v1/experiment-runs/{payload['run_id']}/results",
+                    params={"limit": MAX_BASELINE_RESULTS},
+                )
+            results = [ExampleResult.model_validate(row) for row in rows or []]
+        except PublishError as exc:
+            # Degrades to a metrics-only baseline. The gate engine then reports the significance
+            # rule as undecidable rather than passing it, which is the honest outcome.
+            return Baseline(
+                run_id=str(payload["run_id"]),
+                git_commit=payload.get("git_commit"),
+                metrics=[Metric.model_validate(row) for row in payload.get("metrics") or []],
+                error=f"baseline results unavailable: {exc}",
+            )
+
     return Baseline(
         run_id=str(payload["run_id"]),
         git_commit=payload.get("git_commit"),
         metrics=[Metric.model_validate(row) for row in payload.get("metrics") or []],
+        results=results,
     )
 
 

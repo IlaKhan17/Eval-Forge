@@ -43,8 +43,7 @@ def upgrade() -> None:
     # constraint that does not exist. A CHECK cannot be altered in place, so it is dropped and
     # recreated with the wider set.
     op.execute(
-        "ALTER TABLE online_evaluations "
-        "DROP CONSTRAINT ck_online_evaluations_decision_reason_valid"
+        "ALTER TABLE online_evaluations DROP CONSTRAINT ck_online_evaluations_decision_reason_valid"
     )
     op.execute(
         "ALTER TABLE online_evaluations ADD CONSTRAINT "
@@ -58,12 +57,10 @@ def downgrade() -> None:
     # the closest older meaning rather than left to break the downgrade. `capped` is that: both say
     # "a limit stopped this", and the distinction they lose is exactly the one this migration added.
     op.execute(
-        "UPDATE online_evaluations SET decision_reason = 'capped' "
-        "WHERE decision_reason = 'budget'"
+        "UPDATE online_evaluations SET decision_reason = 'capped' WHERE decision_reason = 'budget'"
     )
     op.execute(
-        "ALTER TABLE online_evaluations "
-        "DROP CONSTRAINT ck_online_evaluations_decision_reason_valid"
+        "ALTER TABLE online_evaluations DROP CONSTRAINT ck_online_evaluations_decision_reason_valid"
     )
     op.execute(
         "ALTER TABLE online_evaluations ADD CONSTRAINT "
