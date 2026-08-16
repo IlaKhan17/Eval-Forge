@@ -9,10 +9,10 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import Field, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, field_validator, model_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 Environment = Literal["development", "test", "staging", "production"]
 
@@ -99,7 +99,40 @@ class Settings(BaseSettings):
     max_request_bytes: int = 5 * 1024 * 1024
     max_page_size: int = 200
 
-    cors_origins: list[str] = Field(default_factory=list)
+    #: `NoDecode` is load-bearing. Without it pydantic-settings JSON-decodes an environment variable
+    #: for any complex type *before* a validator can see it, so `CORS_ORIGINS=` raises a parser
+    #: error at startup and `CORS_ORIGINS=https://a,https://b` does too — a deployer would have to
+    #: write a JSON array inside a shell variable. With it, the validator below reads the plain
+    #: comma-separated string an environment variable actually is.
+    cors_origins: Annotated[list[str], NoDecode] = Field(default_factory=list)
+
+    # ------------------------------------------------------------ file-backed secrets
+    #
+    # Declared, not inferred. `extra="ignore"` means pydantic-settings discards any environment
+    # variable that does not match a field *before* a validator can see it — so `JWT_SECRET_FILE`
+    # in the environment was silently dropped while the same value passed as a keyword argument
+    # worked. The tests passed and the container did not, which is the most expensive kind of gap:
+    # the feature exists for orchestrators, and an orchestrator is exactly what sets an env var.
+    jwt_secret_file: str | None = None
+    postgres_password_file: str | None = None
+    s3_secret_key_file: str | None = None
+    database_url_file: str | None = None
+    migration_database_url_file: str | None = None
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _split_origins(cls, value: Any) -> Any:
+        """Accept a comma-separated string, because that is what an environment variable is.
+
+        pydantic-settings JSON-decodes a complex type by default, so `CORS_ORIGINS=` fails outright
+        and `CORS_ORIGINS=https://a,https://b` fails too — a deployer would have to write
+        `["https://a","https://b"]` in a shell variable, and the error when they do not names the
+        parser rather than the fix. Empty means empty, which is the correct default when only the
+        dashboard talks to the API.
+        """
+        if isinstance(value, str):
+            return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
 
     @model_validator(mode="before")
     @classmethod
@@ -168,21 +201,32 @@ class Settings(BaseSettings):
             problems.append("debug must be off in production")
         if "*" in self.cors_origins:
             problems.append("cors_origins must not contain '*' in production")
-        if self.migration_database_url is None:
-            # A warning would be ignored. Running migrations as the application role means the
-            # application owns its tables, and a table owner is exempt from its own policies unless
-            # FORCE is set on every one of them — which is a property of the schema that a future
-            # migration can silently drop.
-            problems.append(
-                "migration_database_url is not set, so migrations would run as the application "
-                "role. See docs/HARDENING.md: the application must not own its tables."
-            )
-
         if problems:
             joined = "\n  - ".join(problems)
             msg = f"refusing to start in production:\n  - {joined}"
             raise ValueError(msg)
         return self
+
+    def require_separate_migration_role(self) -> None:
+        """Refuse to run DDL as the application role in production.
+
+        This is deliberately *not* part of `_refuse_unsafe_production`, which every process runs at
+        boot. Requiring it there would mean the API and the worker each need the owning role's
+        credential in their environment merely to start — pushing the most privileged secret in the
+        system into the process most exposed to the internet, to enforce a rule about a thing that
+        process never does. The rule belongs at the point of use: whoever is about to issue DDL.
+
+        The rule itself stands. Running migrations as the application role means the application
+        owns its tables, and an owner is exempt from its own row-level policies unless FORCE is set
+        on every one of them — a property of the schema that a later migration can silently drop.
+        """
+        if self.is_production and self.migration_database_url is None:
+            msg = (
+                "refusing to migrate in production: migration_database_url is not set, so "
+                "migrations would run as the application role. See docs/HARDENING.md: the "
+                "application must not own its tables."
+            )
+            raise ValueError(msg)
 
 
 @lru_cache

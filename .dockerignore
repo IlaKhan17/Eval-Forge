@@ -1,0 +1,16 @@
+# Build context hygiene. Without this the context includes .venv, node_modules, and .git — hundreds
+# of megabytes that are copied to the daemon on every build and then discarded.
+.git
+.venv
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+node_modules
+**/node_modules
+apps/web/.next
+backups
+.env
+.env.*
+*.dump
+tests/load/results

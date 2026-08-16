@@ -24,7 +24,7 @@ function stubRoutes(routes: Record<string, unknown>): void {
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string) => {
-      const path = url.replace("/api/ef", "")
+      const path = url.replace("/api/ps", "")
       const match = Object.keys(routes).find((key) => path.startsWith(key))
       if (!match) return new Response("null", { status: 404 })
       return new Response(JSON.stringify(routes[match]), {

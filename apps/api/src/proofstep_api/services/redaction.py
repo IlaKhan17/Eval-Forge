@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from proofstep.redaction import RedactionPipeline
+from proofstep_core.redaction import RedactionPipeline
 from proofstep_types import CaptureMode
 
 

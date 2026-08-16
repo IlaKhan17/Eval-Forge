@@ -928,20 +928,20 @@ version = "0.1.0"
 source = { editable = "packages/python-sdk" }
 dependencies = [
     { name = "httpx" },
+    { name = "proofstep-core" },
     { name = "proofstep-types" },
     { name = "pydantic" },
 ]
 
 [package.optional-dependencies]
 eval = [
-    { name = "proofstep-core" },
     { name = "proofstep-trajectory" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "httpx", specifier = ">=0.27" },
-    { name = "proofstep-core", marker = "extra == 'eval'", editable = "packages/evaluation-core" },
+    { name = "proofstep-core", editable = "packages/evaluation-core" },
     { name = "proofstep-trajectory", marker = "extra == 'eval'", editable = "packages/trajectory-engine" },
     { name = "proofstep-types", editable = "packages/shared-types" },
     { name = "pydantic", specifier = ">=2.9" },

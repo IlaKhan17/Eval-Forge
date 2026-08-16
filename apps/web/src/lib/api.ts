@@ -1,7 +1,7 @@
 /**
  * Browser-side API client.
  *
- * Every request goes to this app's own origin at `/api/ef/...`, never directly to the
+ * Every request goes to this app's own origin at `/api/ps/...`, never directly to the
  * Proofstep API. The proxy on the other side attaches the credential from a
  * server-only environment variable.
  *
@@ -23,7 +23,7 @@ import type { Experiment, Metric, Run } from "./experiments"
 import { type TraceFilters, serializeFilters } from "./filters"
 import type { TraceDetail } from "./spans"
 
-export const API_BASE = "/api/ef"
+export const API_BASE = "/api/ps"
 
 export interface TraceSummary {
   trace_id: string

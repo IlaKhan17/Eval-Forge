@@ -68,6 +68,21 @@ class TestSecretFiles:
         target.write_text("   \n")
         assert Settings(jwt_secret=SECRET, jwt_secret_file=str(target)).jwt_secret == SECRET
 
+    def test_a_secret_file_is_read_from_the_environment(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Through the environment, not as a keyword argument.
+
+        The whole point of `<NAME>_FILE` is that an orchestrator sets it — and an orchestrator sets
+        environment variables. The original tests passed the path as an init kwarg, which worked
+        while the environment path was silently broken: `extra="ignore"` discarded the unknown
+        variable before any validator could see it. The container caught what the tests did not.
+        """
+        target = tmp_path / "jwt"
+        target.write_text(f"{SECRET}\n")
+        monkeypatch.setenv("JWT_SECRET_FILE", str(target))
+        assert Settings().jwt_secret == SECRET
+
     def test_an_unreadable_file_fails_loudly(self, tmp_path: Path) -> None:
         with pytest.raises(ValueError, match="could not read"):
             Settings(jwt_secret_file=str(tmp_path / "missing"))
@@ -76,17 +91,33 @@ class TestSecretFiles:
 class TestProductionRefusals:
     """Production settings that must stop a boot rather than degrade it."""
 
-    def test_a_shared_migration_role_is_refused(self) -> None:
+    def test_a_production_process_boots_without_the_owning_role(self) -> None:
+        """The API and worker never issue DDL, so they must not need the owning credential.
+
+        Requiring it at boot put the most privileged secret in the system into the environment of
+        the process most exposed to the internet — to enforce a rule about something that process
+        does not do. The rule moved to the DDL path; the boot must stay clean.
+        """
+        settings = Settings(
+            env="production",
+            jwt_secret=SECRET,
+            postgres_password="x" * 20,
+            migration_database_url=None,
+        )
+        assert settings.migration_database_url is None
+
+    def test_a_shared_migration_role_is_refused_at_migration_time(self) -> None:
         # Running migrations as the application role means the application owns its tables, and an
         # owner is exempt from its own policies unless FORCE is set on every one — a property a
         # later migration can drop without anyone noticing.
+        settings = Settings(
+            env="production",
+            jwt_secret=SECRET,
+            postgres_password="x" * 20,
+            migration_database_url=None,
+        )
         with pytest.raises(ValueError, match="migration_database_url"):
-            Settings(
-                env="production",
-                jwt_secret=SECRET,
-                postgres_password="x" * 20,
-                migration_database_url=None,
-            )
+            settings.require_separate_migration_role()
 
     def test_a_separate_migration_role_is_accepted(self) -> None:
         settings = Settings(
@@ -95,7 +126,12 @@ class TestProductionRefusals:
             postgres_password="x" * 20,
             migration_database_url="postgresql+psycopg://owner:pw@db/proofstep",
         )
+        settings.require_separate_migration_role()
         assert settings.migration_url != settings.sqlalchemy_url
+
+    def test_a_shared_migration_role_is_fine_outside_production(self) -> None:
+        # A single-role development or CI install must not be blocked from migrating.
+        Settings(env="development").require_separate_migration_role()
 
     def test_the_migration_url_falls_back_outside_production(self) -> None:
         # A single-role development install must keep working with no extra configuration.

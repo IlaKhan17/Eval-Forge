@@ -23,7 +23,7 @@ from proofstep_api.db.models.identity import Invitation, RefreshToken
 from proofstep_api.main import create_app
 from proofstep_api.settings import Settings
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 pytestmark = pytest.mark.integration
 
@@ -518,3 +518,57 @@ class TestApiKeys:
             f"/v1/projects/{other['project_id']}/api-keys", headers=auth(stranger)
         )
         assert response.status_code == 404
+
+
+class TestUnderRowLevelSecurity:
+    """The same flow, on a connection that row-level security actually applies to.
+
+    Every other test in this file runs as the session superuser, which Postgres exempts from every
+    policy unconditionally. That is a configuration no production deployment uses, and the gap is
+    not hypothetical: signup created a project and then inserted its default environment with no
+    tenant set on the transaction. `environments` has a `WITH CHECK` policy, so the superuser
+    accepted the insert and the application role refused it — a 500 on the first request a new user
+    ever makes, reachable only after deploying exactly as the hardening guide instructs.
+
+    Two endpoints, because both create a project and then write a tenant-scoped row into it, and
+    fixing one would have left the other.
+    """
+
+    @pytest_asyncio.fixture
+    async def restricted_client(
+        self, unprivileged_engine: AsyncEngine
+    ) -> AsyncIterator[AsyncClient]:
+        app = create_app(
+            Settings(
+                env="test",
+                jwt_secret="test-secret-value-that-is-long-enough-32",
+                rate_limit_auth_per_min=0,
+            )
+        )
+        maker = async_sessionmaker(unprivileged_engine, expire_on_commit=False)
+
+        async def override() -> AsyncIterator[AsyncSession]:
+            async with maker() as db:
+                yield db
+                await db.commit()
+
+        app.dependency_overrides[get_session] = override
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as http:
+            yield http
+
+    async def test_signup_creates_its_first_environment(
+        self, restricted_client: AsyncClient
+    ) -> None:
+        created = await signup(restricted_client)
+        assert created["project_id"] is not None
+
+    async def test_a_later_project_creates_its_environment_too(
+        self, restricted_client: AsyncClient
+    ) -> None:
+        owner = await signup(restricted_client)
+        response = await restricted_client.post(
+            f"/v1/orgs/{owner['org_id']}/projects",
+            headers=auth(owner),
+            json={"name": "Second"},
+        )
+        assert response.status_code == 201, response.text

@@ -145,7 +145,7 @@ describe("TraceDetailView", () => {
 
     await waitFor(() => expect(screen.getByText("reply-drafter")).toBeDefined())
     const call = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0]
-    expect(String(call?.[0])).toBe("/api/ef/v1/traces/abc123")
+    expect(String(call?.[0])).toBe("/api/ps/v1/traces/abc123")
   })
 
   it("renders the span rows", async () => {

@@ -14,12 +14,9 @@ as that role would pass while proving nothing, which is the trap this file is wr
 from __future__ import annotations
 
 import uuid
-from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 
 import pytest
-import pytest_asyncio
-from conftest import TEST_DB, _settings
 from proofstep_api.db.rls import (
     PROTECTED_TABLES,
     TENANT_SETTING,
@@ -29,59 +26,9 @@ from proofstep_api.db.rls import (
 )
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 pytestmark = pytest.mark.integration
-
-#: A role with no privileges beyond what the application needs, and crucially neither SUPERUSER nor
-#: BYPASSRLS. Created per session and dropped afterwards.
-APP_ROLE = "proofstep_rls_probe"
-APP_PASSWORD = "probe-only-not-a-secret"
-
-
-@pytest_asyncio.fixture(scope="session")
-async def unprivileged_engine(engine: AsyncEngine) -> AsyncIterator[AsyncEngine]:
-    """An engine connected as a role that RLS actually applies to."""
-    settings = _settings()
-    async with engine.begin() as setup:
-        await setup.execute(
-            text(
-                f"DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '{APP_ROLE}') "
-                f"THEN CREATE ROLE {APP_ROLE} LOGIN PASSWORD '{APP_PASSWORD}' "
-                "NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE; END IF; END $$"
-            )
-        )
-        # Exactly the grants an application needs: use the schema and read/write the tables. No
-        # ownership, so `FORCE ROW LEVEL SECURITY` is not even required for the policies to bite —
-        # though it is set anyway, because a deployment may well run as the owner.
-        await setup.execute(text(f"GRANT USAGE ON SCHEMA public TO {APP_ROLE}"))
-        await setup.execute(
-            text(
-                f"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {APP_ROLE}"
-            )
-        )
-        await setup.execute(
-            text(f"GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO {APP_ROLE}")
-        )
-
-    url = (
-        f"postgresql+psycopg://{APP_ROLE}:{APP_PASSWORD}"
-        f"@{settings.postgres_host}:{settings.postgres_port}/{TEST_DB}"
-    )
-    probe = create_async_engine(url)
-    try:
-        yield probe
-    finally:
-        await probe.dispose()
-        async with engine.begin() as teardown:
-            await teardown.execute(
-                text(f"REVOKE ALL ON ALL TABLES IN SCHEMA public FROM {APP_ROLE}")
-            )
-            await teardown.execute(
-                text(f"REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM {APP_ROLE}")
-            )
-            await teardown.execute(text(f"REVOKE USAGE ON SCHEMA public FROM {APP_ROLE}"))
-            await teardown.execute(text(f"DROP ROLE IF EXISTS {APP_ROLE}"))
 
 
 async def seed_two_tenants(engine: AsyncEngine) -> tuple[uuid.UUID, uuid.UUID]:

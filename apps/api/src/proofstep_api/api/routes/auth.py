@@ -40,6 +40,7 @@ from proofstep_api.api.dependencies import (
     _client_ip,
     _enforce_limit,
 )
+from proofstep_api.db import rls
 from proofstep_api.db.models.identity import (
     Environment,
     Membership,
@@ -225,6 +226,14 @@ async def signup(
     )
     session.add(project)
     await session.flush()
+    # The transaction has no tenant: the request that created this account was unauthenticated, so
+    # the dependency had no project to scope it to. `environments` is tenant-scoped and its policy
+    # has a WITH CHECK, so inserting into it with no tenant set is refused outright.
+    #
+    # Invisible on a superuser connection, which bypasses every policy, and fatal on the
+    # unprivileged role a production deployment is supposed to use. So: signup worked in
+    # development and returned a 500 in production, on the first request a new user ever makes.
+    await rls.set_tenant(session, project.id)
     session.add(Environment(project_id=project.id, name=DEFAULT_ENVIRONMENT))
     await session.flush()
 

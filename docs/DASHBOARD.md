@@ -17,8 +17,8 @@ be recovered — losing it means issuing another.
 
 ## The API key never reaches the browser
 
-Every request from the page goes to this app's own origin at `/api/ef/...`. A route
-handler (`src/app/api/ef/[...path]/route.ts`) attaches the credential from
+Every request from the page goes to this app's own origin at `/api/ps/...`. A route
+handler (`src/app/api/ps/[...path]/route.ts`) attaches the credential from
 `PROOFSTEP_API_KEY`, which is a server-only variable.
 
 The alternative — `NEXT_PUBLIC_PROOFSTEP_API_KEY` read directly by the client — would

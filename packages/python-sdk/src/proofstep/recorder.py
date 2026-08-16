@@ -13,8 +13,8 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from proofstep.redaction import RedactionPipeline
 from proofstep.safety import log_once, never_raises
+from proofstep_core.redaction import RedactionPipeline
 from proofstep_types import CaptureMode, Span, SpanEvent, SpanType, Status, TokenUsage, Trace
 
 if TYPE_CHECKING:

@@ -12,7 +12,7 @@ import { type NextRequest, NextResponse } from "next/server"
  * which is what makes a script policy without `'unsafe-inline'` possible at all.
  *
  * `connect-src 'self'` is affordable only because every API call goes through the
- * same-origin proxy in `src/app/api/ef`. Styles still need `'unsafe-inline'`: the
+ * same-origin proxy in `src/app/api/ps`. Styles still need `'unsafe-inline'`: the
  * framework emits inline style tags and a nonce-based style policy does not survive
  * streaming. Scripts are the half that matters for injection, and those are locked.
  */

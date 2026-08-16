@@ -35,6 +35,7 @@ from sqlalchemy import select
 
 from proofstep_api.api.dependencies import PrincipalDep, SessionDep
 from proofstep_api.api.routes.auth import slugify
+from proofstep_api.db import rls
 from proofstep_api.db.models.identity import (
     ApiKey,
     Environment,
@@ -430,6 +431,14 @@ async def create_project(
     project = Project(org_id=org_id, name=body.name, slug=slug)
     session.add(project)
     await session.flush()
+    # Scope the transaction to the project that was just created. The caller's session is scoped to
+    # whichever project their credential named — or to none — and `environments` has a WITH CHECK
+    # policy, so the insert below is refused under any other tenant. Same failure as in signup, and
+    # equally invisible to a connection that bypasses RLS.
+    #
+    # Safe to move the tenant here because nothing afterwards reads another project's rows: the
+    # handler returns the project it just made.
+    await rls.set_tenant(session, project.id)
     # An environment, so the first trace has somewhere to land without another setup step.
     session.add(Environment(project_id=project.id, name="production"))
     await session.flush()

@@ -17,7 +17,13 @@ import pytest_asyncio
 from factories import Tenant, make_tenant
 from proofstep_api.db.partitions import ensure_partitions
 from proofstep_api.settings import Settings
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 TEST_DB = "proofstep_test"
 ROOT = Path(__file__).resolve().parents[3]
@@ -101,3 +107,62 @@ async def tenant_a(session: AsyncSession) -> Tenant:
 @pytest_asyncio.fixture
 async def tenant_b(session: AsyncSession) -> Tenant:
     return await make_tenant(session, slug="beta")
+
+
+# --------------------------------------------------------- the role RLS actually applies to
+#
+# Here rather than in test_rls.py, where it started, because it is not only the policy tests that
+# need it. Every integration test that runs as the session superuser is testing a configuration no
+# production deployment uses, and the gap is not theoretical: signup inserted a row into a
+# tenant-scoped table with no tenant set, which a superuser connection accepts and the real
+# application role refuses. See test_accounts.py::TestUnderRowLevelSecurity.
+
+#: A role with no privileges beyond what the application needs, and crucially neither SUPERUSER nor
+#: BYPASSRLS. Created per session and dropped afterwards.
+APP_ROLE = "proofstep_rls_probe"
+APP_PASSWORD = "probe-only-not-a-secret"
+
+
+@pytest_asyncio.fixture(scope="session")
+async def unprivileged_engine(engine: AsyncEngine) -> AsyncIterator[AsyncEngine]:
+    """An engine connected as a role that RLS actually applies to."""
+    settings = _settings()
+    async with engine.begin() as setup:
+        await setup.execute(
+            text(
+                f"DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '{APP_ROLE}') "
+                f"THEN CREATE ROLE {APP_ROLE} LOGIN PASSWORD '{APP_PASSWORD}' "
+                "NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE; END IF; END $$"
+            )
+        )
+        # Exactly the grants an application needs: use the schema and read/write the tables. No
+        # ownership, so `FORCE ROW LEVEL SECURITY` is not even required for the policies to bite —
+        # though it is set anyway, because a deployment may well run as the owner.
+        await setup.execute(text(f"GRANT USAGE ON SCHEMA public TO {APP_ROLE}"))
+        await setup.execute(
+            text(
+                f"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {APP_ROLE}"
+            )
+        )
+        await setup.execute(
+            text(f"GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO {APP_ROLE}")
+        )
+
+    url = (
+        f"postgresql+psycopg://{APP_ROLE}:{APP_PASSWORD}"
+        f"@{settings.postgres_host}:{settings.postgres_port}/{TEST_DB}"
+    )
+    probe = create_async_engine(url)
+    try:
+        yield probe
+    finally:
+        await probe.dispose()
+        async with engine.begin() as teardown:
+            await teardown.execute(
+                text(f"REVOKE ALL ON ALL TABLES IN SCHEMA public FROM {APP_ROLE}")
+            )
+            await teardown.execute(
+                text(f"REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM {APP_ROLE}")
+            )
+            await teardown.execute(text(f"REVOKE USAGE ON SCHEMA public FROM {APP_ROLE}"))
+            await teardown.execute(text(f"DROP ROLE IF EXISTS {APP_ROLE}"))

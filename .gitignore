@@ -1,55 +1,51 @@
-# Python
+
 __pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
-.mypy_cache/
-.ruff_cache/
-.pytest_cache/
-.hypothesis/
-htmlcov/
+!.env.example
 .coverage
 .coverage.*
-coverage.xml
-dist/
-build/
-
-# Node
-node_modules/
-.next/
-out/
-.turbo/
-*.tsbuildinfo
-
-# Secrets and local config — never commit these
+.docker-data/
+.DS_Store
+.e2e-api.log
 .env
 .env.*
-!.env.example
-*.pem
-*.key
-credentials.json
-
-# Proofstep local state
-.proofstep/
-~/.proofstep/
-# Reports a local run drops in the working tree. The name comes from the suite, so the pattern has
-# to cover all of them rather than the default filename only.
-proofstep-*.json
-
-# The e2e stack's server log, written next to the repo so a CI failure can print it.
-.e2e-api.log
-
-# Database dumps. Never committed: they contain every tenant's data, and a backup in a git history
-# is a backup with no access control and no retention.
-backups/
-*.proofstep.local.yaml
-
-# Editors / OS
-.DS_Store
+.env.prod
+.hypothesis/
 .idea/
+.mypy_cache/
+.next/
+.proofstep/
+.pytest_cache/
+.ruff_cache/
+.turbo/
+.venv/
 .vscode/
+*.egg-info/
+*.key
+*.pem
+*.proofstep.local.yaml
+*.py[cod]
 *.swp
-
+*.tsbuildinfo
+# Database dumps. Never committed: they contain every tenant's data, and a backup in a git history
 # Docker volumes
-.docker-data/
+# Editors / OS
+# is a backup with no access control and no retention.
+# Node
+# Proofstep local state
+# Python
+# Reports a local run drops in the working tree. The name comes from the suite, so the pattern has
+# Secrets and local config — never commit these
+# The e2e stack's server log, written next to the repo so a CI failure can print it.
+# to cover all of them rather than the default filename only.
+~/.proofstep/
+backups/
+build/
+coverage.xml
+credentials.json
+dist/
+htmlcov/
+node_modules/
+out/
+proofstep-*.json
+secrets/
+venv/

@@ -31,7 +31,11 @@ if config.config_file_name is not None:
 # without FORCE, and cannot create a table that has no policy. Where no separate migration role is
 # configured the two are the same string, so a single-role development install is unaffected.
 if not config.get_main_option("sqlalchemy.url", None):
-    config.set_main_option("sqlalchemy.url", get_settings().migration_url)
+    settings = get_settings()
+    # Checked here rather than at boot: this is the only place DDL is issued, so this is the only
+    # place that needs the owning role. See `Settings.require_separate_migration_role`.
+    settings.require_separate_migration_role()
+    config.set_main_option("sqlalchemy.url", settings.migration_url)
 target_metadata = Base.metadata
 
 

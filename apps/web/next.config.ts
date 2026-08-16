@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
+  // A self-contained server bundle with only the modules it actually imports, rather than a
+  // container carrying the whole node_modules tree. It is the difference between a ~200MB image
+  // and a ~1GB one, and the trace is computed from real imports so it cannot drift from the code.
+  output: "standalone",
+
   typescript: {
     // A type error must fail the build. The alternative ships a broken page and
     // discovers it in the browser.

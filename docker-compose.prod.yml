@@ -1,0 +1,171 @@
+# The whole system, self-hosted.
+#
+#   cp .env.prod.example .env.prod && $EDITOR .env.prod
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+#
+# Separate from docker-compose.yml, which carries only the backing services for local development.
+# One file trying to serve both grows conditionals nobody can read, and the failure mode is a
+# development default reaching production.
+#
+# What this file encodes that a minimal compose file would not:
+#
+#   - migrations run once, as a *different* database role, before the API starts
+#   - the API and worker connect as a role that row-level security applies to
+#   - secrets come from files, not from the environment
+#   - the API is not published to the host; only the dashboard and your own reverse proxy are
+
+# Overridable, and defaulted to something distinct from the development stack in
+# docker-compose.yml — which also calls itself `proofstep`. Sharing the name means `up` on this file
+# *replaces* the developer's running database and adopts its volumes, which is a memorable way to
+# lose a local dataset. A real deployment can set COMPOSE_PROJECT_NAME to whatever it likes.
+name: ${COMPOSE_PROJECT_NAME:-proofstep-prod}
+
+x-app-env: &app-env
+  ENV: production
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: ${POSTGRES_DB:-proofstep}
+  # The application role. Not the owner — see docs/HARDENING.md; a table's owner is exempt from its
+  # own policies unless FORCE is set on every one, and that is a property a later migration can drop.
+  POSTGRES_USER: ${APP_DB_USER:-proofstep_app}
+  POSTGRES_PASSWORD_FILE: /run/secrets/app_db_password
+  JWT_SECRET_FILE: /run/secrets/jwt_secret
+  REDIS_URL: redis://redis:6379/0
+  S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+  S3_BUCKET: ${S3_BUCKET:-proofstep-payloads}
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY:-proofstep}
+  S3_SECRET_KEY_FILE: /run/secrets/s3_secret_key
+  CORS_ORIGINS: ${CORS_ORIGINS:-}
+  # The proxy in front of this stack. Without an allow-list, X-Forwarded-For is caller-controlled
+  # and every client IP in the audit log is a guess.
+  FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-0.0.0.0/0}
+
+x-secrets: &app-secrets
+  - app_db_password
+  - jwt_secret
+  - s3_secret_key
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${OWNER_DB_USER:-proofstep}
+      POSTGRES_PASSWORD_FILE: /run/secrets/owner_db_password
+      POSTGRES_DB: ${POSTGRES_DB:-proofstep}
+    secrets: [owner_db_password]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${OWNER_DB_USER:-proofstep}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    # Persistence on: the queue holds work that has been accepted but not yet done, and losing it on
+    # a restart means online evaluations that silently never happen.
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-proofstep}
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/s3_secret_key
+    secrets: [s3_secret_key]
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  # Runs to completion, then the API and worker start. A separate service rather than something the
+  # API does on boot: migrations need the *owning* role, and every replica would otherwise race the
+  # same DDL.
+  migrate:
+    image: ${PROOFSTEP_IMAGE:-ghcr.io/ilakhan17/proofstep-api}:${PROOFSTEP_TAG:-latest}
+    command: ["migrate"]
+    restart: "no"
+    environment:
+      <<: *app-env
+      # The one place the owner's credentials are used.
+      MIGRATION_DATABASE_URL: postgresql+psycopg://${OWNER_DB_USER:-proofstep}:${OWNER_DB_PASSWORD}@postgres:5432/${POSTGRES_DB:-proofstep}
+    secrets: *app-secrets
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    image: ${PROOFSTEP_IMAGE:-ghcr.io/ilakhan17/proofstep-api}:${PROOFSTEP_TAG:-latest}
+    command: ["api"]
+    restart: unless-stopped
+    environment: *app-env
+    secrets: *app-secrets
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    # Deliberately not published to the host. The dashboard reaches it over the compose network, and
+    # anything else should come through your own TLS-terminating proxy. Publish it only if you have
+    # decided to expose the API directly and have TLS in front of it.
+    expose:
+      - "8000"
+
+  worker:
+    image: ${PROOFSTEP_IMAGE:-ghcr.io/ilakhan17/proofstep-api}:${PROOFSTEP_TAG:-latest}
+    command: ["worker"]
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+      # The worker's two DDL jobs — partition maintenance and retention — need the owning role.
+      # Without this they fail on every sweep with a permission error, which is exactly what
+      # happened the first time this ran as the unprivileged role.
+      MIGRATION_DATABASE_URL: postgresql+psycopg://${OWNER_DB_USER:-proofstep}:${OWNER_DB_PASSWORD}@postgres:5432/${POSTGRES_DB:-proofstep}
+    secrets: *app-secrets
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  web:
+    image: ${PROOFSTEP_WEB_IMAGE:-ghcr.io/ilakhan17/proofstep-web}:${PROOFSTEP_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      PROOFSTEP_API_URL: http://api:8000
+      NODE_ENV: production
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+
+secrets:
+  owner_db_password:
+    file: ./secrets/owner_db_password
+  app_db_password:
+    file: ./secrets/app_db_password
+  jwt_secret:
+    file: ./secrets/jwt_secret
+  s3_secret_key:
+    file: ./secrets/s3_secret_key
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:

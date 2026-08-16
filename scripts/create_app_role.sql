@@ -1,8 +1,16 @@
 -- Create the unprivileged role the application should connect as.
 --
--- Run this once per database, as a superuser, *after* migrations:
+-- Run this against the database as an owning or superuser role, *after* migrations. The password
+-- arrives as a session setting rather than a psql variable, so that the same file can be executed by
+-- psql and by a plain database driver — `scripts/provision_app_role.py` runs it on every deploy, and
+-- a second hand-maintained copy of these grants would drift from this one within a release:
 --
---   psql "$ADMIN_URL" -v role_password="$(openssl rand -hex 24)" -f scripts/create_app_role.sql
+--   psql "$ADMIN_URL" -v ON_ERROR_STOP=1 \
+--     -c "SET proofstep.role_password = 'PW'" \
+--     -f scripts/create_app_role.sql
+--
+-- Re-running is safe and expected: it rotates the password and re-applies the grants, which is how
+-- tables added by the latest migration become reachable by the application role.
 --
 -- Then point the application at it:
 --
@@ -20,19 +28,35 @@
 -- Migrations still run as an owner or superuser: they create tables, and the application role
 -- deliberately cannot.
 
-\set ON_ERROR_STOP on
+-- The password is read from `proofstep.role_password`, set by the caller. Passing it through a
+-- setting keeps it out of this file, out of the shell's argument list, and — because the role name
+-- is fixed and the value goes through `quote_literal` — out of reach of SQL injection.
+--
+-- `quote_literal` rather than the idiomatic `format()` with a literal specifier: this file is also
+-- executed by psycopg, which scans the whole statement -- comments included -- for its own
+-- client-side placeholders and refuses anything starting with a percent sign that it does not
+-- recognise. The two are equivalent here; only one survives both callers. Which is also why no
+-- percent sign appears anywhere in this file.
+DO $$
+DECLARE
+  pw text := current_setting('proofstep.role_password', true);
+BEGIN
+  IF pw IS NULL OR pw = '' THEN
+    RAISE EXCEPTION
+      'proofstep.role_password is not set. Run: SET proofstep.role_password = ''''<password>''';
+  END IF;
 
--- Created with \gexec rather than a DO block, because psql does not substitute :variables inside
--- dollar-quoted strings — so the password would arrive literally as ":'role_password'".
-SELECT format(
-  'CREATE ROLE proofstep_app LOGIN PASSWORD %L NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE',
-  :'role_password'
-)
-WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'proofstep_app')
-\gexec
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'proofstep_app') THEN
+    EXECUTE 'CREATE ROLE proofstep_app LOGIN PASSWORD ' || quote_literal(pw);
+  END IF;
 
--- Idempotent: re-running rotates the password rather than failing.
-ALTER ROLE proofstep_app PASSWORD :'role_password';
+  -- Idempotent: re-running rotates the password rather than failing.
+  EXECUTE 'ALTER ROLE proofstep_app PASSWORD ' || quote_literal(pw);
+END
+$$;
+
+-- Unconditional and deliberate: if someone granted this role SUPERUSER or BYPASSRLS to work around
+-- a permissions problem, every policy in the database is inert until it is taken back.
 ALTER ROLE proofstep_app NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
 
 -- Exactly what the application needs: read and write the data, and nothing structural. It cannot
