@@ -40,6 +40,12 @@ jobs:
       - name: application-neutrality check
         run: ./scripts/check-domain-leak.sh
 
+      - name: every path a workflow names exists
+        # Cheap, and it guards a failure that is invisible in a log: a pytest path that has moved
+        # exits 4 with "no tests ran", so the job goes red for a reason nobody can see and the suite
+        # it was meant to run silently stops running.
+        run: uv run python scripts/check_workflow_paths.py
+
   # Stage 2 — unit tests.
   unit:
     name: unit tests
@@ -311,8 +317,20 @@ jobs:
           uv run python - <<'PY'
           from proofstep_api.worker.main import WorkerSettings
           names = [f.__name__ for f in WorkerSettings.functions]
-          assert names == ["online_eval", "release_leases", "rollup", "retention"], names
-          assert len(WorkerSettings.cron_jobs) == 4
+          # The exact list, not a subset. A job silently dropped from the schedule is a feature that
+          # stops happening with nothing to show for it — no error, no failing test, just a rollup
+          # that never runs. The cost is that this line must be updated deliberately when the
+          # schedule changes, which is the point.
+          expected = [
+              "online_eval",      # the queue that evaluates production traces
+              "release_leases",   # returns review items abandoned mid-review
+              "rollup",           # aggregate metrics
+              "retention",        # drops expired partitions and payloads
+              "partitions",       # creates next month's span partition before it is needed
+              "heartbeat",        # what worker liveness reads; see worker/liveness.py
+          ]
+          assert names == expected, f"schedule changed: {names}"
+          assert len(WorkerSettings.cron_jobs) == len(expected)
           assert WorkerSettings.max_jobs == 1, "these jobs are database-bound; concurrency buys lock contention"
           print("worker schedule:", names)
           PY
@@ -357,8 +375,14 @@ jobs:
           # Down and up, because the downgrade discovers policies from the catalogue rather than
           # from a code list that can change under it — a mismatch that once left an orphaned
           # policy on api_keys and broke authentication entirely.
+          #
+          # Targeted at the row-level-security revision by name, not `downgrade -1`. Relative to
+          # *head* is only the right migration for as long as it stays the newest one, and the first
+          # migration added after it turned this into a check that downgraded something unrelated and
+          # then asserted the RLS policies were gone — which they were not, because nothing had asked
+          # them to be. A test that stops testing its subject still passes for a while.
           uv run alembic upgrade head
-          uv run alembic downgrade -1
+          uv run alembic downgrade dbd7500c5735-1
           uv run python - <<'PY'
           import asyncio
           from sqlalchemy import text
@@ -381,8 +405,11 @@ jobs:
 
       - name: the app role script produces a role RLS applies to
         run: |
-          PGPASSWORD=proofstep psql -h 127.0.0.1 -U proofstep -d proofstep \
-            -v role_password=ci-only-not-a-real-password -f scripts/create_app_role.sql \
+          # The password arrives as a session setting, not a psql variable, so that the same file
+          # can be executed by psql and by a driver — see the header of create_app_role.sql.
+          PGPASSWORD=proofstep psql -h 127.0.0.1 -U proofstep -d proofstep -v ON_ERROR_STOP=1 \
+            -c "SET proofstep.role_password = 'ci-only-not-a-real-password'" \
+            -f scripts/create_app_role.sql \
             | tee /tmp/role.txt
           grep -q "rls applies" /tmp/role.txt
 
@@ -556,10 +583,10 @@ jobs:
       - run: uv sync --all-packages
 
       - name: every suite validates and plans for free
-        run: uv run pytest packages/cli/tests/test_reference_suites.py -q -m "not slow"
+        run: uv run pytest tests/test_reference_suites.py -q -m "not slow"
 
       - name: a clean run passes and every injected regression is caught
-        run: uv run pytest packages/cli/tests/test_reference_suites.py -q -m slow
+        run: uv run pytest tests/test_reference_suites.py -q -m slow
 
       - name: the fixtures and calibration sets regenerate byte-identically
         run: |

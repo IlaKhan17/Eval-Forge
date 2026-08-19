@@ -77,6 +77,14 @@ class Settings(BaseSettings):
     s3_bucket: str = "proofstep-payloads"
     s3_access_key: str = ""
     s3_secret_key: str = ""
+    #: How long an object-storage call may take before ingestion gives up on it and stores the span
+    #: without its large payloads. Deliberately short. `IngestService._offload` degrades rather than
+    #: failing, which is only a kindness if the failure is quick — botocore's own defaults are 60s
+    #: connect, 60s read, five attempts, and that turns an object store having a bad afternoon into
+    #: an ingestion outage while every request politely waits its turn.
+    s3_connect_timeout_s: float = 2.0
+    s3_read_timeout_s: float = 5.0
+    s3_max_attempts: int = 2
 
     # --------------------------------------------------------------------- auth
     jwt_secret: str = ""

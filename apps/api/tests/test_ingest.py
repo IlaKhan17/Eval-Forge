@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
@@ -16,6 +17,7 @@ from factories import Tenant, make_tenant
 from proofstep_api.api.schemas.ingest import IngestBatch, IngestResult
 from proofstep_api.db.models.identity import Environment, Organization
 from proofstep_api.db.models.traces import PayloadObject, Span, SpanEvent, Trace
+from proofstep_api.services import storage
 from proofstep_api.services.ingest import IngestService
 from proofstep_api.services.storage import InMemoryObjectStore, load_payload
 from sqlalchemy import delete as sa_delete
@@ -580,3 +582,88 @@ class TestConcurrentFirstBatch:
             async with maker() as teardown:
                 await teardown.execute(sa_delete(Organization).where(Organization.id == org_id))
                 await teardown.commit()
+
+
+class TestResolvingTheObjectStore:
+    """Getting hold of the store, which is a separate failure from using it.
+
+    `TestGracefulDegradation` above injects a broken store and proves `_offload` degrades. It cannot
+    catch anything about how a store is *obtained*, because it never obtains one — and that is
+    precisely where this broke.
+
+    `get_store` is lazy, so the first ingest request after a restart is what constructs the client
+    and verifies the bucket. When object storage was unreachable, that verification raised straight
+    out of the route: past `_offload`, past every graceful-degradation test, into a 500. And since
+    the store was never memoized, it was not the first request that failed but every request, for
+    as long as the outage lasted. Careful degradation written, tested, and unreachable in the one
+    situation it existed for.
+    """
+
+    @staticmethod
+    def _settings(**overrides: object) -> SimpleNamespace:
+        return SimpleNamespace(
+            s3_endpoint="http://127.0.0.1:9",
+            s3_bucket="proofstep-payloads",
+            s3_access_key="key",
+            s3_secret_key="secret",
+            s3_connect_timeout_s=0.05,
+            s3_read_timeout_s=0.05,
+            s3_max_attempts=1,
+            **overrides,
+        )
+
+    def test_an_unreachable_store_still_yields_one(self) -> None:
+        storage.set_store(None)
+        try:
+            store = storage.get_store(self._settings())
+        finally:
+            storage.set_store(None)
+        # A store whose bucket could not be verified is still a usable object: writes through it
+        # fail, and `_offload` turns that into an accepted trace with no payload. What must not
+        # happen is an exception here, which no caller is positioned to handle.
+        assert store is not None
+
+    def test_it_is_not_memoized_so_the_outage_can_end(self) -> None:
+        """Otherwise recovery needs a restart.
+
+        Memoizing a store whose bucket was never verified would be the tidier-looking fix and would
+        mean payloads keep being dropped after storage comes back, until someone notices and
+        restarts the API.
+        """
+        storage.set_store(None)
+        try:
+            storage.get_store(self._settings())
+            assert storage._store is None, "a half-initialised store must not be cached"
+        finally:
+            storage.set_store(None)
+
+    def test_a_working_store_is_memoized(self) -> None:
+        # The other half of the same rule: the normal path must still build the client once per
+        # process rather than per request.
+        storage.set_store(None)
+        try:
+            first = storage.get_store(SimpleNamespace(s3_endpoint=None))
+            second = storage.get_store(SimpleNamespace(s3_endpoint=None))
+            assert first is second
+        finally:
+            storage.set_store(None)
+
+    def test_the_client_gives_up_quickly(self) -> None:
+        """Degrading is only a kindness if it is fast.
+
+        botocore defaults to a 60-second connect timeout, a 60-second read timeout, and five
+        attempts. Under those, an object store that black-holes packets does not make ingestion
+        degrade — it makes every ingest request wait minutes while holding a database connection,
+        and the client gives up long before the server does.
+        """
+        store = storage.S3ObjectStore(
+            bucket="b",
+            endpoint_url="http://127.0.0.1:9",
+            access_key="k",
+            secret_key="s",
+        )
+        config = store._client.meta.config
+        assert config.connect_timeout <= 5, config.connect_timeout
+        assert config.read_timeout <= 10, config.read_timeout
+        # `total_max_attempts` is what botocore resolves to, whichever spelling went in.
+        assert config.retries["total_max_attempts"] <= 3, config.retries

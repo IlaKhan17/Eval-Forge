@@ -17,6 +17,7 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
+import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -32,6 +33,9 @@ class StoredPayload:
     size_bytes: int
     encoding: str = "gzip"
     content_type: str = "application/json"
+
+
+logger = logging.getLogger(__name__)
 
 
 class ObjectStore(Protocol):
@@ -85,16 +89,42 @@ class S3ObjectStore:
         access_key: str,
         secret_key: str,
         region: str = "us-east-1",
+        connect_timeout_s: float = 2.0,
+        read_timeout_s: float = 5.0,
+        max_attempts: int = 2,
     ) -> None:
         import boto3  # noqa: PLC0415 — lazy so tests need no AWS dependency
+        from botocore.config import Config  # noqa: PLC0415
 
         self.bucket = bucket
+        # Short and bounded, which is the difference between degrading and hanging.
+        #
+        # `IngestService._offload` already treats an unreachable store as "accept the trace without
+        # its large payloads", on the argument that a trace missing payloads still answers what the
+        # agent did while a rejected batch answers nothing. That argument only holds if the failure
+        # is *fast*. botocore's defaults are a 60-second connect timeout, a 60-second read timeout,
+        # and up to five attempts — so a black-holed endpoint turns each offload into minutes of
+        # waiting, holding a database connection the whole time. The request eventually degrades
+        # gracefully, long after the client gave up and the SDK's bounded buffer overflowed.
+        #
+        # Two attempts total, not one: a single dropped packet is common and worth one retry. Not
+        # five: past the second attempt this is no longer a blip, and the caller has somewhere
+        # better to be.
+        #
+        # `total_max_attempts`, not `max_attempts` — botocore reads the latter as the number of
+        # *retries* and normalises it to `total_max_attempts = max_attempts + 1`, so the obvious
+        # spelling quietly buys one more attempt than it looks like.
         self._client = boto3.client(
             "s3",
             endpoint_url=endpoint_url,
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,
             region_name=region,
+            config=Config(
+                connect_timeout=connect_timeout_s,
+                read_timeout=read_timeout_s,
+                retries={"total_max_attempts": max_attempts, "mode": "standard"},
+            ),
         )
 
     def ensure_bucket(self) -> None:
@@ -183,8 +213,34 @@ def get_store(settings: Any) -> ObjectStore:
         endpoint_url=endpoint,
         access_key=settings.s3_access_key,
         secret_key=settings.s3_secret_key,
+        connect_timeout_s=getattr(settings, "s3_connect_timeout_s", 2.0),
+        read_timeout_s=getattr(settings, "s3_read_timeout_s", 5.0),
+        max_attempts=getattr(settings, "s3_max_attempts", 2),
     )
-    store.ensure_bucket()
+
+    try:
+        store.ensure_bucket()
+    except Exception:
+        # Unreachable object storage must not fail the request that happened to be first.
+        #
+        # This function is called lazily, from inside an ingest request, so before this `try` the
+        # exception propagated straight out of the route — past `IngestService._offload`, whose
+        # entire job is to turn exactly this failure into "accept the trace without its large
+        # payloads". Careful graceful degradation, written and tested, and unreachable in the one
+        # situation it was written for. Worse, `_store` stayed unset, so it was not the first
+        # request that failed but every request, for as long as the object store was away.
+        #
+        # Deliberately not memoized on this path: the next request constructs the store again and
+        # retries `ensure_bucket`, so the system heals by itself when storage comes back. That costs
+        # one bounded connection attempt per request while it is down — bounded being the operative
+        # word, and the reason the timeouts above are short.
+        logger.warning(
+            "object storage did not respond at %s; accepting traces without their large "
+            "payloads until it does",
+            endpoint,
+        )
+        return store
+
     _store = store
     return _store
 

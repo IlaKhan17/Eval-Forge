@@ -1,6 +1,5 @@
 
 __pycache__/
-!.env.example
 .coverage
 .coverage.*
 .docker-data/
@@ -9,6 +8,13 @@ __pycache__/
 .env
 .env.*
 .env.prod
+# Exceptions, and they must come *after* the patterns above: git takes the last matching rule, so a
+# negation written earlier in the file is silently overridden. That is not a hypothetical — the `!`
+# line used to sit at the top, `.env.*` re-ignored it, and `.env.prod.example` was never committed.
+# `scripts/init_secrets.sh` reads that file, so the first documented step of self-hosting failed for
+# anyone who cloned the repository. It was caught by CI running the same step.
+!.env.example
+!.env.prod.example
 .hypothesis/
 .idea/
 .mypy_cache/
