@@ -42,13 +42,38 @@ const ALLOWED_GET_PATTERNS: readonly RegExp[] = [
   /^\/v1\/projects\/[0-9a-f-]{36}\/api-keys$/,
   /^\/v1\/ops\/queues$/,
   /^\/v1\/ops\/budget$/,
+  // Resolving an invitation link. Unauthenticated by necessity — the person following it usually
+  // has no account yet — and safe to expose: it answers only for a token the caller already holds,
+  // and the API rate-limits it so it cannot be ground against.
+  /^\/v1\/invites\/preview$/,
 ]
 
 export interface PolicyDecision {
   allowed: boolean
   /** Reason, for the 403 body and the server log. Only set when denied. */
   reason?: string
+  /**
+   * Whether this path may be forwarded with no session attached.
+   *
+   * False for everything except the handful below, and the default matters: the proxy refuses an
+   * unauthenticated request outright, which is right for every endpoint that reads tenant data and
+   * wrong for the two or three that exist precisely for people who have no account yet.
+   */
+  anonymous?: boolean
 }
+
+/**
+ * Paths the proxy forwards without a session.
+ *
+ * Kept to what genuinely cannot require one. An invitation link is followed by someone who, in the
+ * common case, has never used this product — demanding a session first would mean the only people
+ * who can read an invitation are the ones who do not need it.
+ *
+ * Nothing here reaches tenant data. `/v1/invites/preview` resolves a token the caller already holds
+ * and returns what the invitation email they are reading already told them, and the API rate-limits
+ * it so the token cannot be guessed at.
+ */
+const ANONYMOUS_PATTERNS: readonly RegExp[] = [/^\/v1\/invites\/preview$/]
 
 /**
  * Writes the dashboard may make, as `METHOD /path` patterns.
@@ -81,11 +106,13 @@ export function checkProxyRequest(method: string, path: string): PolicyDecision 
     return { allowed: false, reason: "Path is not in a normalized form." }
   }
 
+  const anonymous = ANONYMOUS_PATTERNS.some((pattern) => pattern.test(path))
+
   if (method === "GET" || method === "HEAD") {
     if (!ALLOWED_GET_PATTERNS.some((pattern) => pattern.test(path))) {
       return { allowed: false, reason: `The dashboard proxy does not expose ${path}.` }
     }
-    return { allowed: true }
+    return { allowed: true, anonymous }
   }
 
   const writable = ALLOWED_WRITE_PATTERNS.some(
@@ -121,6 +148,10 @@ const ALLOWED_QUERY_KEYS: ReadonlySet<string> = new Set([
   // Experiment history filters by suite, which is how a reader asks "show me this suite's runs"
   // without paging through every other suite's.
   "suite_name",
+  // The invitation being resolved. Dropped rather than forwarded, this parameter would turn every
+  // preview into a 404 — an allow-list's characteristic failure, and one that looks like a broken
+  // invitation rather than a missing entry here.
+  "token",
 ])
 
 export function filterQuery(params: URLSearchParams): URLSearchParams {

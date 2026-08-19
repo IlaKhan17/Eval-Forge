@@ -11,6 +11,7 @@ a link, and API keys created by someone whose role should not allow it.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
@@ -20,10 +21,16 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from proofstep_api.api.dependencies import get_session
-from proofstep_api.db.models.identity import Invitation, RefreshToken
+from proofstep_api.db.models.identity import (
+    Invitation,
+    PasswordReset,
+    RefreshToken,
+    User,
+)
 from proofstep_api.main import create_app
+from proofstep_api.security import resets
 from proofstep_api.settings import Settings
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 pytestmark = pytest.mark.integration
@@ -575,3 +582,340 @@ class TestUnderRowLevelSecurity:
             json={"name": "Second"},
         )
         assert response.status_code == 201, response.text
+
+
+class TestInvitePreview:
+    """Resolving an invitation before anyone is signed in.
+
+    The page needs this: the person following the link usually has no account, and a form asking
+    for a password with no indication of who invited them or to what is indistinguishable from a
+    phishing page.
+    """
+
+    async def test_it_names_the_organization_and_the_address(self, client: AsyncClient) -> None:
+        owner = await signup(client, organization="Acme")
+        invitee = email()
+        invite = (
+            await client.post(
+                f"/v1/orgs/{owner['org_id']}/invites",
+                headers=auth(owner),
+                json={"email": invitee, "role": "reviewer"},
+            )
+        ).json()
+
+        preview = (await client.get(f"/v1/invites/preview?token={invite['token']}")).json()
+        assert preview["organization"] == "Acme"
+        assert preview["email"] == invitee
+        assert preview["role"] == "reviewer"
+
+    async def test_it_needs_no_session(self, client: AsyncClient) -> None:
+        """The whole point. A signed-in user is the case this endpoint is *not* for."""
+        owner = await signup(client)
+        invite = (
+            await client.post(
+                f"/v1/orgs/{owner['org_id']}/invites",
+                headers=auth(owner),
+                json={"email": email(), "role": "viewer"},
+            )
+        ).json()
+        response = await client.get(f"/v1/invites/preview?token={invite['token']}")
+        assert response.status_code == 200
+
+    async def test_a_guessed_token_is_a_flat_404(self, client: AsyncClient) -> None:
+        response = await client.get("/v1/invites/preview?token=not-a-real-token")
+        assert response.status_code == 404
+
+    async def test_a_spent_invitation_stops_previewing(self, client: AsyncClient) -> None:
+        """Otherwise the link keeps describing an organization to whoever still holds it."""
+        owner = await signup(client)
+        invitee = email()
+        invite = (
+            await client.post(
+                f"/v1/orgs/{owner['org_id']}/invites",
+                headers=auth(owner),
+                json={"email": invitee, "role": "developer"},
+            )
+        ).json()
+        colleague = await signup(client, invitee)
+        await client.post(
+            "/v1/invites/accept", headers=auth(colleague), json={"token": invite["token"]}
+        )
+
+        assert (await client.get(f"/v1/invites/preview?token={invite['token']}")).status_code == 404
+
+
+class TestSigningUpThroughAnInvitation:
+    async def test_the_invitee_lands_in_the_inviting_organization(
+        self, client: AsyncClient
+    ) -> None:
+        """And nowhere else.
+
+        Signing up normally and then accepting leaves an empty organization named after the
+        invitee's email address, forever, in the switcher of everyone who ever accepted an invite.
+        """
+        owner = await signup(client, organization="Acme")
+        invitee = email()
+        invite = (
+            await client.post(
+                f"/v1/orgs/{owner['org_id']}/invites",
+                headers=auth(owner),
+                json={"email": invitee, "role": "developer"},
+            )
+        ).json()
+
+        joined = await signup(client, invitee, invite_token=invite["token"])
+        assert joined["org_id"] == owner["org_id"]
+
+        orgs = (await client.get("/v1/auth/me", headers=auth(joined))).json()["organizations"]
+        assert [o["org_id"] for o in orgs] == [owner["org_id"]], "exactly one, and not a new one"
+        assert orgs[0]["role"] == "developer"
+
+    async def test_it_lands_on_a_project_the_organization_already_has(
+        self, client: AsyncClient
+    ) -> None:
+        # The dashboard's first screen is a trace list. Without a project, that is an empty state
+        # that reads as a broken account rather than as a workspace someone just joined.
+        owner = await signup(client, organization="Acme")
+        invitee = email()
+        invite = (
+            await client.post(
+                f"/v1/orgs/{owner['org_id']}/invites",
+                headers=auth(owner),
+                json={"email": invitee, "role": "developer"},
+            )
+        ).json()
+        joined = await signup(client, invitee, invite_token=invite["token"])
+        assert joined["project_id"] == owner["project_id"]
+
+    async def test_a_forwarded_invitation_cannot_be_spent_by_someone_else(
+        self, client: AsyncClient
+    ) -> None:
+        """The attack this whole flow has to survive.
+
+        Without the address check, anyone who is forwarded the link signs up under their own
+        address and is inside the organization — and "who did we invite?" stops matching "who is in
+        here?".
+        """
+        owner = await signup(client)
+        invite = (
+            await client.post(
+                f"/v1/orgs/{owner['org_id']}/invites",
+                headers=auth(owner),
+                json={"email": email(), "role": "admin"},
+            )
+        ).json()
+
+        response = await client.post(
+            "/v1/auth/signup",
+            json={"email": email(), "password": PASSWORD, "invite_token": invite["token"]},
+        )
+        assert response.status_code == 403
+
+    async def test_an_invalid_token_creates_no_account(
+        self, client: AsyncClient, session: AsyncSession
+    ) -> None:
+        """Either both happen or neither does.
+
+        A signup that succeeds while its invitation fails leaves someone with an account they did
+        not ask for, in no organization, wondering why they cannot see anything.
+        """
+        address = email()
+        response = await client.post(
+            "/v1/auth/signup",
+            json={"email": address, "password": PASSWORD, "invite_token": "nope"},
+        )
+        assert response.status_code == 401
+
+        found = (
+            await session.execute(select(User.id).where(User.email == address))
+        ).scalar_one_or_none()
+        assert found is None
+
+
+class TestPasswordReset:
+    """The flow whose failure modes are all silent.
+
+    A password reset is the one credential path that bypasses the password, so almost every way of
+    getting it wrong hands out accounts rather than throwing an error. What is pinned here is
+    exactly those ways.
+    """
+
+    @staticmethod
+    async def _link_for(client: AsyncClient, address: str, caplog: Any) -> str:
+        """Request a reset and recover the token the way an operator would.
+
+        Through the log, because that is the only route out of the process — see
+        `security/resets.py` for why the response must never carry it. A test that reached into the
+        database for the token would be testing a flow nobody can actually perform.
+        """
+        with caplog.at_level(logging.WARNING, logger="proofstep_api.security.resets"):
+            response = await client.post("/v1/auth/forgot", json={"email": address})
+        assert response.status_code == 202
+        links: list[str] = [
+            str(record.getMessage()).rsplit("token=", 1)[1]
+            for record in caplog.records
+            if "PASSWORD RESET LINK" in record.getMessage()
+        ]
+        assert links, "no reset link was delivered anywhere"
+        return links[-1]
+
+    async def test_a_forgotten_password_can_be_replaced(
+        self, client: AsyncClient, caplog: Any
+    ) -> None:
+        address = email()
+        await signup(client, address)
+        token = await self._link_for(client, address, caplog)
+
+        changed = await client.post(
+            "/v1/auth/reset", json={"token": token, "password": "a-brand-new-long-password"}
+        )
+        assert changed.status_code == 200
+
+        assert (
+            await client.post(
+                "/v1/auth/login", json={"email": address, "password": "a-brand-new-long-password"}
+            )
+        ).status_code == 200
+        assert (
+            await client.post("/v1/auth/login", json={"email": address, "password": PASSWORD})
+        ).status_code == 401, "the old password must stop working"
+
+    async def test_the_response_never_carries_the_token(
+        self, client: AsyncClient, caplog: Any
+    ) -> None:
+        """The one that gives away every account in the database.
+
+        An endpoint that returns the reset link to whoever asked is not a password reset, it is a
+        password bypass: post any address, receive the account. It is the most tempting shortcut in
+        the flow, because it is the only way to make the demo work without a mail server.
+        """
+        address = email()
+        await signup(client, address)
+        token = await self._link_for(client, address, caplog)
+
+        response = await client.post("/v1/auth/forgot", json={"email": address})
+        assert token not in response.text
+        assert "token" not in response.json()
+
+    async def test_an_unknown_address_is_answered_identically(self, client: AsyncClient) -> None:
+        """Otherwise this is a membership oracle against any email list."""
+        known = email()
+        await signup(client, known)
+
+        hit = await client.post("/v1/auth/forgot", json={"email": known})
+        miss = await client.post("/v1/auth/forgot", json={"email": email()})
+        assert hit.status_code == miss.status_code == 202
+        assert hit.json() == miss.json()
+
+    async def test_a_link_works_once(self, client: AsyncClient, caplog: Any) -> None:
+        """A live-until-expiry link is a standing takeover credential sitting in a mailbox."""
+        address = email()
+        await signup(client, address)
+        token = await self._link_for(client, address, caplog)
+
+        first = await client.post(
+            "/v1/auth/reset", json={"token": token, "password": "the-first-new-password"}
+        )
+        assert first.status_code == 200
+        second = await client.post(
+            "/v1/auth/reset", json={"token": token, "password": "a-second-new-password"}
+        )
+        assert second.status_code == 401
+
+    async def test_spending_one_link_kills_the_others(
+        self, client: AsyncClient, caplog: Any
+    ) -> None:
+        """Two requests, one used: the unused one must not survive.
+
+        Otherwise the second link in the mailbox is exactly the standing credential the first one
+        was just retired for being.
+        """
+        address = email()
+        await signup(client, address)
+        first = await self._link_for(client, address, caplog)
+        second = await self._link_for(client, address, caplog)
+        assert first != second
+
+        await client.post(
+            "/v1/auth/reset", json={"token": second, "password": "a-perfectly-good-password"}
+        )
+        stale = await client.post(
+            "/v1/auth/reset", json={"token": first, "password": "another-good-password"}
+        )
+        assert stale.status_code == 401
+
+    async def test_an_expired_link_is_refused(
+        self, client: AsyncClient, session: AsyncSession, caplog: Any
+    ) -> None:
+        address = email()
+        await signup(client, address)
+        token = await self._link_for(client, address, caplog)
+
+        await session.execute(
+            update(PasswordReset)
+            .where(PasswordReset.token_hash == resets.hash_token(token))
+            .values(expires_at=datetime.now(UTC) - timedelta(seconds=1))
+        )
+        await session.flush()
+
+        response = await client.post(
+            "/v1/auth/reset", json={"token": token, "password": "a-perfectly-good-password"}
+        )
+        assert response.status_code == 401
+
+    async def test_resetting_signs_every_session_out(
+        self, client: AsyncClient, caplog: Any
+    ) -> None:
+        """The case worth designing for is the stolen password, not the forgotten one.
+
+        If an attacker's refresh token outlives the reset, the reset changed nothing for them —
+        they keep the account and the owner believes they took it back.
+        """
+        address = email()
+        account = await signup(client, address)
+        token = await self._link_for(client, address, caplog)
+
+        await client.post(
+            "/v1/auth/reset", json={"token": token, "password": "a-perfectly-good-password"}
+        )
+
+        refreshed = await client.post(
+            "/v1/auth/refresh", json={"refresh_token": account["refresh_token"]}
+        )
+        assert refreshed.status_code == 401
+
+    async def test_the_token_is_not_stored_in_the_clear(
+        self, client: AsyncClient, session: AsyncSession, caplog: Any
+    ) -> None:
+        address = email()
+        await signup(client, address)
+        token = await self._link_for(client, address, caplog)
+
+        stored = (
+            await session.execute(
+                select(PasswordReset.token_hash).where(
+                    PasswordReset.token_hash == resets.hash_token(token)
+                )
+            )
+        ).scalar_one_or_none()
+        assert stored is not None, "the row exists"
+        assert token.encode() not in stored, "but not the token itself"
+
+    async def test_a_reset_does_not_sign_the_caller_in(
+        self, client: AsyncClient, caplog: Any
+    ) -> None:
+        """Friendlier to hand back a session; also means one stolen link is a session.
+
+        Requiring the login proves the new password reached the person who set it.
+        """
+        address = email()
+        await signup(client, address)
+        token = await self._link_for(client, address, caplog)
+
+        body = (
+            await client.post(
+                "/v1/auth/reset", json={"token": token, "password": "a-perfectly-good-password"}
+            )
+        ).json()
+        assert "access_token" not in body
+        assert "refresh_token" not in body

@@ -13,6 +13,9 @@ data:
   # Empty is right when only the dashboard calls the API, which is the default topology. A browser
   # never talks to the API directly in that shape, so there is no origin to allow.
   CORS_ORIGINS: ""
+  # Where the dashboard is reachable, used to build password-reset links. Must match the Ingress
+  # host; the default only works for someone port-forwarding to their own machine.
+  DASHBOARD_URL: https://app.example.com
   # The ingress controller's pod network. Without an allow-list uvicorn trusts X-Forwarded-For from
   # anyone, and every client address in the audit log becomes whatever the caller claimed. Narrow
   # this to your controller's CIDR; the default here is the widest possible and is a placeholder.

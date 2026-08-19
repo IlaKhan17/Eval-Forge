@@ -6,16 +6,35 @@
  * The two forms differ by one field and one endpoint, and keeping them together is what stops them
  * drifting into two subtly different error-handling paths — which is exactly where a login form
  * starts leaking whether an account exists.
+ *
+ * It also serves the invitation flow. `invite` fixes the email to the address the invitation was
+ * sent to and hides the organization field, because someone joining a workspace is not creating
+ * one; the token rides along so the account lands in the inviting organization rather than in a new
+ * one of its own.
  */
 
+import { AuthCard, Field, FormError, SubmitButton } from "@/components/Field"
 import { ApiError, signIn } from "@/lib/api"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { type FormEvent, useState } from "react"
 
-export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+export interface InviteContext {
+  token: string
+  organization: string
+  /** The address the invitation names. The only one that can spend it. */
+  email: string
+}
+
+export function AuthForm({
+  mode,
+  invite,
+}: {
+  mode: "login" | "signup"
+  invite?: InviteContext
+}) {
   const router = useRouter()
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState(invite?.email ?? "")
   const [password, setPassword] = useState("")
   const [organization, setOrganization] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +50,8 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       await signIn(mode, {
         email,
         password,
-        ...(signup && organization ? { organization } : {}),
+        ...(signup && organization && !invite ? { organization } : {}),
+        ...(signup && invite ? { invite_token: invite.token } : {}),
       })
       // `replace`, not `push`: the login page should not be somewhere the back button returns to
       // once a session exists.
@@ -47,16 +67,20 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   }
 
   return (
-    <div className="mx-auto mt-24 w-full max-w-sm">
-      <h1 className="text-lg font-medium text-slate-100">
-        {signup ? "Create an account" : "Sign in"}
-      </h1>
-      <p className="mt-1 text-xs text-slate-400">
-        {signup
-          ? "You get a workspace and a project to send your first trace to."
-          : "Welcome back."}
-      </p>
-
+    <AuthCard
+      title={signup ? "Create an account" : "Sign in"}
+      subtitle={
+        invite ? (
+          <>
+            You have been invited to <span className="text-slate-200">{invite.organization}</span>.
+          </>
+        ) : signup ? (
+          "You get a workspace and a project to send your first trace to."
+        ) : (
+          "Welcome back."
+        )
+      }
+    >
       <form onSubmit={submit} className="mt-6 space-y-3">
         <Field
           label="Email"
@@ -65,6 +89,11 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           onChange={setEmail}
           autoComplete="email"
           required
+          // Fixed, not merely prefilled. Only the invited address can spend the invitation, so an
+          // editable field here offers a change that the API will refuse — after the password has
+          // been typed.
+          readOnly={Boolean(invite)}
+          hint={invite ? "The address this invitation was sent to." : undefined}
         />
         <Field
           label="Password"
@@ -75,7 +104,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           required
           hint={signup ? "At least 12 characters. Length is what actually helps." : undefined}
         />
-        {signup ? (
+        {signup && !invite ? (
           <Field
             label="Organization"
             value={organization}
@@ -84,74 +113,39 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           />
         ) : null}
 
-        {error ? (
-          <p
-            // `role="alert"` so a screen reader announces a failed sign-in rather than leaving the
-            // person waiting for something that already happened.
-            role="alert"
-            className="rounded border border-red-900/50 bg-red-950/20 px-3 py-2 text-xs text-red-200"
-          >
-            {error}
-          </p>
-        ) : null}
+        {error ? <FormError>{error}</FormError> : null}
 
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded bg-slate-100 px-3 py-2 text-sm font-medium text-slate-900 hover:bg-white disabled:opacity-50"
-        >
-          {busy ? "…" : signup ? "Create account" : "Sign in"}
-        </button>
+        <SubmitButton busy={busy}>
+          {invite ? `Join ${invite.organization}` : signup ? "Create account" : "Sign in"}
+        </SubmitButton>
       </form>
 
-      <p className="mt-4 text-xs text-slate-400">
-        {signup ? (
-          <>
-            Already have an account?{" "}
-            <Link href="/login" className="text-slate-200 underline-offset-2 hover:underline">
-              Sign in
+      {invite ? null : (
+        <p className="mt-4 flex justify-between text-xs text-slate-400">
+          <span>
+            {signup ? (
+              <>
+                Already have an account?{" "}
+                <Link href="/login" className="text-slate-200 underline-offset-2 hover:underline">
+                  Sign in
+                </Link>
+              </>
+            ) : (
+              <>
+                No account?{" "}
+                <Link href="/signup" className="text-slate-200 underline-offset-2 hover:underline">
+                  Create one
+                </Link>
+              </>
+            )}
+          </span>
+          {signup ? null : (
+            <Link href="/forgot" className="text-slate-400 underline-offset-2 hover:underline">
+              Forgot password?
             </Link>
-          </>
-        ) : (
-          <>
-            No account?{" "}
-            <Link href="/signup" className="text-slate-200 underline-offset-2 hover:underline">
-              Create one
-            </Link>
-          </>
-        )}
-      </p>
-    </div>
-  )
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  type = "text",
-  hint,
-  ...rest
-}: {
-  label: string
-  value: string
-  onChange: (value: string) => void
-  type?: string
-  hint?: string
-  autoComplete?: string
-  required?: boolean
-}) {
-  return (
-    <label className="block text-xs">
-      <span className="text-slate-400">{label}</span>
-      <input
-        {...rest}
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full rounded border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-slate-600"
-      />
-      {hint ? <span className="mt-1 block text-slate-500">{hint}</span> : null}
-    </label>
+          )}
+        </p>
+      )}
+    </AuthCard>
   )
 }

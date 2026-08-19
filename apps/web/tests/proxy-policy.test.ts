@@ -128,3 +128,27 @@ describe("session-carrying proxy", () => {
     ).toBe(false)
   })
 })
+
+describe("requests that must work without a session", () => {
+  it("marks the invitation preview as anonymous", () => {
+    // The people this endpoint exists for are precisely the ones with no account. Requiring a
+    // session here means an invitation can only be read by someone who does not need it — which is
+    // what shipped, because the unit tests stub `fetch` and never reach the proxy handler.
+    expect(checkProxyRequest("GET", "/v1/invites/preview").anonymous).toBe(true)
+  })
+
+  it("marks everything else as needing one", () => {
+    // The default is what keeps this exception narrow. A new endpoint is authenticated unless
+    // somebody adds it to the list on purpose.
+    expect(checkProxyRequest("GET", "/v1/traces").anonymous).toBe(false)
+    expect(checkProxyRequest("GET", "/v1/auth/me").anonymous).toBe(false)
+    expect(checkProxyRequest("GET", "/v1/orgs").anonymous).toBe(false)
+  })
+
+  it("does not make a write anonymous just because a read is", () => {
+    // Accepting an invitation genuinely requires a session: the API matches the signed-in address
+    // against the one invited, which is what stops a forwarded link becoming a transferable
+    // membership.
+    expect(checkProxyRequest("POST", "/v1/invites/accept").anonymous).toBeFalsy()
+  })
+})

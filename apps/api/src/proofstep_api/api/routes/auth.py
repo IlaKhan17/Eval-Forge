@@ -31,7 +31,7 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Request, Response, status
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from proofstep_api.api.dependencies import (
     PrincipalDep,
@@ -43,14 +43,22 @@ from proofstep_api.api.dependencies import (
 from proofstep_api.db import rls
 from proofstep_api.db.models.identity import (
     Environment,
+    Invitation,
     Membership,
     Organization,
+    PasswordReset,
     Project,
     RefreshToken,
     User,
 )
-from proofstep_api.errors import ConflictError, ForbiddenError, UnauthorizedError
-from proofstep_api.security import passwords, ratelimit
+from proofstep_api.errors import (
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+    UnauthorizedError,
+)
+from proofstep_api.security import keys as key_utils
+from proofstep_api.security import passwords, ratelimit, resets
 from proofstep_api.security import tokens as token_utils
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
@@ -70,6 +78,9 @@ class SignupIn(BaseModel):
     #: The organization to create. Defaults to the local part of the email so the flow has no
     #: required field a person has to invent before they can try the product.
     organization: str | None = Field(default=None, max_length=200)
+    #: An invitation being accepted as part of signing up. When present, this account joins an
+    #: existing organization instead of creating one — see the note in `signup`.
+    invite_token: str | None = Field(default=None, max_length=128)
 
 
 class LoginIn(BaseModel):
@@ -183,6 +194,59 @@ async def _limit_by_address(request: Request, settings: SettingsDep) -> None:
     )
 
 
+async def _resolve_invitation(session: SessionDep, token: str, email: str) -> Invitation:
+    """The invitation this signup is accepting, or a refusal.
+
+    The email check is the same one `accept_invite` makes, and it matters more here: without it,
+    anyone holding a forwarded link could sign up under *their own* address and land inside someone
+    else's organization. The invitation names an address; only that address may spend it.
+    """
+    invitation = (
+        await session.execute(
+            select(Invitation).where(Invitation.token_hash == key_utils.hash_key(token))
+        )
+    ).scalar_one_or_none()
+    if invitation is None or invitation.accepted_at is not None:
+        raise UnauthorizedError("That invitation is not valid.")
+    if invitation.expires_at <= datetime.now(UTC):
+        raise UnauthorizedError("That invitation has expired. Ask for a new one.")
+    if invitation.email.lower() != email:
+        raise ForbiddenError("This invitation was sent to a different email address.")
+    return invitation
+
+
+async def _join_by_invitation(
+    session: SessionDep, settings: SettingsDep, user: User, invitation: Invitation
+) -> SessionOut:
+    """Put a brand-new account into the organization that invited it.
+
+    Lands them on a project they can actually see, rather than on the organization with no project
+    context — the dashboard's first screen is a trace list, and a trace list with no project is an
+    empty state that looks like a broken account.
+    """
+    organization = await session.get(Organization, invitation.org_id)
+    if organization is None or organization.is_deleted:
+        raise NotFoundError("That organization no longer exists.")
+
+    session.add(Membership(org_id=invitation.org_id, user_id=user.id, role=invitation.role))
+    invitation.accepted_at = datetime.now(UTC)
+    await session.flush()
+
+    # The organization's oldest project: the one everyone else is already looking at.
+    project_id = (
+        await session.execute(
+            select(Project.id)
+            .where(Project.org_id == organization.id, Project.deleted_at.is_(None))
+            .order_by(Project.created_at)
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+
+    return await _issue_session(
+        session, settings, user, org_id=organization.id, project_id=project_id
+    )
+
+
 @router.post("/signup", response_model=SessionOut, status_code=status.HTTP_201_CREATED)
 async def signup(
     body: SignupIn,
@@ -195,6 +259,13 @@ async def signup(
     All four, because every useful first action needs a project, and an onboarding flow that makes
     someone create one by hand before they can send a trace is a step that exists for the schema's
     convenience rather than theirs.
+
+    **Unless an invitation came with it.** Somebody invited to an existing workspace does not want a
+    workspace of their own; they want the one they were invited to. Creating one anyway and then
+    joining leaves every invited user with a permanent empty organization named after their email
+    address, cluttering the switcher of everyone who ever accepted an invite. So the token is
+    honoured here, in the same transaction: either the account is created *and* joins, or neither
+    happens and the invitation is still there to try again.
     """
     await _limit_by_address(request, settings)
 
@@ -208,9 +279,18 @@ async def signup(
         # would strand the person with no way to understand why they cannot log in.
         raise ConflictError("An account with that email already exists.")
 
+    invitation = None
+    if body.invite_token is not None:
+        # Resolved before the account is created, so an invitation that turns out to be expired
+        # fails the whole request rather than leaving a half-finished signup behind.
+        invitation = await _resolve_invitation(session, body.invite_token, email)
+
     user = User(email=email, password_hash=passwords.hash_password(body.password), name=body.name)
     session.add(user)
     await session.flush()
+
+    if invitation is not None:
+        return await _join_by_invitation(session, settings, user, invitation)
 
     org_name = body.organization or email.split("@")[0]
     organization = Organization(name=org_name, slug=await _unique_slug(session, slugify(org_name)))
@@ -428,3 +508,137 @@ async def me(principal: PrincipalDep, session: SessionDep) -> MeOut:
             for membership, org in rows
         ],
     )
+
+
+# ------------------------------------------------------------------ forgotten passwords
+#
+# The flow that exists because the alternative is "email the operator and hope". Without it, a
+# forgotten password is a permanently lost account, which for a product with more than one user is
+# not a gap so much as a guarantee of support tickets.
+#
+# Three properties hold this together, and each is a decision that has to survive the next edit.
+#
+# **The response never carries the token.** It is the whole ballgame. An endpoint that returns the
+# reset link to whoever asked for it is not a password reset, it is a password bypass: anyone could
+# post someone else's address and be handed a working account-takeover credential. The token leaves
+# this process by exactly one route — `resets.deliver` — which writes it where only somebody with
+# server access can read it.
+#
+# **The answer is the same whether or not the account exists.** Same status, same body, same
+# approximate timing. A different response for a known address turns this into a membership oracle
+# against any email list.
+#
+# **Using a reset invalidates every session.** A password is reset either because it was forgotten
+# or because it was stolen, and the second case is the one worth designing for: leaving the
+# attacker's refresh token alive means the reset changed nothing for them.
+
+
+class ForgotIn(BaseModel):
+    email: EmailStr
+
+
+class ResetIn(BaseModel):
+    token: str = Field(max_length=128)
+    password: str = Field(min_length=12, max_length=256)
+
+
+class AcknowledgedOut(BaseModel):
+    """Deliberately contentless.
+
+    Anything specific here — "we sent it", "no such account" — is the enumeration oracle this
+    endpoint exists to avoid. The message is the same one the page shows either way.
+    """
+
+    detail: str = (
+        "If that address has an account, a reset link is on its way. "
+        "Check with whoever runs this installation if it does not arrive."
+    )
+
+
+@router.post("/forgot", response_model=AcknowledgedOut, status_code=status.HTTP_202_ACCEPTED)
+async def forgot_password(
+    body: ForgotIn,
+    request: Request,
+    session: SessionDep,
+    settings: SettingsDep,
+) -> AcknowledgedOut:
+    """Begin a password reset. Always accepted, whether or not the address is known."""
+    await _limit_by_address(request, settings)
+    email = body.email.lower().strip()
+
+    user = (await session.execute(select(User).where(User.email == email))).scalar_one_or_none()
+    if user is not None:
+        token, digest = resets.generate()
+        session.add(
+            PasswordReset(
+                user_id=user.id,
+                token_hash=digest,
+                expires_at=datetime.now(UTC) + timedelta(seconds=settings.password_reset_ttl_s),
+                requested_by_ip=_client_ip(request),
+            )
+        )
+        await session.flush()
+        await resets.deliver(user.email, token, settings=settings)
+
+    # No `else`. Not even a log line distinguishing the two — an operator reading logs is not the
+    # threat, but a log that says "reset requested for an unknown address" is one grep away from
+    # being the oracle this endpoint refuses to be over HTTP.
+    return AcknowledgedOut()
+
+
+@router.post("/reset", response_model=AcknowledgedOut)
+async def reset_password(
+    body: ResetIn,
+    request: Request,
+    session: SessionDep,
+    settings: SettingsDep,
+) -> AcknowledgedOut:
+    """Finish a password reset, and sign every session out.
+
+    Unlike `/forgot`, this one *does* refuse a bad token — there is nothing to enumerate, because
+    the token was random and is not an account identifier.
+    """
+    await _limit_by_address(request, settings)
+
+    digest = resets.hash_token(body.token)
+    reset = (
+        await session.execute(select(PasswordReset).where(PasswordReset.token_hash == digest))
+    ).scalar_one_or_none()
+    now = datetime.now(UTC)
+    if reset is None or reset.used_at is not None:
+        raise UnauthorizedError("That reset link is not valid. Ask for a new one.")
+    if reset.expires_at <= now:
+        raise UnauthorizedError("That reset link has expired. Ask for a new one.")
+
+    user = await session.get(User, reset.user_id)
+    if user is None:
+        # The cascade should have taken the reset row with the account. Belt and braces: a token
+        # that resolves to nobody must not resolve to somebody else later.
+        raise UnauthorizedError("That reset link is not valid. Ask for a new one.")
+
+    user.password_hash = passwords.hash_password(body.password)
+    reset.used_at = now
+
+    # Every *other* outstanding reset for this user, too. Two links in a mailbox and only one spent
+    # leaves the second one live, which is the same standing credential this flow just closed.
+    await session.execute(
+        update(PasswordReset)
+        .where(
+            PasswordReset.user_id == user.id,
+            PasswordReset.used_at.is_(None),
+        )
+        .values(used_at=now)
+    )
+
+    # And every session. See the note at the top of this section: if the password was reset because
+    # it was stolen, an attacker's refresh token outliving the reset makes the reset ornamental.
+    await session.execute(
+        update(RefreshToken)
+        .where(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=now)
+    )
+    await session.flush()
+
+    # No session issued. Signing the caller straight in would be friendlier and would also mean a
+    # single stolen link is a session without ever proving the new password works. Log in.
+    return AcknowledgedOut(detail="Your password has been changed. Sign in with it.")

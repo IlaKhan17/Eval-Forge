@@ -7,6 +7,10 @@
  * mail server, and making one a hard requirement to add a colleague would mean the product does not
  * work until someone configures SMTP. The cloud deployment sends the link; here the person who
  * invited copies it. Stated in the UI so nobody waits for an email that was never sent.
+ *
+ * The link is offered as a copy button rather than as text to select, because these are long and a
+ * partial selection produces a token that resolves to nothing — indistinguishable, from the
+ * recipient's side, from an invitation that was never valid.
  */
 
 import { ErrorState, Panel, Skeleton } from "@/components/Primitives"
@@ -14,6 +18,19 @@ import { type Member, changeRole, getMe, inviteMember, listMembers, removeMember
 import { formatTimestamp } from "@/lib/format"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
+
+/**
+ * The link a colleague follows.
+ *
+ * Built from the browser's own origin rather than from configuration: the dashboard is reached at
+ * whatever address this person just used, and that is by definition an address that works. A
+ * configured base URL would be the more "correct" source and would hand out a link to a hostname
+ * the recipient may not be able to resolve.
+ */
+function inviteUrl(token: string): string {
+  const origin = typeof window === "undefined" ? "" : window.location.origin
+  return `${origin}/invite?token=${encodeURIComponent(token)}`
+}
 
 const ROLES = ["admin", "developer", "reviewer", "viewer"] as const
 
@@ -31,6 +48,7 @@ export function MemberSettings() {
   const [email, setEmail] = useState("")
   const [role, setRole] = useState<string>("developer")
   const [inviteLink, setInviteLink] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const me = useQuery({ queryKey: ["me"], queryFn: ({ signal }) => getMe(signal) })
   const orgId = me.data?.organizations[0]?.org_id
@@ -82,15 +100,35 @@ export function MemberSettings() {
             expires in 14 days.
           </p>
           <code className="mt-2 block break-all font-mono text-xs text-slate-100">
-            {typeof window === "undefined" ? "" : window.location.origin}/invite?token={inviteLink}
+            {inviteUrl(inviteLink)}
           </code>
-          <button
-            type="button"
-            onClick={() => setInviteLink(null)}
-            className="mt-2 text-xs text-emerald-300 underline-offset-2 hover:underline"
-          >
-            Done
-          </button>
+          <div className="mt-2 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                // `?.` because clipboard access is unavailable outside a secure context — an
+                // install reached over plain http on a LAN, which is a normal way to try this
+                // product. The link is on screen either way; the button just stops being useful.
+                navigator.clipboard?.writeText(inviteUrl(inviteLink)).then(
+                  () => setCopied(true),
+                  () => setCopied(false),
+                )
+              }}
+              className="rounded border border-emerald-800 px-2 py-1 text-xs text-emerald-200 hover:bg-emerald-950/40"
+            >
+              {copied ? "Copied" : "Copy link"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setInviteLink(null)
+                setCopied(false)
+              }}
+              className="text-xs text-emerald-300 underline-offset-2 hover:underline"
+            >
+              Done
+            </button>
+          </div>
         </div>
       ) : null}
 

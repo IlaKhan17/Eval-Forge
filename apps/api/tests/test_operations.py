@@ -9,6 +9,7 @@ which is exactly why they need tests of their own.
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -445,3 +446,22 @@ class TestLimiterExemptions:
         assert ratelimit.is_exempt("/healthz")
         assert ratelimit.is_exempt("/readyz")
         assert not ratelimit.is_exempt("/v1/traces")
+
+
+class TestApplicationLoggingSurvivesMigration:
+    async def test_an_application_logger_is_not_disabled(self) -> None:
+        """Alembic's `fileConfig` must not switch off the loggers that already exist.
+
+        `logging.config.fileConfig` defaults to `disable_existing_loggers=True`, which turns off
+        every logger created before it runs — and importing the models imports the application, so
+        that is all of them. Alembic normally runs as its own process where nothing notices.
+        Anything that migrates in-process, including this test suite, gets an application that logs
+        nothing at all while continuing to work perfectly.
+
+        The failure is invisible by construction: the symptom of a silenced logger is silence.
+        This was found through a password-reset link delivered to a logger nobody could hear, and it
+        would come back the moment someone regenerated `env.py` from Alembic's template.
+        """
+        # The session-scoped migration has already run by the time any test executes.
+        assert not logging.getLogger("proofstep_api.security.resets").disabled
+        assert not logging.getLogger("proofstep_api.services.ingest").disabled

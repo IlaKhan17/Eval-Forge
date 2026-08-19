@@ -241,6 +241,57 @@ raising it is how a bill gets bigger.
 
 ---
 
+## 7. Accounts: invitations and forgotten passwords
+
+Both flows work without a mail server, because a self-hosted install does not have one and making
+SMTP a prerequisite for adding a colleague would mean the product does not run until someone
+configures it. Both therefore need an operator in the loop, and it is worth knowing which parts.
+
+**Set `DASHBOARD_URL`.** Reset links are built from it. It is configuration rather than something
+read from the request, because a link built from a caller-supplied `Host` header points wherever the
+caller said — with a live token attached. Wrong value, dead links.
+
+### Invitations
+
+Self-service. An admin invites an address in **Settings → Members**, the dashboard shows the link,
+and they send it however they normally talk to that person. The link:
+
+- works only for the address it was issued to, so forwarding it does not transfer membership;
+- expires in 14 days, and can be accepted once;
+- is stored only as a SHA-256 digest, so it cannot be recovered from the database — a lost link is
+  reissued, not looked up.
+
+Someone with no account who follows it signs up *into* the inviting organization rather than getting
+a personal workspace of their own first.
+
+### Forgotten passwords
+
+`/forgot` on the dashboard creates a reset token. With no mail transport configured, the link leaves
+the process by one route only — a `WARNING` in the API log:
+
+```
+PASSWORD RESET LINK for someone@example.com (no mail transport is configured, ...): https://.../reset?token=...
+```
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs api | grep "PASSWORD RESET LINK"
+```
+
+Or skip the form entirely and issue one directly:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.prod exec api \
+  python scripts/reset_link.py someone@example.com
+```
+
+Either way the link is valid once, for an hour (`PASSWORD_RESET_TTL_S`), and using it signs every
+session on that account out — including an attacker's, which is the case worth designing for.
+
+**The link is never returned in an HTTP response**, and that is the load-bearing decision in this
+flow rather than an inconvenience to work around. An endpoint that handed the reset link back to
+whoever asked for it would let anyone type any address and receive a working credential for that
+account. If you add a mailer, implement `deliver` in `security/resets.py` and change nothing else.
+
 ## Deploy sequence
 
 ```bash

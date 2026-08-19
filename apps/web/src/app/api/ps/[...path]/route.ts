@@ -76,7 +76,12 @@ async function handle(request: Request, path: string[]): Promise<NextResponse> {
   }
 
   const { accessToken, refreshToken } = await readSession()
-  if (!accessToken) {
+  // `decision.anonymous` is the narrow exception, and it is narrow on purpose — see the list in
+  // proxy-policy.ts. Without it the invitation page 401s for exactly the people it exists for:
+  // someone following a link who has no account yet. That is not a hypothetical. It shipped, passed
+  // its unit tests — which stub `fetch` and so never meet this handler — and was caught by running
+  // the flow against the real stack.
+  if (!accessToken && !decision.anonymous) {
     return problem(
       401,
       "https://proofstep.dev/problems/not-signed-in",
@@ -101,11 +106,14 @@ async function handle(request: Request, path: string[]): Promise<NextResponse> {
     request.method === "GET" || request.method === "HEAD" ? undefined : await request.text()
 
   try {
-    const send = (token: string) =>
+    const send = (token: string | undefined) =>
       fetch(upstream, {
         method: request.method,
         headers: {
-          authorization: `Bearer ${token}`,
+          // Omitted entirely when there is no session, rather than sent as `Bearer undefined`.
+          // The API would reject that string, which would turn an anonymous request that is
+          // supposed to work into a 401 that looks like an expired login.
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
           accept: "application/json",
           ...(payload === undefined ? {} : { "content-type": "application/json" }),
         },

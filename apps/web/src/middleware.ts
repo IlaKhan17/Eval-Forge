@@ -16,8 +16,18 @@ import { type NextRequest, NextResponse } from "next/server"
  * framework emits inline style tags and a nonce-based style policy does not survive
  * streaming. Scripts are the half that matters for injection, and those are locked.
  */
-/** Pages reachable without a session. Everything else redirects to the sign-in screen. */
-const PUBLIC_PATHS = new Set(["/login", "/signup"])
+/**
+ * Pages reachable without a session. Everything else redirects to the sign-in screen.
+ *
+ * Two sets, not one, because "does not require a session" and "is pointless once you have one" are
+ * different questions and conflating them broke the invitation flow: `/invite` has to work for
+ * someone with no account *and* for a colleague who signed up first and is already logged in.
+ * Bouncing the second case to `/traces` drops the invitation on the floor at the last step.
+ */
+const PUBLIC_PATHS = new Set(["/login", "/signup", "/invite", "/forgot", "/reset"])
+
+/** Public pages that a signed-in visitor has no business on. */
+const SIGNED_OUT_ONLY = new Set(["/login", "/signup"])
 
 export function middleware(request: NextRequest): NextResponse {
   const nonce = crypto.randomUUID().replaceAll("-", "")
@@ -36,7 +46,7 @@ export function middleware(request: NextRequest): NextResponse {
     if (path !== "/") login.searchParams.set("next", path)
     return NextResponse.redirect(login)
   }
-  if (signedIn && PUBLIC_PATHS.has(path)) {
+  if (signedIn && SIGNED_OUT_ONLY.has(path)) {
     return NextResponse.redirect(new URL("/traces", request.url))
   }
 

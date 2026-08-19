@@ -96,6 +96,10 @@ UNPROTECTED_TABLES: dict[str, str] = {
     # it, and acceptance additionally requires the signed-in email to match.
     "invitations": "read before the invitee is a member; scoped by a hashed single-use token",
     "refresh_tokens": "keyed by user, not project; rotation must work before a tenant is known",
+    # Read while nobody is signed in at all — that is the entire point of forgetting a password —
+    # and keyed by user rather than project. Isolation comes from the token: a lookup by a unique
+    # SHA-256 digest, single use, so a row is worthless without the link that produced it.
+    "password_resets": "read before anyone is authenticated; scoped by a hashed single-use token",
     "alembic_version": "migration bookkeeping",
     # Deployment-level operational records, not tenant data. These jobs sweep every project, so a
     # failure belongs to the installation; giving the row a project_id would mean either inventing

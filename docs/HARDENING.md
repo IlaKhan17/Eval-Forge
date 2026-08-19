@@ -236,6 +236,10 @@ Stated plainly rather than implied by absence:
   pretending otherwise.
 - **Alert delivery.** The rules exist and the metrics are exported, but nothing has ever paged
   anyone: routing, inhibition, and on-call escalation are unconfigured and unexercised.
+- **Email delivery.** There is no mail transport. Invitation links are shown to the person who
+  created them; password reset links go to the application log, and `scripts/reset_link.py` lets an
+  operator issue one directly. Both flows work without it — see `OPERATIONS.md` §7 — but a hosted
+  deployment needs a mailer before it can be self-service.
 - **A docs site.** These markdown files are the documentation.
 - **Point-in-time recovery and multi-region.** Backups are logical snapshots with a verified
   restore; everything written between two runs is lost if the primary is. WAL archiving is not

@@ -103,6 +103,17 @@ EXCUSED: dict[tuple[str, str], str] = {
     ("POST", "/v1/auth/login"): "unauthenticated by design",
     ("POST", "/v1/auth/refresh"): "unauthenticated; the refresh token is the proof of possession",
     ("POST", "/v1/auth/logout"): "unauthenticated; must work with an expired access token",
+    # Unauthenticated on purpose: forgetting a password is precisely the state of having no
+    # session. Neither reaches tenant data. `/forgot` answers identically for a known and an
+    # unknown address — the one property that matters, and asserted directly in
+    # test_accounts.py::TestPasswordReset — and `/reset` is scoped by a hashed single-use token
+    # that names no account.
+    ("POST", "/v1/auth/forgot"): "unauthenticated by design; answers identically for any address",
+    ("POST", "/v1/auth/reset"): "unauthenticated; scoped by a hashed single-use token",
+    # Same shape: an invitation link is followed by someone who usually has no account at all. It
+    # resolves only a token the caller already holds, and returns the organization name and the
+    # address the invitation was sent to — both of which that person read in the invitation itself.
+    ("GET", "/v1/invites/preview"): "unauthenticated; resolves a token the caller already holds",
     ("GET", "/v1/auth/me"): "the caller's own identity; refuses API keys",
     ("GET", "/v1/orgs"): "lists only the caller's memberships",
     ("POST", "/v1/orgs"): "creates an organization owned by the caller; no id in the request",

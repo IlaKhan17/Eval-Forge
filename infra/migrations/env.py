@@ -21,7 +21,15 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 config = context.config
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    # `disable_existing_loggers=False` is not a detail. The default is True, which means every
+    # logger created before this line — that is, every application logger, since importing the
+    # models imports the app — is switched off for the rest of the process. Alembic normally runs
+    # as its own process where that harms nothing, but anything that migrates in-process inherits a
+    # silent application: no warnings, no errors, no output at all from code that is still running.
+    #
+    # The test suite migrates in-process, and this cost an hour of chasing a password-reset link
+    # that was being written to a logger nobody could hear.
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 # A caller may set the URL explicitly (the test suite does, to target its own
 # database). Only fall back to application settings when they have not.

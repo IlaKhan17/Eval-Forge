@@ -290,3 +290,64 @@ export async function signIn(
 export async function signOut(): Promise<void> {
   await fetch("/api/auth/logout", { method: "POST", headers: SAME_ORIGIN })
 }
+
+/**
+ * What an invitation link refers to, resolved before anyone signs in.
+ *
+ * Without this the invitation page is a password form with no context, which is indistinguishable
+ * from a phishing page and asks someone to trust it anyway.
+ */
+export interface InvitePreview {
+  organization: string
+  email: string
+  role: string
+  expires_at: string
+}
+
+export function previewInvite(token: string, signal?: AbortSignal): Promise<InvitePreview> {
+  return request<InvitePreview>(`/v1/invites/preview?token=${encodeURIComponent(token)}`, {
+    signal,
+  })
+}
+
+export function acceptInvite(token: string): Promise<{ id: string; name: string; role: string }> {
+  return request("/v1/invites/accept", {
+    method: "POST",
+    headers: SAME_ORIGIN,
+    body: JSON.stringify({ token }),
+  })
+}
+
+/**
+ * The two halves of a password reset.
+ *
+ * Both go to the dashboard's own origin, like sign-in, and neither returns a session — see the note
+ * on `AUTHENTICATING` in the auth route handler for why that separation is load-bearing.
+ *
+ * `requestPasswordReset` resolves the same way whether or not the address has an account. That is
+ * the API's decision, not a limitation here: a different answer for a known address turns this form
+ * into a membership oracle against any email list. The page says so plainly rather than implying a
+ * message is on its way.
+ */
+export async function requestPasswordReset(email: string): Promise<{ detail: string }> {
+  const response = await fetch("/api/auth/forgot", {
+    method: "POST",
+    headers: SAME_ORIGIN,
+    body: JSON.stringify({ email }),
+  })
+  if (!response.ok) throw await toApiError(response)
+  return (await response.json()) as { detail: string }
+}
+
+export async function completePasswordReset(
+  token: string,
+  password: string,
+): Promise<{ detail: string }> {
+  const response = await fetch("/api/auth/reset", {
+    method: "POST",
+    headers: SAME_ORIGIN,
+    body: JSON.stringify({ token, password }),
+  })
+  if (!response.ok) throw await toApiError(response)
+  return (await response.json()) as { detail: string }
+}

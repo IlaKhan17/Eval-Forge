@@ -118,6 +118,36 @@ class Invitation(IdentifiedBase, TimestampMixin):
     accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
 
+class PasswordReset(IdentifiedBase, TimestampMixin):
+    """A pending password reset.
+
+    Hashed at rest, like an invitation and an API key, and for the same reason: a reset link *is* a
+    credential — it is the one thing that can take over an account without knowing the password —
+    so a leaked database must not hand out a working link for every outstanding request.
+
+    Single use, enforced by `used_at`. Without that, a link sitting in a mailbox stays a permanent
+    account-takeover credential for as long as it has not expired, which is precisely the window an
+    attacker with old mailbox access is looking for.
+
+    `requested_by_ip` is kept because a burst of requests for one address is the signature of
+    someone working through a list, and answering "where from?" during that incident needs the
+    address to have been written down before it started. It is not used for anything else.
+    """
+
+    __tablename__ = "password_resets"
+    __table_args__ = (
+        # "The outstanding requests for this user", which is the query behind invalidating the rest
+        # when one is used, and behind refusing to mint a hundred of them.
+        Index("ix_password_resets_user_id_created_at", "user_id", "created_at"),
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    token_hash: Mapped[bytes] = mapped_column(LargeBinary(32), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    requested_by_ip: Mapped[str | None] = mapped_column(INET, default=None)
+
+
 class Project(IdentifiedBase, TimestampMixin, UpdatedAtMixin, SoftDeleteMixin):
     __tablename__ = "projects"
 

@@ -83,6 +83,15 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_ttl_s: int = 15 * 60
     refresh_token_ttl_s: int = 30 * 24 * 3600
+    #: How long a password reset link stays redeemable. An hour: long enough to survive a slow
+    #: mail hop and someone reading it after lunch, short enough that a link left in a mailbox is
+    #: not a standing account-takeover credential. Single use on top of this — see
+    #: `security/resets.py`.
+    password_reset_ttl_s: int = 3600
+    #: Where the dashboard is reachable, used to build links that arrive by email. Configuration
+    #: rather than something derived from the request, because a link built from a caller-supplied
+    #: Host header points wherever the caller said — with a live token attached.
+    dashboard_url: str = "http://localhost:3000"
     api_key_cache_ttl_s: int = Field(
         default=30,
         description=(

@@ -29,12 +29,12 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, Query, Request, Response, status
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 
-from proofstep_api.api.dependencies import PrincipalDep, SessionDep
-from proofstep_api.api.routes.auth import slugify
+from proofstep_api.api.dependencies import PrincipalDep, SessionDep, SettingsDep
+from proofstep_api.api.routes.auth import _limit_by_address, slugify
 from proofstep_api.db import rls
 from proofstep_api.db.models.identity import (
     ApiKey,
@@ -299,6 +299,57 @@ async def list_invites(org_id: uuid.UUID, session: SessionDep, user_id: UserId) 
         InviteOut(id=row.id, email=row.email, role=row.role, expires_at=row.expires_at)
         for row in rows
     ]
+
+
+class InvitePreviewOut(BaseModel):
+    """What the invitation page can show before anyone has signed in."""
+
+    organization: str
+    email: str
+    role: str
+    expires_at: datetime
+
+
+@router.get("/invites/preview", response_model=InvitePreviewOut)
+async def preview_invite(
+    token: str, request: Request, session: SessionDep, settings: SettingsDep
+) -> InvitePreviewOut:
+    """Resolve an invitation token without requiring a session.
+
+    Unauthenticated by necessity: the person following the link usually has no account yet, and an
+    invitation page that cannot say who invited them or to what is a form asking for a password
+    with no explanation attached.
+
+    It gives nothing away. The caller already holds the token, and the token was sent to exactly one
+    address; returning the organization name and that same address tells its holder what they were
+    already told by the email they are reading it in. What it must never do is accept a *guess* —
+    hence the rate limit, because without one this is an oracle you can grind against 2^256 with
+    nothing but patience and bandwidth.
+    """
+    await _limit_by_address(request, settings)
+
+    invitation = (
+        await session.execute(
+            select(Invitation).where(Invitation.token_hash == key_utils.hash_key(token))
+        )
+    ).scalar_one_or_none()
+    # One message for every failure. "Already accepted" and "expired" and "never existed" are
+    # different facts about a token the caller should not be probing for in the first place.
+    if invitation is None or invitation.accepted_at is not None:
+        raise NotFoundError("That invitation is not valid.")
+    if invitation.expires_at <= datetime.now(UTC):
+        raise NotFoundError("That invitation has expired. Ask for a new one.")
+
+    organization = await session.get(Organization, invitation.org_id)
+    if organization is None or organization.is_deleted:
+        raise NotFoundError("That organization no longer exists.")
+
+    return InvitePreviewOut(
+        organization=organization.name,
+        email=invitation.email,
+        role=invitation.role,
+        expires_at=invitation.expires_at,
+    )
 
 
 @router.post("/invites/accept", response_model=OrgOut)

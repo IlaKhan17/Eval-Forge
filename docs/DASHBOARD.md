@@ -150,3 +150,41 @@ The proxy allow-list gained three read paths (`/v1/experiments`, one experiment'
 metrics) and the `suite_name` query key. `POST /v1/experiments/{id}/promote-baseline` remains
 unreachable through the dashboard — it changes what future gates compare against, which is a quiet,
 high-impact write with no business being reachable from a read-only viewer.
+
+## Signing in, joining, and getting back in
+
+Four screens that are not about traces at all, and the reason a workspace can have more than one
+person in it.
+
+`/login`, `/signup` — the session lives in httpOnly cookies the page cannot read (`lib/session.ts`).
+
+`/invite?token=…` — where an invitation link lands. It resolves the token *before* rendering
+anything, through `GET /v1/invites/preview`, and then shows one of four things:
+
+| Who is following the link | What they get |
+|---|---|
+| Nobody signed in (the common case) | A sign-up form with the email fixed to the invited address and the token attached, so the account joins the inviting organization instead of creating one |
+| The invited person, signed in | One button |
+| A different account, signed in | An explanation, and who to sign in as — a shared computer is not an error |
+| An expired or spent invitation | That, plus a way on |
+
+The preview matters beyond convenience. A page that asks for a password without naming the
+organization or the address it is for is what a phishing page looks like, and it is asking to be
+trusted anyway.
+
+`/forgot`, `/reset?token=…` — password recovery. The confirmation deliberately says *if* that
+address has an account, because the API answers identically either way; "check your inbox" would be
+a small lie that leaves someone who mistyped their address refreshing an empty one. Delivery in a
+self-hosted install goes through the operator — see `OPERATIONS.md` §7.
+
+### The proxy exception these needed
+
+`/api/ps` refuses any request without a session, which is right for every endpoint that reads tenant
+data and wrong for `GET /v1/invites/preview` — an endpoint whose entire audience is people who have
+no account yet. `proxy-policy.ts` marks that one path `anonymous`; everything else defaults to
+requiring a session, so a new endpoint is authenticated unless somebody decides otherwise on
+purpose.
+
+It is worth knowing how that was found. The component tests stub `fetch`, so they never reach the
+proxy handler and all passed against a flow that returned 401 to every invitee. It took running the
+thing against a real stack.

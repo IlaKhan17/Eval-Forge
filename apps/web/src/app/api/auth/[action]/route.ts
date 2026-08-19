@@ -14,7 +14,19 @@ import { ConfigError, serverConfig } from "@/lib/server-config"
 import { REQUEST_HEADER, clearSession, readSession, writeSession } from "@/lib/session"
 import { NextResponse } from "next/server"
 
-const ACTIONS = new Set(["login", "signup", "logout"])
+const ACTIONS = new Set(["login", "signup", "logout", "forgot", "reset"])
+
+/**
+ * Actions that authenticate. Everything else here is a request *about* an account rather than a
+ * way into one, and must not be allowed to write a session cookie.
+ *
+ * This distinction is the reason the set exists. `forgot` and `reset` return a bland
+ * acknowledgement with no tokens in it, so the session-writing branch below would store two
+ * `undefined`s — quietly replacing whatever session the browser already had with a broken one.
+ * Signing out the person who just reset their password would at least be visible; signing out a
+ * bystander who mistyped an address on the forgot form would not be.
+ */
+const AUTHENTICATING = new Set(["login", "signup"])
 
 function problem(status: number, detail: string, title = "Request failed"): NextResponse {
   return NextResponse.json(
@@ -80,6 +92,12 @@ export async function POST(
       status: upstream.status,
       headers: { "content-type": "application/problem+json" },
     })
+  }
+
+  if (!AUTHENTICATING.has(action)) {
+    // Passed through as-is: the API's acknowledgement is deliberately the same whether or not the
+    // address exists, and the page shows exactly what it says.
+    return NextResponse.json(payload)
   }
 
   await writeSession({
