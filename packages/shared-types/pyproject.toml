@@ -3,7 +3,7 @@ name = "proofstep-types"
 version = "0.1.0"
 description = "Shared Pydantic models for Proofstep — the wire and domain contract"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "Apache-2.0"
 classifiers = [
     "Development Status :: 4 - Beta",

@@ -699,3 +699,75 @@ jobs:
         # one would miss anything the kustomization itself breaks, which is where the image tags and
         # the namespace come from.
         run: kubectl kustomize infra/k8s | kubeconform -strict -summary -
+
+  # The oldest Python the published packages claim to support. Everything else in this workflow runs
+  # on 3.12, which is exactly why this job exists: `requires-python` is a promise to strangers, and
+  # nothing else here tests it.
+  #
+  # It has already been wrong twice, both times invisibly. `proofstep-types` advertised 3.10 while
+  # importing `enum.StrEnum` (3.11+), and the SDK advertised 3.10 while depending on a package
+  # pinned to >=3.12 — so `pip install proofstep` was unsatisfiable on every version it claimed.
+  # A metadata mistake cannot be corrected in place: the version number is spent.
+  oldest-python:
+    name: the packages install and pass on their minimum Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      - name: the floor is what the packages say it is
+        id: floor
+        # Read from the manifests rather than hardcoded here, so raising the floor is one edit and
+        # this job follows. Disagreement between packages is itself a failure: a user installing the
+        # SDK gets its dependencies too, so the effective floor is the highest of them.
+        run: |
+          floor=$(uv run --no-project python - <<'PY'
+          import pathlib, re, tomllib
+          floors = {}
+          for manifest in sorted(pathlib.Path("packages").glob("*/pyproject.toml")):
+              data = tomllib.loads(manifest.read_text())["project"]
+              floors[data["name"]] = data["requires-python"]
+          if len(set(floors.values())) != 1:
+              raise SystemExit(f"packages disagree on requires-python: {floors}")
+          print(re.sub(r"[^0-9.]", "", next(iter(floors.values()))))
+          PY
+          )
+          echo "version=$floor" >> "$GITHUB_OUTPUT"
+          echo "minimum supported Python is $floor"
+
+      - name: build the distributions
+        run: |
+          for pkg in packages/*/; do uv build "$pkg" --out-dir dist; done
+
+      - name: they install from the built wheels
+        # From the wheels, not the workspace: `uv sync` resolves against the source tree and would
+        # happily ignore a `requires-python` that PyPI will enforce.
+        run: |
+          uv venv --python "${{ steps.floor.outputs.version }}" .oldest
+          VIRTUAL_ENV=.oldest uv pip install --find-links dist "proofstep[eval]" proofstep-cli pytest pytest-asyncio hypothesis
+
+      - name: every module imports
+        # Submodule by submodule. A top-level import misses a newer-Python import sitting in one
+        # leaf, which is precisely how `StrEnum` went unnoticed.
+        run: |
+          .oldest/bin/python - <<'PY'
+          import importlib, pkgutil, sys
+          failed = []
+          for top in ["proofstep_types", "proofstep_core", "proofstep_trajectory", "proofstep", "proofstep_cli"]:
+              module = importlib.import_module(top)
+              for info in pkgutil.walk_packages(module.__path__, prefix=f"{top}."):
+                  try:
+                      importlib.import_module(info.name)
+                  except Exception as error:
+                      failed.append(f"{info.name}: {type(error).__name__}: {error}")
+          if failed:
+              sys.exit("modules that do not import:\n  " + "\n  ".join(failed))
+          print("every module imports")
+          PY
+
+      - name: and the suites pass against the installed wheels
+        run: |
+          .oldest/bin/python -m pytest packages/*/tests -q -p no:cacheprovider
+
+      - name: the console script runs
+        run: .oldest/bin/proofstep --help

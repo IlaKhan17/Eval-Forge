@@ -3,7 +3,7 @@ name = "proofstep-cli"
 version = "0.1.0"
 description = "Proofstep command-line interface — run suites, gate CI, compare experiments"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 license = "Apache-2.0"
 classifiers = [
     "Development Status :: 4 - Beta",

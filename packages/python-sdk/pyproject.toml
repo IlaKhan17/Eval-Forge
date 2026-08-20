@@ -6,7 +6,7 @@ readme = "README.md"
 # Deliberately wider than the rest of the workspace: this installs into *users'*
 # applications, and forcing an interpreter upgrade to adopt a tracing library
 # is a non-starter. See ADR-002.
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "Apache-2.0"
 classifiers = [
     "Development Status :: 4 - Beta",
