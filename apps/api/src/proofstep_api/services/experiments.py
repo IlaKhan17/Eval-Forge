@@ -15,8 +15,10 @@ from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import delete, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from proofstep_api.db.base import uuid7
 from proofstep_api.db.models.evaluation import (
     AggregateMetric,
     EvaluationResult,
@@ -269,47 +271,76 @@ class ExperimentService:
         and is not deserves to hear about it.
         """
         run = await self.get_run(run_id)
-        computed = {
-            (row.metric_key, row.slice_key)
-            for row in (
-                await self.session.execute(
-                    select(AggregateMetric).where(AggregateMetric.run_id == run.id)
-                )
-            )
-            .scalars()
-            .all()
-        }
 
-        stored = 0
+        # Deduplicated here, before the database sees any of it: two rows with the same key are
+        # indistinguishable to every reader downstream, so the second is reported rather than
+        # stored beside the first.
+        candidates: dict[tuple[str, str], Metric] = {}
         rejected: list[str] = []
         for metric in metrics:
             key = (metric.key, slice_key(metric.slice))
-            if key in computed:
+            if key in candidates:
                 rejected.append(metric.full_key)
                 continue
-            self.session.add(
-                AggregateMetric(
-                    project_id=self.project_id,
-                    run_id=run.id,
-                    metric_key=metric.key,
-                    slice_key=key[1],
-                    slice=metric.slice,
-                    value=metric.value,
-                    count=metric.count,
-                    error_count=metric.error_count,
-                    stddev=metric.stddev,
-                    ci_low=metric.ci_low,
-                    ci_high=metric.ci_high,
-                    unit=metric.unit,
+            candidates[key] = metric
+
+        if not candidates:
+            return 0, rejected
+
+        # `ON CONFLICT DO NOTHING`, rather than reading the computed keys first and skipping them.
+        #
+        # The read-then-write version expressed the same rule and was one race away from being
+        # wrong: whatever the SELECT saw was already history by the time the INSERT ran, and a key
+        # that appeared in between made the whole statement fail on the unique index. Not the one
+        # row — the statement, and with it every other metric in the submission, because they all
+        # arrive in a single INSERT. A run would then be missing exactly the corpus metrics that
+        # cannot be recomputed from per-example scores, so its protected-class gate would read
+        # ERROR ("metric missing") on a run the CLI had already called a failure. That is the
+        # divergence between CLI and dashboard this whole system exists to prevent, arriving
+        # through a 500 in the last request of a publish.
+        #
+        # `DO NOTHING` is also the exact semantics wanted: a metric the server computed for itself
+        # wins, and the client is told which of its numbers were not taken. `DO UPDATE` would let a
+        # run overwrite the server's own aggregate with any value it liked, which is the thing
+        # `_recompute_aggregates` exists to make impossible.
+        inserted = (
+            await self.session.execute(
+                pg_insert(AggregateMetric)
+                .values(
+                    [
+                        {
+                            "id": uuid7(),
+                            "project_id": self.project_id,
+                            "run_id": run.id,
+                            "metric_key": key[0],
+                            "slice_key": key[1],
+                            "slice": metric.slice,
+                            "value": metric.value,
+                            "count": metric.count,
+                            "error_count": metric.error_count,
+                            "stddev": metric.stddev,
+                            "ci_low": metric.ci_low,
+                            "ci_high": metric.ci_high,
+                            "unit": metric.unit,
+                        }
+                        for key, metric in candidates.items()
+                    ]
                 )
+                .on_conflict_do_nothing(
+                    index_elements=["run_id", "metric_key", "slice_key"],
+                )
+                .returning(AggregateMetric.metric_key, AggregateMetric.slice_key)
             )
-            # Added to the set as we go, so a duplicate key inside one submission is rejected too
-            # rather than producing two rows the reader cannot tell apart.
-            computed.add(key)
-            stored += 1
+        ).all()
+
+        # What came back is what was actually written; everything else lost to a key the server
+        # already had. Reported rather than silently dropped, because a client that believes it is
+        # setting a number and is not deserves to hear so.
+        written = {(row.metric_key, row.slice_key) for row in inserted}
+        rejected.extend(metric.full_key for key, metric in candidates.items() if key not in written)
 
         await self.session.flush()
-        return stored, rejected
+        return len(written), rejected
 
     async def load_results(self, run_id: uuid.UUID) -> list[ExampleResult]:
         """Rehydrate stored rows into the core's own result type.

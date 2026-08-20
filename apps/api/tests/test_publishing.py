@@ -271,3 +271,91 @@ class TestBaselineResolution:
             params={"suite_name": "shared-name", "branch": "main"},
         )
         assert response.json()["run_id"] is None
+
+
+class TestSubmittingWhatTheServerAlreadyHas:
+    """Resubmitting a computed metric must cost that metric, not the whole submission.
+
+    This is the last request of every publish, and it carries the corpus metrics — a protected
+    class's recall, p95 latency — that cannot be reconstructed from per-example scores by anyone
+    but the process that ran the suite. They all travel in one INSERT.
+
+    The original code decided what to insert by first reading which keys the server had computed,
+    then inserting the rest. Correct in a quiet room, and one race from wrong: a key appearing
+    between the SELECT and the INSERT made the statement fail on the unique index, taking every
+    other metric in the submission with it. The run then had no `classes_recall`, so its protected
+    gate read ERROR — "metric missing" — on a run the CLI had already called a failure. A verdict
+    disagreeing between CLI and dashboard is the one outcome this system exists to prevent, and it
+    arrived as a 500 in the last request of a publish.
+
+    Seen for real in CI, where the API log showed all 41 of a run's metrics rolled back over one
+    duplicate key, leaving the run without the corpus metrics its gate needed.
+
+    The tests below pin the behaviour that must hold; they do **not** reproduce that failure, and
+    neither did anything else tried. Sequentially the old code was correct, and two submissions
+    raced through asyncio commit in whatever order the loop picks, which was reliably the safe one.
+    So this is a fix by construction rather than by reproduction: `ON CONFLICT DO NOTHING` has no
+    window between deciding and writing, which is the only place the old version could go wrong.
+    Stated plainly because a fix whose trigger was never reproduced deserves to be labelled as one.
+    """
+
+    async def test_the_run_keeps_the_metrics_it_could_not_compute(
+        self, client: AsyncClient, tenant_a: Tenant
+    ) -> None:
+        run_id = await make_run(client, tenant_a)
+        computed = (
+            await client.get(f"/v1/experiment-runs/{run_id}/metrics", headers=auth(tenant_a))
+        ).json()
+        already = {metric["key"] for metric in computed}
+        assert already, "the run must have server-computed metrics for this test to mean anything"
+
+        # A realistic publish: every computed key resubmitted, plus the corpus metric only the
+        # client has. Exactly the shape that produced the 500.
+        submission = [{"key": key, "value": 0.123, "count": 1} for key in sorted(already)] + [
+            {"key": "classes_recall", "value": 0.4, "count": 5, "slice": {"class": "unsubscribe"}}
+        ]
+
+        response = await client.post(
+            f"/v1/experiment-runs/{run_id}/metrics",
+            headers=auth(tenant_a),
+            json={"metrics": submission},
+        )
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["stored"] == 1, body
+        assert set(body["rejected"]) == already, body
+
+        # The corpus metric survived, and the server's own numbers were not overwritten by the
+        # client's 0.123 — which is what makes the server's verdict verified rather than reported.
+        stored = {
+            metric["key"]: metric["value"]
+            for metric in (
+                await client.get(f"/v1/experiment-runs/{run_id}/metrics", headers=auth(tenant_a))
+            ).json()
+        }
+        assert "classes_recall" in stored
+        for key in already:
+            assert stored[key] != 0.123, f"{key} was overwritten by the client's value"
+
+    async def test_submitting_the_same_payload_twice_is_stable(
+        self, client: AsyncClient, tenant_a: Tenant
+    ) -> None:
+        """A retried publish must not destroy the first one's metrics.
+
+        The CLI does not retry today, but a proxy, a timeout, or an operator running the command
+        again all produce the same request — and the honest answer to "I already have that" is to
+        say so, not to fail the request.
+        """
+        run_id = await make_run(client, tenant_a)
+        payload = {"metrics": [{"key": "ndcg", "value": 0.8, "count": 1}]}
+
+        first = await client.post(
+            f"/v1/experiment-runs/{run_id}/metrics", headers=auth(tenant_a), json=payload
+        )
+        second = await client.post(
+            f"/v1/experiment-runs/{run_id}/metrics", headers=auth(tenant_a), json=payload
+        )
+
+        assert first.json() == {"stored": 1, "rejected": []}
+        assert second.status_code == 200, second.text
+        assert second.json() == {"stored": 0, "rejected": ["ndcg"]}
