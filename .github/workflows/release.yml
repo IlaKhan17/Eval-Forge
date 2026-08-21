@@ -19,51 +19,88 @@ permissions:
   contents: read
 
 jobs:
-  # The gate before anything is published. A broken release cannot be unpublished from PyPI — the
-  # version number is burned even if the file is deleted — so the whole suite runs first.
+  # The gate before anything is published. A version on PyPI cannot be reclaimed — the number is
+  # spent even if the file is deleted — so nothing is uploaded until the tests that ran on this
+  # exact commit are known to have passed.
+  #
+  # It *checks* CI rather than re-running it, and the difference matters. This job used to run
+  # `pytest -q` itself, on one runner with one Postgres service. CI runs the same suites across
+  # eleven jobs, each with the environment its suite needs: the acceptance test wants a live server
+  # and a deliberately dead object-store endpoint, the row-level-security suite wants a second
+  # database role. A single flat run reproduces none of that, so it failed on the first real release
+  # for reasons that had nothing to do with the release — a worker heartbeat table in a database
+  # that job never migrates, and an acceptance test with no acceptance environment.
+  #
+  # A gate that fails for reasons unrelated to what it is gating is a gate people learn to bypass.
   verify:
-    name: tests must pass before anything ships
+    name: CI must have passed on this commit
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: proofstep
-          POSTGRES_PASSWORD: ci-only-password
-          POSTGRES_DB: proofstep
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U proofstep"
-          --health-interval 2s --health-timeout 3s --health-retries 30
-    env:
-      POSTGRES_USER: proofstep
-      POSTGRES_PASSWORD: ci-only-password
-      POSTGRES_HOST: 127.0.0.1
-      POSTGRES_PORT: "5432"
-      POSTGRES_DB: proofstep
-      JWT_SECRET: ci-secret-value-that-is-long-enough-32
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
-          enable-cache: true
-      - run: uv sync --all-packages
-      - run: uv run ruff check .
-      - run: uv run mypy packages apps/api/src
-      - run: uv run pytest -q
+
+      - name: the CI workflow succeeded for this exact commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # By commit SHA, not by branch or by "the latest run". A tag can point at any commit, and
+          # "main is green" is not the same statement as "this artefact's source is green".
+          run=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${GITHUB_SHA}&per_page=1" \
+            --jq '.workflow_runs[0] | {status, conclusion, html_url} | @json')
+          echo "CI on ${GITHUB_SHA}: ${run}"
+          status=$(echo "$run" | uv run --no-project python -c "import json,sys; print(json.load(sys.stdin).get('status') or 'none')" 2>/dev/null || echo none)
+          conclusion=$(echo "$run" | uv run --no-project python -c "import json,sys; print(json.load(sys.stdin).get('conclusion') or 'none')" 2>/dev/null || echo none)
+
+          # Fails closed, and says which kind of "no" it is. These need different actions from
+          # whoever pushed the tag, and a single "not success" would send them looking in the
+          # wrong place.
+          if [ "$status" = "none" ]; then
+            echo "::error::No CI run found for ${GITHUB_SHA}. Push the commit to main first, " \
+                 "then tag it — a tag alone does not run CI."
+            exit 1
+          fi
+          if [ "$conclusion" = "none" ]; then
+            echo "::error::CI on this commit is still ${status}. Wait for it, then re-push the tag."
+            exit 1
+          fi
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::Refusing to publish: CI on this commit concluded '${conclusion}'."
+            exit 1
+          fi
 
       - name: the tag matches the packaged version
         # A tag that disagrees with pyproject.toml publishes a version nobody can find from the
         # repository, and the mismatch is invisible until someone tries.
         run: |
           TAG="${GITHUB_REF_NAME#v}"
-          PKG="$(uv run python -c "
+          PKG="$(uv run --no-project python -c "
           import tomllib, pathlib
           print(tomllib.loads(pathlib.Path('packages/python-sdk/pyproject.toml').read_text())['project']['version'])
           ")"
           echo "tag=$TAG package=$PKG"
           test "$TAG" = "$PKG" || { echo "tag $TAG does not match packaged version $PKG"; exit 1; }
+
+      - name: every package agrees on that version
+        # Five distributions released together. One left behind at an older version is a
+        # dependency resolution nobody can reproduce, and it cannot be corrected in place.
+        run: |
+          uv run --no-project python - <<'PY'
+          import pathlib, sys, tomllib
+          versions = {}
+          for manifest in sorted(pathlib.Path("packages").glob("*/pyproject.toml")):
+              data = tomllib.loads(manifest.read_text())["project"]
+              versions[data["name"]] = data["version"]
+          if len(set(versions.values())) != 1:
+              sys.exit(f"packages disagree on version: {versions}")
+          print("all five at", next(iter(versions.values())))
+          PY
 
   build:
     name: build distributions

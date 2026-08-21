@@ -435,20 +435,27 @@ class TestLiveness:
     point of the check.
     """
 
-    @pytest_asyncio.fixture
-    async def beat(
+    @pytest.fixture(autouse=True)
+    def _probe_reads_the_test_database(
         self, engine: AsyncEngine, monkeypatch: pytest.MonkeyPatch
-    ) -> AsyncIterator[Any]:
-        """Write a heartbeat with a chosen age, and remove it afterwards.
+    ) -> None:
+        """Point the probe at the engine under test.
 
-        The probe reads its own settings to find the database, which in a test process means the
-        development one. Pointed at the engine under test instead — the alternative is asserting
-        against whatever happens to be in the developer's own database.
+        `autouse`, and that is the whole point of it being a fixture of its own. `liveness.check`
+        resolves its own settings, so without this it queries whichever database the environment
+        happens to name — the developer's, which is migrated and answers plausibly, and in CI one
+        that has never been migrated. A test here passed locally for exactly that reason and failed
+        the release gate with "relation worker_heartbeats does not exist", which is the same class
+        of accident as a test that passes because it is testing nothing.
         """
         url = engine.url.render_as_string(hide_password=False)
         monkeypatch.setattr(
             liveness, "get_settings", lambda: Settings(env="test", database_url=url)
         )
+
+    @pytest_asyncio.fixture
+    async def beat(self, engine: AsyncEngine) -> AsyncIterator[Any]:
+        """Write a heartbeat with a chosen age, and remove it afterwards."""
         names: list[str] = []
 
         async def write(name: str, age: timedelta = timedelta(0)) -> str:
