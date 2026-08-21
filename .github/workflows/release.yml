@@ -111,13 +111,41 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
-      - name: build all five
+      - name: build all five, each into its own directory
+        # Separate directories because the publish step uploads a *directory*, and uploading them
+        # together is what caused a partial release: see the note in the publish job.
         run: |
-          for pkg in packages/shared-types packages/evaluation-core packages/trajectory-engine \
-                     packages/python-sdk packages/cli; do
-            uv build "$pkg" --out-dir dist
+          set -euo pipefail
+          uv build packages/shared-types      --out-dir dist/1-types
+          uv build packages/evaluation-core   --out-dir dist/2-core
+          uv build packages/trajectory-engine --out-dir dist/3-trajectory
+          uv build packages/python-sdk        --out-dir dist/4-sdk
+          uv build packages/cli               --out-dir dist/5-cli
+          # `uv build` leaves a .gitignore in each output directory. The publish action uploads the
+          # directory's contents, and twine refuses a file it does not recognise as a distribution,
+          # so it has to go.
+          find dist -name ".gitignore" -delete
+          # Numbered in dependency order, so the directory listing is the publish order and a
+          # reordering is visible in review rather than implied.
+          find dist -type f | sort
+
+      - name: each directory holds exactly one distribution
+        # A stray file here uploads a package out of order, which is the failure this whole
+        # arrangement exists to prevent — and an empty directory would publish nothing while
+        # reporting success.
+        run: |
+          set -euo pipefail
+          for dir in dist/*/; do
+            wheels=$(find "$dir" -name "*.whl" | wc -l | tr -d " ")
+            sdists=$(find "$dir" -name "*.tar.gz" | wc -l | tr -d " ")
+            total=$(find "$dir" -type f | wc -l | tr -d " ")
+            if [ "$wheels" != "1" ] || [ "$sdists" != "1" ] || [ "$total" != "2" ]; then
+              echo "$dir: $wheels wheel(s), $sdists sdist(s), $total file(s) — expected exactly one of each"
+              find "$dir" -type f
+              exit 1
+            fi
           done
-          ls -l dist
+          echo "five directories, one wheel and one sdist each"
       - uses: actions/upload-artifact@v4
         with:
           name: distributions
@@ -137,5 +165,35 @@ jobs:
         with:
           name: distributions
           path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        # No `password`: the OIDC token is minted from `id-token: write` above.
+
+      # Uploaded in dependency order, one package per step, and this is not tidiness.
+      #
+      # The first attempt at 0.1.0 uploaded all ten files in a single call. `twine` takes them in
+      # the order it finds them, which put `proofstep` — the package that depends on the other four
+      # — first. It published. The next upload was refused, and the run stopped. The result was one
+      # package on PyPI whose every dependency was missing, so `pip install proofstep` failed for
+      # everyone with "proofstep-core was not found in the package registry", and the only fix was
+      # to publish the rest.
+      #
+      # Leaves first, so the registry is never in a state where something published cannot be
+      # installed. If a step fails, what is already up still resolves.
+      #
+      # `skip-existing` on every one of them, so a re-run after a partial failure uploads what is
+      # missing instead of failing on what is already there. Without it, recovering from a partial
+      # release means editing this file under pressure.
+      - name: proofstep-types
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with: {packages-dir: dist/1-types, skip-existing: true}
+      - name: proofstep-core
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with: {packages-dir: dist/2-core, skip-existing: true}
+      - name: proofstep-trajectory
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with: {packages-dir: dist/3-trajectory, skip-existing: true}
+      - name: proofstep (the SDK)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with: {packages-dir: dist/4-sdk, skip-existing: true}
+      - name: proofstep-cli
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with: {packages-dir: dist/5-cli, skip-existing: true}
+        # No `password` on any of these: the OIDC token is minted from `id-token: write` above.
